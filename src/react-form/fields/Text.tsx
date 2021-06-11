@@ -30,38 +30,38 @@ export default memo((props: TextProps) => {
     onChange?.(name, newValue, validateField(newValue, props));
   };
 
+  if (Component) {
+    return (
+      <Component
+        name={name}
+        id={id}
+        value={value}
+        label={label}
+        placeholder={placeholder}
+        helperText={helperText}
+        error={error}
+        disabled={disabled}
+        required={required}
+        onChange={handleChange}
+        onBlur={onBlur}
+      />
+    );
+  }
+
   return (
-    <>
-      {Component ? (
-        <Component
-          name={name}
-          id={id}
-          value={value}
-          label={label}
-          placeholder={placeholder}
-          helperText={helperText}
-          error={error}
-          disabled={disabled}
-          required={required}
-          onChange={handleChange}
-          onBlur={onBlur}
-        />
-      ) : (
-        <FormControl fullWidth error={error} disabled={disabled} required={required}>
-          {label && <InputLabel htmlFor={id}>{label}</InputLabel>}
-          <Input
-            type="text"
-            id={id}
-            name={name}
-            value={value}
-            placeholder={placeholder}
-            onChange={handleChange}
-            onBlur={onBlur}
-            aria-describedby={`${id}-helper-text`}
-          />
-          {helperText && <FormHelperText id={`${id}-helper-text`}>{helperText}</FormHelperText>}
-        </FormControl>
-      )}
-    </>
+    <FormControl fullWidth error={error} disabled={disabled} required={required}>
+      {label && <InputLabel htmlFor={id}>{label}</InputLabel>}
+      <Input
+        type="text"
+        id={id}
+        name={name}
+        value={value}
+        placeholder={placeholder}
+        onChange={handleChange}
+        onBlur={onBlur}
+        aria-describedby={`${id}-helper-text`}
+      />
+      {helperText && <FormHelperText id={`${id}-helper-text`}>{helperText}</FormHelperText>}
+    </FormControl>
   );
 });

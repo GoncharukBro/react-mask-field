@@ -57,20 +57,21 @@ export function validateForm(
 ) {
   // Проверяем наличие незаполненных полей
   const hasValues = Object.values(values).find((value) => value);
-  // Если ни одно поле не заполнено, возвращаем `false`
-  if (!hasValues) return false;
-
+  if (!hasValues) {
+    return false;
+  }
   // Проверяем наличие ошибок
   const hasErrors = Object.values(errors).find((error) => error);
-  // Если имеется хоть одна ошибка, возвращаем `false`
-  if (hasErrors) return false;
-
+  if (hasErrors) {
+    return false;
+  }
   // Проверяем наличие невалидных значений с зависимостью
   const hasInvalidValueWithDependence = Object.keys(dependencies).find((dependence) => {
     return values[dependence] && dependencies[dependence]?.find((value) => !values[value]);
   });
-  // Если имеется зависимость и поле с этой зависимостью не заполнено, возвращаем `false`
-  if (hasInvalidValueWithDependence) return false;
-
+  if (hasInvalidValueWithDependence) {
+    return false;
+  }
+  // Если не найдено не одной ошибки возвращаем `true`
   return true;
 }

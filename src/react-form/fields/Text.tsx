@@ -1,4 +1,8 @@
 import { memo } from 'react';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
+import Input from '@material-ui/core/Input';
+import FormHelperText from '@material-ui/core/FormHelperText';
 import { BaseFieldProps } from '../types';
 import { validateField } from '../validate';
 
@@ -43,22 +47,20 @@ export default memo((props: TextProps) => {
           onBlur={onBlur}
         />
       ) : (
-        <div>
-          {label && <label htmlFor={id}>{label}</label>}
-          <input
+        <FormControl fullWidth error={error} disabled={disabled} required={required}>
+          {label && <InputLabel htmlFor={id}>{label}</InputLabel>}
+          <Input
             type="text"
-            aria-describedby={`${id}-helper-text`}
-            name={name}
             id={id}
+            name={name}
             value={value}
             placeholder={placeholder}
-            disabled={disabled}
-            required={required}
             onChange={handleChange}
             onBlur={onBlur}
+            aria-describedby={`${id}-helper-text`}
           />
-          {helperText && <span id={`${id}-helper-text`}>{helperText}</span>}
-        </div>
+          {helperText && <FormHelperText id={`${id}-helper-text`}>{helperText}</FormHelperText>}
+        </FormControl>
       )}
     </>
   );

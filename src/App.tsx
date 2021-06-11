@@ -1,26 +1,26 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { Form, Field } from 'src/react-form';
 
-function App() {
+export default function App() {
+  interface AppFormData {
+    text: string;
+  }
+
+  const handleSubmit = (data: AppFormData) => {
+    console.log(data);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <Form<AppFormData> name="appForm" initialValues={{}} onSubmit={handleSubmit}>
+        <Field.Text
+          name="myText"
+          label="Введите текст"
+          placeholder="Мой текст"
+          required
+          minLength={6}
+          xs={6}
+        />
+      </Form>
     </div>
   );
 }
-
-export default App;

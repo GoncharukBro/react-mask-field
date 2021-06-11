@@ -21,10 +21,10 @@ export default function App() {
             minLength={6}
             xs={6}
           />
-          <Field.Text
-            name="myText2"
-            label="Введите текст 2"
-            placeholder="Мой текст 2"
+          <Field.Password
+            name="myPassword"
+            label="Введите пароль"
+            placeholder="Мой пароль"
             required
             minLength={6}
             xs={6}

@@ -13,22 +13,9 @@ export default function App() {
     <div style={{ height: '100vh', display: 'flex' }}>
       <div style={{ width: 500, margin: 'auto' }}>
         <Form<AppFormData> name="appForm" enableReset initialValues={{}} onSubmit={handleSubmit}>
-          <Field.Text
-            name="myText"
-            label="Введите текст"
-            placeholder="Мой текст"
-            required
-            minLength={6}
-            xs={6}
-          />
-          <Field.Password
-            name="myPassword"
-            label="Введите пароль"
-            placeholder="Мой пароль"
-            required
-            minLength={6}
-            xs={6}
-          />
+          <Field.Text name="myText" label="Введите текст" placeholder="Мой текст" />
+          <Field.Password name="myPassword" label="Введите пароль" placeholder="Мой пароль" />
+          <Field.Numeric name="myNumeric" label="Введите номер" placeholder="Мой номер" />
         </Form>
       </div>
     </div>

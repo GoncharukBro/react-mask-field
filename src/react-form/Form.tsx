@@ -24,12 +24,13 @@
 // week - выбор недели
 
 import { useState, useEffect, useMemo, useCallback, Children, cloneElement } from 'react';
+import Button from '@material-ui/core/Button';
 import { FormState, BaseFieldProps } from './types';
 import { validateField, validateForm } from './validate';
 
 type FormProps<T = any> = React.PropsWithChildren<{
   name: string;
-  resetButton?: boolean;
+  enableReset?: boolean;
   status?: 'idle' | 'loading' | 'success' | 'error';
   error?: string | null;
   helperText?: string;
@@ -42,7 +43,7 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
   const {
     children,
     name: formName,
-    resetButton,
+    enableReset,
     status,
     error: formError,
     helperText,
@@ -171,23 +172,27 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
         <div>{fields}</div>
 
         <div style={{ display: 'flex', marginTop: 8 }}>
-          {resetButton && (
-            <button
-              id={`${formName}-reset-button`}
+          {enableReset && (
+            <Button
               type="button"
+              fullWidth
+              variant="contained"
+              id={`${formName}-reset-button`}
               disabled={!Object.values(state.values).length}
               onClick={handleReset}
             >
               Сбросить
-            </button>
+            </Button>
           )}
-          <button
-            id={`${formName}-submit-button`}
+          <Button
             type="submit"
+            fullWidth
+            variant="contained"
+            id={`${formName}-submit-button`}
             disabled={disabled || !state.isValid || submiting || submitSuccess}
           >
             Отправить
-          </button>
+          </Button>
         </div>
       </form>
 
@@ -203,7 +208,9 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
         </div>
       )}
 
-      {process.env.NODE_ENV !== 'production' && JSON.stringify(state, null, 2)}
+      <div style={{ margin: '24px 0' }}>
+        {process.env.NODE_ENV !== 'production' && JSON.stringify(state, null, 2)}
+      </div>
     </div>
   );
 }

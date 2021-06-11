@@ -10,17 +10,27 @@ export default function App() {
   };
 
   return (
-    <div>
-      <Form<AppFormData> name="appForm" initialValues={{}} onSubmit={handleSubmit}>
-        <Field.Text
-          name="myText"
-          label="Введите текст"
-          placeholder="Мой текст"
-          required
-          minLength={6}
-          xs={6}
-        />
-      </Form>
+    <div style={{ height: '100vh', display: 'flex' }}>
+      <div style={{ width: 500, margin: 'auto' }}>
+        <Form<AppFormData> name="appForm" enableReset initialValues={{}} onSubmit={handleSubmit}>
+          <Field.Text
+            name="myText"
+            label="Введите текст"
+            placeholder="Мой текст"
+            required
+            minLength={6}
+            xs={6}
+          />
+          <Field.Text
+            name="myText2"
+            label="Введите текст 2"
+            placeholder="Мой текст 2"
+            required
+            minLength={6}
+            xs={6}
+          />
+        </Form>
+      </div>
     </div>
   );
 }

@@ -1,3 +1,5 @@
+// Текстовое поле, предназначено для ввода символов с помощью клавиатуры
+
 import { memo } from 'react';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
@@ -51,6 +53,7 @@ export default memo((props: TextProps) => {
   return (
     <FormControl fullWidth error={error} disabled={disabled} required={required}>
       {label && <InputLabel htmlFor={id}>{label}</InputLabel>}
+
       <Input
         type="text"
         id={id}
@@ -61,6 +64,7 @@ export default memo((props: TextProps) => {
         onBlur={onBlur}
         aria-describedby={`${id}-helper-text`}
       />
+
       {helperText && <FormHelperText id={`${id}-helper-text`}>{helperText}</FormHelperText>}
     </FormControl>
   );

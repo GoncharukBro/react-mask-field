@@ -1,3 +1,5 @@
+// Разрешает ввод только чисел
+
 import { memo } from 'react';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
@@ -52,8 +54,9 @@ export default memo((props: NumericProps) => {
   return (
     <FormControl fullWidth error={error} disabled={disabled} required={required}>
       {label && <InputLabel htmlFor={id}>{label}</InputLabel>}
+
       <Input
-        type="text"
+        type="number"
         id={id}
         name={name}
         value={value}
@@ -62,6 +65,7 @@ export default memo((props: NumericProps) => {
         onBlur={onBlur}
         aria-describedby={`${id}-helper-text`}
       />
+
       {helperText && <FormHelperText id={`${id}-helper-text`}>{helperText}</FormHelperText>}
     </FormControl>
   );

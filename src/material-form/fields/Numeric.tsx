@@ -11,7 +11,7 @@ import { useFormContext } from '../useFormContext';
 
 type NumericProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputElement>, 'value'>;
 
-export default memo((props: NumericProps) => {
+const Numeric = memo((props: NumericProps) => {
   const { value = '', name, id, label, placeholder, helperText, error, disabled, required } = props;
   const { handleChange, handleBlur } = useFormContext();
 
@@ -42,3 +42,5 @@ export default memo((props: NumericProps) => {
     </FormControl>
   );
 });
+
+export default Numeric;

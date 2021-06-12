@@ -15,7 +15,7 @@ import { useFormContext } from '../useFormContext';
 
 type PasswordProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputElement>, 'value'>;
 
-export default memo((props: PasswordProps) => {
+const Password = memo((props: PasswordProps) => {
   const {
     value = '',
     name,
@@ -78,3 +78,5 @@ export default memo((props: PasswordProps) => {
     </FormControl>
   );
 });
+
+export default Password;

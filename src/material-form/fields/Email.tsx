@@ -11,7 +11,7 @@ import { useFormContext } from '../useFormContext';
 
 type EmailProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputElement>, 'value'>;
 
-export default memo((props: EmailProps) => {
+const Email = memo((props: EmailProps) => {
   const { value = '', name, id, label, placeholder, helperText, error, disabled, required } = props;
   const { handleChange, handleBlur } = useFormContext();
 
@@ -41,3 +41,5 @@ export default memo((props: EmailProps) => {
     </FormControl>
   );
 });
+
+export default Email;

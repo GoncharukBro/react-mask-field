@@ -11,7 +11,7 @@ import { useFormContext } from '../useFormContext';
 
 type TextProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputElement>, 'value'>;
 
-export default memo((props: TextProps) => {
+const Text = memo((props: TextProps) => {
   const { value = '', name, id, label, placeholder, helperText, error, disabled, required } = props;
   const { handleChange, handleBlur } = useFormContext();
 
@@ -41,3 +41,5 @@ export default memo((props: TextProps) => {
     </FormControl>
   );
 });
+
+export default Text;

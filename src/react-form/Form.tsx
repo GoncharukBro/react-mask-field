@@ -31,6 +31,8 @@ import {
   isValidElement,
 } from 'react';
 import Button from '@material-ui/core/Button';
+import Collapse from '@material-ui/core/Collapse';
+import Alert from '@material-ui/lab/Alert';
 import { FormState, BaseFieldProps } from './types';
 import { validateField, validateForm } from './validate';
 
@@ -155,7 +157,7 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
 
         // Клонируем поля с задаными свойствами
         return cloneElement(child, {
-          id: `${formName}-${fieldName}`,
+          id: `form-${formName}-field-${fieldName}`,
           error: !!(other.error || submitError || formError || error),
           helperText: other.helperText || error,
           disabled: disabled || other.disabled || submiting || submitSuccess || hasEmptyDependence,
@@ -182,7 +184,7 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
   ]);
 
   return (
-    <form style={{ width: '100%' }} id={formName} onSubmit={handleSubmit}>
+    <form style={{ width: '100%' }} id={`form-${formName}`} onSubmit={handleSubmit}>
       {/* Рендерим поля формы */}
       <div>{fields}</div>
 
@@ -193,7 +195,7 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
             type="button"
             fullWidth
             variant="contained"
-            id={`${formName}-reset-button`}
+            id={`form-${formName}-reset-button`}
             disabled={!Object.values(state.values).length}
             onClick={handleReset}
           >
@@ -204,7 +206,7 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
           type="submit"
           fullWidth
           variant="contained"
-          id={`${formName}-submit-button`}
+          id={`form-${formName}-submit-button`}
           disabled={disabled || !state.isValid || submiting || submitSuccess}
         >
           Отправить
@@ -213,16 +215,20 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
 
       {/* Выводим вспомогательный текст */}
       {helperText && (
-        <div id={`${formName}-info-message`} style={{ marginTop: 16 }}>
-          <p>{helperText}</p>
-        </div>
+        <Collapse in={!!helperText} style={{ marginTop: 16 }}>
+          <Alert id={`form-${formName}-info-message`} severity="info">
+            {helperText}
+          </Alert>
+        </Collapse>
       )}
 
       {/* Выводим сообщение об ошибке */}
       {formError && (
-        <div id={`${formName}-error-message`} style={{ marginTop: 16 }}>
-          <strong>Ошибка:</strong> <p>{formError}</p>
-        </div>
+        <Collapse in={!!formError} style={{ marginTop: 16 }}>
+          <Alert id={`form-${formName}-info-message`} severity="error">
+            <strong>Ошибка:</strong> <p>{formError}</p>
+          </Alert>
+        </Collapse>
       )}
 
       {/* Отображаем текущий state */}

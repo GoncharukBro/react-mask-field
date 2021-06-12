@@ -145,10 +145,10 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
         // `true` если поле-зависимость заполнено
         const hasNotEmptyDependence = !!(other.dependence && state.values[other.dependence]);
         // Определяем ошибку только после того, как поле было "тронуто"
-        let error = state.touched[other.name] ? state.errors[other.name] : undefined;
+        let error = state.touched[other.name] ? state.errors[other.name] : '';
         // Убираем текст ошибки если поле-зависимость не заполнено,
         // так как при незаполненом поле-зависимости текущее поле не будет активно
-        error = hasEmptyDependence ? undefined : error;
+        error = hasEmptyDependence ? '' : error;
 
         // Клонируем поля с задаными свойствами
         return (
@@ -179,6 +179,8 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
     submitError,
   ]);
 
+  // Мемоизируем контект во избежание рендера всех полей формы,
+  // в то время как изменен только один
   const context = useMemo(() => {
     return { handleChange, handleBlur };
   }, [handleBlur, handleChange]);
@@ -221,9 +223,9 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
         </Grid>
 
         {/* Отображаем текущий state */}
-        {/* {process.env.NODE_ENV !== 'production' && (
-        <pre style={{ marginTop: 24 }}>{JSON.stringify(state, null, 2)}</pre>
-      )} */}
+        {process.env.NODE_ENV !== 'production' && (
+          <pre style={{ marginTop: 24 }}>{JSON.stringify(state, null, 2)}</pre>
+        )}
       </Box>
     </FormContextProvider>
   );

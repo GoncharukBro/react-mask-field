@@ -1,6 +1,6 @@
 // Скрывает ввод пароля, маскируя символы звёздочками
 
-import { useState, memo } from 'react';
+import { useState, memo, cloneElement } from 'react';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import Input from '@material-ui/core/Input';
@@ -45,12 +45,15 @@ export default memo((props: PasswordProps) => {
   const showPasswordButton = (
     <InputAdornment position="end">
       <IconButton
+        size="small"
         id={`${id}-show-password-button`}
         disabled={disabled}
         onClick={handleShowPassword}
         aria-label="toggle password visibility"
       >
-        {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+        {cloneElement(showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />, {
+          fontSize: 'inherit',
+        })}
       </IconButton>
     </InputAdornment>
   );

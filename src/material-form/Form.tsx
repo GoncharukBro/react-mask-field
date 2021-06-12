@@ -189,7 +189,7 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
       </Grid>
 
       {/* Кнопки управления формой */}
-      <Grid container spacing={2}>
+      <Grid container spacing={2} style={{ marginTop: 8 }}>
         {enableReset && (
           <Grid item xs>
             <Button

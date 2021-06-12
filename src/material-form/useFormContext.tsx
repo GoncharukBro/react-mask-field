@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 
 interface FormContextValue {
-  handleChange: (name: string, value: string | boolean, error: string) => void;
+  handleChange: (name: string, value: string | boolean, error: string | undefined) => void;
   handleBlur: (event: React.FocusEvent<HTMLInputElement>) => void;
 }
 

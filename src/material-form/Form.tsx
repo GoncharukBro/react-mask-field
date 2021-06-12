@@ -116,14 +116,17 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
   };
 
   // Реагируем на изменение значения поля
-  const handleChange = useCallback((fieldName: string, value: string | boolean, error: string) => {
-    setState((prev) => {
-      const values = { ...prev.values, [fieldName]: value };
-      const errors = { ...prev.errors, [fieldName]: error };
-      const isValid = validateForm(values, errors, prev.dependencies);
-      return { ...prev, isValid, values, errors };
-    });
-  }, []);
+  const handleChange = useCallback(
+    (fieldName: string, value: string | boolean, error: string | undefined) => {
+      setState((prev) => {
+        const values = { ...prev.values, [fieldName]: value };
+        const errors = { ...prev.errors, [fieldName]: error };
+        const isValid = validateForm(values, errors, prev.dependencies);
+        return { ...prev, isValid, values, errors };
+      });
+    },
+    []
+  );
 
   // Реагируем на расфокус поля
   const handleBlur = useCallback((event: React.FocusEvent<HTMLInputElement>) => {
@@ -145,10 +148,10 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
         // `true` если поле-зависимость заполнено
         const hasNotEmptyDependence = !!(other.dependence && state.values[other.dependence]);
         // Определяем ошибку только после того, как поле было "тронуто"
-        let error = state.touched[other.name] ? state.errors[other.name] : '';
+        let error = state.touched[other.name] ? state.errors[other.name] : undefined;
         // Убираем текст ошибки если поле-зависимость не заполнено,
         // так как при незаполненом поле-зависимости текущее поле не будет активно
-        error = hasEmptyDependence ? '' : error;
+        error = hasEmptyDependence ? undefined : state.errors[other.name];
 
         // Клонируем поля с задаными свойствами
         return (

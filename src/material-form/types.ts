@@ -1,9 +1,15 @@
-export interface FormState {
+export interface FormState<T = any> {
   isValid: boolean;
-  values: { [key: string]: string | boolean };
-  errors: { [key: string]: string | undefined };
-  touched: { [key: string]: boolean };
-  dependencies: { [key: string]: string[] };
+  values: Partial<T>;
+  errors: {
+    [Property in keyof T]?: string | undefined;
+  };
+  touched: {
+    [Property in keyof T]?: boolean;
+  };
+  dependencies: {
+    [Property in keyof T]?: string[];
+  };
 }
 
 export interface ValidationValues {

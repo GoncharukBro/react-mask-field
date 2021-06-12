@@ -37,18 +37,18 @@ import { FormState, BaseFieldProps } from './types';
 import { validateField, validateForm } from './validate';
 import { FormContextProvider } from './useFormContext';
 
-type FormProps<T = any> = React.PropsWithChildren<{
+type FormProps<T> = React.PropsWithChildren<{
   name: string;
   enableReset?: boolean;
   status?: 'idle' | 'loading' | 'success' | 'error';
   error?: string | null;
   helperText?: string;
-  initialValues?: FormState['values'];
   disabled?: boolean;
+  initialValues?: Partial<T>;
   onSubmit: (data: T) => void;
 }>;
 
-export default function Form<T = FormState['values']>(props: FormProps<T>) {
+export default function Form<T extends { [key: string]: any } = any>(props: FormProps<T>) {
   const {
     children,
     name: formName,
@@ -65,7 +65,7 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
   const submitSuccess = status === 'success';
   const submitError = status === 'error';
 
-  const [state, setState] = useState<FormState>({
+  const [state, setState] = useState<FormState<T>>({
     isValid: false,
     values: {},
     errors: {},
@@ -76,7 +76,9 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
   // Инициализацируем state
   useEffect(() => {
     // Определяем начальное состояние формы
-    const values = Object.values(state.values).length ? state.values : initialValues || {};
+    const values: FormState['values'] = Object.keys(state.values).length
+      ? state.values
+      : initialValues || {};
     const errors: FormState['errors'] = {};
     const touched: FormState['touched'] = {};
     const dependencies: FormState['dependencies'] = {};

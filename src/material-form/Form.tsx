@@ -31,6 +31,7 @@ import {
   isValidElement,
 } from 'react';
 import Button from '@material-ui/core/Button';
+import Grid from '@material-ui/core/Grid';
 import { FormState, BaseFieldProps } from './types';
 import { validateField, validateForm } from './validate';
 
@@ -101,6 +102,7 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [children, initialValues]);
 
+  // Отправляем данные формы
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     onSubmit(state.values as any);
@@ -126,6 +128,7 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Сбрасываем состояние формы
   const handleReset = useCallback(() => {
     setState((prev) => ({ ...prev, isValid: false, values: {}, errors: {}, touched: {} }));
   }, []);
@@ -147,7 +150,7 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
 
         // Клонируем поля с задаными свойствами
         return (
-          <div>
+          <Grid item xs={xs || 12} sm={sm} md={md} lg={lg} xl={xl}>
             {cloneElement(child, {
               id: `form-${formName}-field-${other.name}`,
               error: !!(other.error || submitError || formError || error),
@@ -159,7 +162,7 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
               onChange: handleChange,
               onBlur: handleBlur,
             })}
-          </div>
+          </Grid>
         );
       }
     });
@@ -181,37 +184,43 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
   return (
     <form style={{ width: '100%' }} id={`form-${formName}`} onSubmit={handleSubmit}>
       {/* Рендерим поля формы */}
-      <div>{fields}</div>
+      <Grid container spacing={2}>
+        {fields}
+      </Grid>
 
       {/* Кнопки управления формой */}
-      <div>
+      <Grid container spacing={2}>
         {enableReset && (
+          <Grid item xs>
+            <Button
+              type="button"
+              fullWidth
+              variant="contained"
+              id={`form-${formName}-reset-button`}
+              disabled={!Object.values(state.values).length}
+              onClick={handleReset}
+            >
+              Сбросить
+            </Button>
+          </Grid>
+        )}
+        <Grid item xs>
           <Button
-            type="button"
+            type="submit"
             fullWidth
             variant="contained"
-            id={`form-${formName}-reset-button`}
-            disabled={!Object.values(state.values).length}
-            onClick={handleReset}
+            id={`form-${formName}-submit-button`}
+            disabled={disabled || !state.isValid || submiting || submitSuccess}
           >
-            Сбросить
+            Отправить
           </Button>
-        )}
-        <Button
-          type="submit"
-          fullWidth
-          variant="contained"
-          id={`form-${formName}-submit-button`}
-          disabled={disabled || !state.isValid || submiting || submitSuccess}
-        >
-          Отправить
-        </Button>
-      </div>
+        </Grid>
+      </Grid>
 
       {/* Отображаем текущий state */}
-      {process.env.NODE_ENV !== 'production' && (
+      {/* {process.env.NODE_ENV !== 'production' && (
         <pre style={{ marginTop: 24 }}>{JSON.stringify(state, null, 2)}</pre>
-      )}
+      )} */}
     </form>
   );
 }

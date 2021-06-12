@@ -41,6 +41,8 @@ export function validateField(
     const message = 'Номер телефона указан неверно';
     if (!rule) return message;
   }
+
+  return '';
 }
 
 /**

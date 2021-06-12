@@ -31,8 +31,6 @@ import {
   isValidElement,
 } from 'react';
 import Button from '@material-ui/core/Button';
-import Collapse from '@material-ui/core/Collapse';
-import Alert from '@material-ui/lab/Alert';
 import { FormState, BaseFieldProps } from './types';
 import { validateField, validateForm } from './validate';
 
@@ -86,7 +84,7 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
         // Проверяем поле на наличие ошибок
         errors[fieldName] = validateField(values[fieldName], other);
         // Проверяем поле на наличие значения
-        touched[fieldName] = !!values[fieldName] || undefined;
+        touched[fieldName] = !!values[fieldName];
         // Если поле имеет зависимости, создаём пустой массив для последующего добавления в него значений
         if (dependence && !dependencies[dependence]) {
           dependencies[dependence] = [] as string[];
@@ -111,7 +109,7 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
   // Реагируем на изменение значения поля
   const handleChange = useCallback((fieldName: string, value: string | boolean, error: string) => {
     setState((prev) => {
-      const values = { ...prev.values, [fieldName]: value || undefined };
+      const values = { ...prev.values, [fieldName]: value };
       const errors = { ...prev.errors, [fieldName]: error };
       const isValid = validateForm(values, errors, prev.dependencies);
       return { ...prev, isValid, values, errors };
@@ -121,6 +119,7 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
   // Реагируем на расфокус поля
   const handleBlur = useCallback((event: React.FocusEvent<HTMLInputElement>) => {
     const { name: fieldName } = event.target;
+    // Ставим проверку во избежание повторных срабатываний
     if (!state.touched[fieldName]) {
       setState((prev) => ({ ...prev, touched: { ...prev.touched, [fieldName]: true } }));
     }
@@ -150,10 +149,10 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
         // `true` если поле-зависимость заполнено
         const hasNotEmptyDependence = !!(dependence && state.values[dependence]);
         // Определяем ошибку только после того, как поле было "тронуто"
-        let error = state.touched[fieldName] ? state.errors[fieldName] || '' : '';
+        let error = state.touched[fieldName] ? state.errors[fieldName] : undefined;
         // Убираем текст ошибки если поле-зависимость не заполнено,
         // так как при незаполненом поле-зависимости текущее поле не будет активно
-        error = hasEmptyDependence ? '' : error;
+        error = hasEmptyDependence ? undefined : error;
 
         // Клонируем поля с задаными свойствами
         return cloneElement(child, {
@@ -189,7 +188,7 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
       <div>{fields}</div>
 
       {/* Кнопки управления формой */}
-      <div style={{ display: 'flex', marginTop: 8 }}>
+      <div>
         {enableReset && (
           <Button
             type="button"
@@ -213,28 +212,10 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
         </Button>
       </div>
 
-      {/* Выводим вспомогательный текст */}
-      {helperText && (
-        <Collapse in={!!helperText} style={{ marginTop: 16 }}>
-          <Alert id={`form-${formName}-info-message`} severity="info">
-            {helperText}
-          </Alert>
-        </Collapse>
-      )}
-
-      {/* Выводим сообщение об ошибке */}
-      {formError && (
-        <Collapse in={!!formError} style={{ marginTop: 16 }}>
-          <Alert id={`form-${formName}-info-message`} severity="error">
-            <strong>Ошибка:</strong> <p>{formError}</p>
-          </Alert>
-        </Collapse>
-      )}
-
       {/* Отображаем текущий state */}
-      <div style={{ margin: '24px 0' }}>
-        {process.env.NODE_ENV !== 'production' && JSON.stringify(state, null, 2)}
-      </div>
+      {process.env.NODE_ENV !== 'production' && (
+        <pre style={{ marginTop: 24 }}>{JSON.stringify(state, null, 2)}</pre>
+      )}
     </form>
   );
 }

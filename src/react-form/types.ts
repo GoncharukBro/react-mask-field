@@ -1,9 +1,9 @@
 export interface FormState {
   isValid: boolean;
-  values: { [key: string]: string | boolean | undefined };
-  errors: { [key: string]: string | undefined };
-  touched: { [key: string]: boolean | undefined };
-  dependencies: { [key: string]: string[] | undefined };
+  values: { [key: string]: string | boolean };
+  errors: { [key: string]: string };
+  touched: { [key: string]: boolean };
+  dependencies: { [key: string]: string[] };
 }
 
 export interface ValidationValues {

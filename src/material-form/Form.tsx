@@ -37,6 +37,14 @@ import { FormState, BaseFieldProps } from './types';
 import { validateField, validateForm } from './validate';
 import { FormContextProvider } from './useFormContext';
 
+const initialState: FormState = {
+  isValid: false,
+  values: {},
+  errors: {},
+  touched: {},
+  dependencies: {},
+};
+
 type FormProps<T> = React.PropsWithChildren<{
   name: string;
   enableReset?: boolean;
@@ -65,23 +73,14 @@ export default function Form<T extends { [key: string]: any } = any>(props: Form
   const submitSuccess = status === 'success';
   const submitError = status === 'error';
 
-  const [state, setState] = useState<FormState<T>>({
-    isValid: false,
-    values: {},
-    errors: {},
-    touched: {},
-    dependencies: {},
-  });
+  const [state, setState] = useState<FormState<T>>(initialState);
 
   // Инициализацируем state
   useEffect(() => {
-    // Определяем начальное состояние формы
-    const values: FormState['values'] = Object.keys(state.values).length
-      ? state.values
-      : initialValues || {};
-    const errors: FormState['errors'] = {};
-    const touched: FormState['touched'] = {};
-    const dependencies: FormState['dependencies'] = {};
+    const { errors, touched, dependencies } = initialState;
+    let { isValid, values } = initialState;
+    // Определяем наличие начальных значений
+    values = Object.keys(state.values).length ? state.values : initialValues || {};
     // Изменяем начальное состояние формы в зависимости от свойств полей
     Children.forEach(children as JSX.Element[], (child) => {
       if (isValidElement(child)) {
@@ -101,7 +100,7 @@ export default function Form<T extends { [key: string]: any } = any>(props: Form
       }
     });
     // Валидируем форму
-    const isValid = validateForm(values, errors, dependencies);
+    isValid = validateForm(values, errors, dependencies);
     setState({ isValid, values, errors, touched, dependencies });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [children, initialValues]);
@@ -114,7 +113,8 @@ export default function Form<T extends { [key: string]: any } = any>(props: Form
 
   // Сбрасываем состояние формы
   const handleReset = () => {
-    setState((prev) => ({ ...prev, isValid: false, values: {}, errors: {}, touched: {} }));
+    const { isValid, values, errors, touched } = initialState;
+    setState((prev) => ({ ...prev, isValid, values, errors, touched }));
   };
 
   // Реагируем на изменение значения поля

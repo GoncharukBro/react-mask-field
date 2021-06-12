@@ -1,4 +1,4 @@
-import { Form, Field } from 'src/react-form';
+import { Form, Field } from 'src/material-form';
 
 export default function App() {
   interface AppFormData {

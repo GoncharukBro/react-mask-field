@@ -134,37 +134,33 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
   const fields = useMemo(() => {
     return Children.map(children as JSX.Element[], (child) => {
       if (child) {
-        const {
-          name: fieldName,
-          dependence,
-          xs,
-          sm,
-          md,
-          lg,
-          xl,
-          ...other
-        } = child.props as BaseFieldProps;
+        const { xs, sm, md, lg, xl, ...other } = child.props as BaseFieldProps;
         // `true` если поле-зависимость не заполнено
-        const hasEmptyDependence = !!(dependence && !state.values[dependence]);
+        const hasEmptyDependence = !!(other.dependence && !state.values[other.dependence]);
         // `true` если поле-зависимость заполнено
-        const hasNotEmptyDependence = !!(dependence && state.values[dependence]);
+        const hasNotEmptyDependence = !!(other.dependence && state.values[other.dependence]);
         // Определяем ошибку только после того, как поле было "тронуто"
-        let error = state.touched[fieldName] ? state.errors[fieldName] : undefined;
+        let error = state.touched[other.name] ? state.errors[other.name] : undefined;
         // Убираем текст ошибки если поле-зависимость не заполнено,
         // так как при незаполненом поле-зависимости текущее поле не будет активно
         error = hasEmptyDependence ? undefined : error;
 
         // Клонируем поля с задаными свойствами
-        return cloneElement(child, {
-          id: `form-${formName}-field-${fieldName}`,
-          error: !!(other.error || submitError || formError || error),
-          helperText: other.helperText || error,
-          disabled: disabled || other.disabled || submiting || submitSuccess || hasEmptyDependence,
-          required: other.required || hasNotEmptyDependence,
-          value: state.values[fieldName],
-          onChange: handleChange,
-          onBlur: handleBlur,
-        });
+        return (
+          <div>
+            {cloneElement(child, {
+              id: `form-${formName}-field-${other.name}`,
+              error: !!(other.error || submitError || formError || error),
+              helperText: other.helperText || error,
+              disabled:
+                disabled || other.disabled || submiting || submitSuccess || hasEmptyDependence,
+              required: other.required || hasNotEmptyDependence,
+              value: state.values[other.name],
+              onChange: handleChange,
+              onBlur: handleBlur,
+            })}
+          </div>
+        );
       }
     });
   }, [

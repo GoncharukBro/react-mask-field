@@ -35,7 +35,7 @@ import Grid from '@material-ui/core/Grid';
 import Box from '@material-ui/core/Box';
 import { FormState, BaseFieldProps } from './types';
 import { validateField, validateForm } from './validate';
-import { FormContextProvider } from './useFormContext';
+import { FormContextProvider } from './context';
 
 const initialState: FormState = {
   isValid: false,
@@ -103,7 +103,7 @@ export default function Form<T extends { [key: string]: any } = any>(props: Form
     isValid = validateForm(values, errors, dependencies);
     setState({ isValid, values, errors, touched, dependencies });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [children, initialValues]);
+  }, []);
 
   // Отправляем данные формы
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {

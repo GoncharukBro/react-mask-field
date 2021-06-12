@@ -7,7 +7,7 @@ import Input from '@material-ui/core/Input';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import { BaseFieldProps } from '../types';
 import { validateField } from '../validate';
-import { useFormContext } from '../useFormContext';
+import { useFormContext } from '../context';
 
 type TextProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputElement>, 'value'>;
 

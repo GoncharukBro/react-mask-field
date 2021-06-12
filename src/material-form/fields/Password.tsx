@@ -11,7 +11,7 @@ import VisibilityIcon from '@material-ui/icons/Visibility';
 import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
 import { BaseFieldProps } from '../types';
 import { validateField } from '../validate';
-import { useFormContext } from '../useFormContext';
+import { useFormContext } from '../context';
 
 type PasswordProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputElement>, 'value'>;
 

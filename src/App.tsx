@@ -2,7 +2,10 @@ import { Form, Field } from 'src/material-form';
 
 export default function App() {
   interface AppFormData {
-    text: string;
+    myText: string;
+    myPassword: string;
+    myNumeric: string;
+    myEmail: string;
   }
 
   const handleSubmit = (data: AppFormData) => {
@@ -16,7 +19,7 @@ export default function App() {
           name="appForm"
           helperText="Я Вспомогаетльный текст"
           enableReset
-          initialValues={{}}
+          initialValues={{ myText: 'Коля' }}
           onSubmit={handleSubmit}
         >
           <Field.Text name="myText" label="Введите текст" placeholder="Мой текст" />

@@ -32,6 +32,7 @@ import {
 } from 'react';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
+import Box from '@material-ui/core/Box';
 import { FormState, BaseFieldProps } from './types';
 import { validateField, validateForm } from './validate';
 
@@ -182,14 +183,14 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
   ]);
 
   return (
-    <form style={{ width: '100%' }} id={`form-${formName}`} onSubmit={handleSubmit}>
+    <Box component="form" width="100%" id={`form-${formName}`} onSubmit={handleSubmit}>
       {/* Рендерим поля формы */}
       <Grid container spacing={2}>
         {fields}
       </Grid>
 
       {/* Кнопки управления формой */}
-      <Grid container spacing={2} style={{ marginTop: 8 }}>
+      <Grid component={Box} mt={1} container spacing={2}>
         {enableReset && (
           <Grid item xs>
             <Button
@@ -221,6 +222,6 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
       {/* {process.env.NODE_ENV !== 'production' && (
         <pre style={{ marginTop: 24 }}>{JSON.stringify(state, null, 2)}</pre>
       )} */}
-    </form>
+    </Box>
   );
 }

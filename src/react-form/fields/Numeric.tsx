@@ -13,7 +13,6 @@ type NumericProps = BaseFieldProps &
 
 export default memo((props: NumericProps) => {
   const {
-    Component,
     name,
     id,
     value = '',
@@ -32,24 +31,6 @@ export default memo((props: NumericProps) => {
     newValue = Number.isNaN(Number(newValue)) ? (value as string) || '' : newValue;
     onChange?.(name, newValue, validateField(newValue, props));
   };
-
-  if (Component) {
-    return (
-      <Component
-        name={name}
-        id={id}
-        value={value}
-        label={label}
-        placeholder={placeholder}
-        helperText={helperText}
-        error={error}
-        disabled={disabled}
-        required={required}
-        onChange={handleChange}
-        onBlur={onBlur}
-      />
-    );
-  }
 
   return (
     <FormControl fullWidth error={error} disabled={disabled} required={required}>

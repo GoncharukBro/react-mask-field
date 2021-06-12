@@ -13,7 +13,6 @@ type TextProps = BaseFieldProps &
 
 export default memo((props: TextProps) => {
   const {
-    Component,
     name,
     id,
     value = '',
@@ -31,24 +30,6 @@ export default memo((props: TextProps) => {
     const newValue = event.target.value;
     onChange?.(name, newValue, validateField(newValue, props));
   };
-
-  if (Component) {
-    return (
-      <Component
-        name={name}
-        id={id}
-        value={value}
-        label={label}
-        placeholder={placeholder}
-        helperText={helperText}
-        error={error}
-        disabled={disabled}
-        required={required}
-        onChange={handleChange}
-        onBlur={onBlur}
-      />
-    );
-  }
 
   return (
     <FormControl fullWidth error={error} disabled={disabled} required={required}>

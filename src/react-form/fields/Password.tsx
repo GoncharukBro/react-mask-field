@@ -17,7 +17,6 @@ type PasswordProps = BaseFieldProps &
 
 export default memo((props: PasswordProps) => {
   const {
-    Component,
     name,
     id,
     value = '',
@@ -42,24 +41,6 @@ export default memo((props: PasswordProps) => {
   const handleShowPassword = (event: never) => {
     setPasswordShow((prev) => !prev);
   };
-
-  if (Component) {
-    return (
-      <Component
-        name={name}
-        id={id}
-        value={value}
-        label={label}
-        placeholder={placeholder}
-        helperText={helperText}
-        error={error}
-        disabled={disabled}
-        required={required}
-        onChange={handleChange}
-        onBlur={onBlur}
-      />
-    );
-  }
 
   const showPasswordButton = (
     <InputAdornment position="end">

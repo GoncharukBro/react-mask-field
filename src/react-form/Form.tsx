@@ -156,7 +156,7 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
         // Клонируем поля с задаными свойствами
         return cloneElement(child, {
           id: `${formName}-${fieldName}`,
-          error: other.error || submitError || formError || !!error,
+          error: !!(other.error || submitError || formError || error),
           helperText: other.helperText || error,
           disabled: disabled || other.disabled || submiting || submitSuccess || hasEmptyDependence,
           required: other.required || hasNotEmptyDependence,
@@ -182,50 +182,53 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
   ]);
 
   return (
-    <div>
-      <form style={{ width: '100%' }} id={formName} onSubmit={handleSubmit}>
-        <div>{fields}</div>
+    <form style={{ width: '100%' }} id={formName} onSubmit={handleSubmit}>
+      {/* Рендерим поля формы */}
+      <div>{fields}</div>
 
-        <div style={{ display: 'flex', marginTop: 8 }}>
-          {enableReset && (
-            <Button
-              type="button"
-              fullWidth
-              variant="contained"
-              id={`${formName}-reset-button`}
-              disabled={!Object.values(state.values).length}
-              onClick={handleReset}
-            >
-              Сбросить
-            </Button>
-          )}
+      {/* Кнопки управления формой */}
+      <div style={{ display: 'flex', marginTop: 8 }}>
+        {enableReset && (
           <Button
-            type="submit"
+            type="button"
             fullWidth
             variant="contained"
-            id={`${formName}-submit-button`}
-            disabled={disabled || !state.isValid || submiting || submitSuccess}
+            id={`${formName}-reset-button`}
+            disabled={!Object.values(state.values).length}
+            onClick={handleReset}
           >
-            Отправить
+            Сбросить
           </Button>
-        </div>
-      </form>
+        )}
+        <Button
+          type="submit"
+          fullWidth
+          variant="contained"
+          id={`${formName}-submit-button`}
+          disabled={disabled || !state.isValid || submiting || submitSuccess}
+        >
+          Отправить
+        </Button>
+      </div>
 
+      {/* Выводим вспомогательный текст */}
       {helperText && (
         <div id={`${formName}-info-message`} style={{ marginTop: 16 }}>
           <p>{helperText}</p>
         </div>
       )}
 
+      {/* Выводим сообщение об ошибке */}
       {formError && (
         <div id={`${formName}-error-message`} style={{ marginTop: 16 }}>
           <strong>Ошибка:</strong> <p>{formError}</p>
         </div>
       )}
 
+      {/* Отображаем текущий state */}
       <div style={{ margin: '24px 0' }}>
         {process.env.NODE_ENV !== 'production' && JSON.stringify(state, null, 2)}
       </div>
-    </div>
+    </form>
   );
 }

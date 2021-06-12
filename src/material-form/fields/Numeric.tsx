@@ -15,6 +15,8 @@ export default memo((props: NumericProps) => {
   const { value = '', name, id, label, placeholder, helperText, error, disabled, required } = props;
   const { handleChange, handleBlur } = useFormContext();
 
+  console.warn('Numeric');
+
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     let newValue = event.target.value;
     newValue = Number.isNaN(Number(newValue)) ? (value as string) || '' : newValue;

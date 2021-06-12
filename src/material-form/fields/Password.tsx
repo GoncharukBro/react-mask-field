@@ -31,6 +31,8 @@ export default memo((props: PasswordProps) => {
   const { handleChange, handleBlur } = useFormContext();
   const [showPassword, setPasswordShow] = useState(false);
 
+  console.warn('Password');
+
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
     handleChange(name, newValue, validateField(newValue, props));

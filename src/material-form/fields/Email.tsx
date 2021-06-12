@@ -15,6 +15,8 @@ export default memo((props: EmailProps) => {
   const { value = '', name, id, label, placeholder, helperText, error, disabled, required } = props;
   const { handleChange, handleBlur } = useFormContext();
 
+  console.warn('Email');
+
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
     handleChange(name, newValue, validateField(newValue, { ...props, email: true }));

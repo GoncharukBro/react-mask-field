@@ -179,8 +179,12 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
     submitError,
   ]);
 
+  const context = useMemo(() => {
+    return { handleChange, handleBlur };
+  }, [handleBlur, handleChange]);
+
   return (
-    <FormContextProvider value={{ handleChange, handleBlur }}>
+    <FormContextProvider value={context}>
       <Box component="form" width="100%" id={`form-${formName}`} onSubmit={handleSubmit}>
         {/* Рендерим поля формы */}
         <Grid container spacing={2}>

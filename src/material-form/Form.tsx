@@ -35,6 +35,7 @@ import Grid from '@material-ui/core/Grid';
 import Box from '@material-ui/core/Box';
 import { FormState, BaseFieldProps } from './types';
 import { validateField, validateForm } from './validate';
+import { FormContextProvider } from './useFormContext';
 
 type FormProps<T = any> = React.PropsWithChildren<{
   name: string;
@@ -109,6 +110,11 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
     onSubmit(state.values as any);
   };
 
+  // Сбрасываем состояние формы
+  const handleReset = () => {
+    setState((prev) => ({ ...prev, isValid: false, values: {}, errors: {}, touched: {} }));
+  };
+
   // Реагируем на изменение значения поля
   const handleChange = useCallback((fieldName: string, value: string | boolean, error: string) => {
     setState((prev) => {
@@ -127,11 +133,6 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
       setState((prev) => ({ ...prev, touched: { ...prev.touched, [fieldName]: true } }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Сбрасываем состояние формы
-  const handleReset = useCallback(() => {
-    setState((prev) => ({ ...prev, isValid: false, values: {}, errors: {}, touched: {} }));
   }, []);
 
   // Инициализируем поля формы
@@ -160,8 +161,6 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
                 disabled || other.disabled || submiting || submitSuccess || hasEmptyDependence,
               required: other.required || hasNotEmptyDependence,
               value: state.values[other.name],
-              onChange: handleChange,
-              onBlur: handleBlur,
             })}
           </Grid>
         );
@@ -173,55 +172,55 @@ export default function Form<T = FormState['values']>(props: FormProps<T>) {
     state.touched,
     state.errors,
     formName,
-    submitError,
     formError,
     disabled,
     submiting,
     submitSuccess,
-    handleChange,
-    handleBlur,
+    submitError,
   ]);
 
   return (
-    <Box component="form" width="100%" id={`form-${formName}`} onSubmit={handleSubmit}>
-      {/* Рендерим поля формы */}
-      <Grid container spacing={2}>
-        {fields}
-      </Grid>
+    <FormContextProvider value={{ handleChange, handleBlur }}>
+      <Box component="form" width="100%" id={`form-${formName}`} onSubmit={handleSubmit}>
+        {/* Рендерим поля формы */}
+        <Grid container spacing={2}>
+          {fields}
+        </Grid>
 
-      {/* Кнопки управления формой */}
-      <Grid component={Box} mt={1} container spacing={2}>
-        {enableReset && (
+        {/* Кнопки управления формой */}
+        <Grid component={Box} mt={1} container spacing={2}>
+          {enableReset && (
+            <Grid item xs>
+              <Button
+                type="button"
+                fullWidth
+                variant="contained"
+                id={`form-${formName}-reset-button`}
+                disabled={!Object.values(state.values).length}
+                onClick={handleReset}
+              >
+                Сбросить
+              </Button>
+            </Grid>
+          )}
           <Grid item xs>
             <Button
-              type="button"
+              type="submit"
               fullWidth
               variant="contained"
-              id={`form-${formName}-reset-button`}
-              disabled={!Object.values(state.values).length}
-              onClick={handleReset}
+              id={`form-${formName}-submit-button`}
+              disabled={disabled || !state.isValid || submiting || submitSuccess}
             >
-              Сбросить
+              Отправить
             </Button>
           </Grid>
-        )}
-        <Grid item xs>
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            id={`form-${formName}-submit-button`}
-            disabled={disabled || !state.isValid || submiting || submitSuccess}
-          >
-            Отправить
-          </Button>
         </Grid>
-      </Grid>
 
-      {/* Отображаем текущий state */}
-      {/* {process.env.NODE_ENV !== 'production' && (
+        {/* Отображаем текущий state */}
+        {/* {process.env.NODE_ENV !== 'production' && (
         <pre style={{ marginTop: 24 }}>{JSON.stringify(state, null, 2)}</pre>
       )} */}
-    </Box>
+      </Box>
+    </FormContextProvider>
   );
 }

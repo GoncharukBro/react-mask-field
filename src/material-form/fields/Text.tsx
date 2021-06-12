@@ -7,28 +7,17 @@ import Input from '@material-ui/core/Input';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import { BaseFieldProps } from '../types';
 import { validateField } from '../validate';
+import { useFormContext } from '../useFormContext';
 
-type TextProps = BaseFieldProps &
-  Pick<React.InputHTMLAttributes<HTMLInputElement>, 'id' | 'value' | 'onBlur'>;
+type TextProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputElement>, 'value'>;
 
 export default memo((props: TextProps) => {
-  const {
-    name,
-    id,
-    value = '',
-    label,
-    placeholder,
-    helperText,
-    error,
-    disabled,
-    required,
-    onBlur,
-    onChange,
-  } = props;
+  const { value = '', name, id, label, placeholder, helperText, error, disabled, required } = props;
+  const { handleChange, handleBlur } = useFormContext();
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
-    onChange?.(name, newValue, validateField(newValue, props));
+    handleChange(name, newValue, validateField(newValue, props));
   };
 
   return (
@@ -41,8 +30,8 @@ export default memo((props: TextProps) => {
         name={name}
         value={value}
         placeholder={placeholder}
-        onChange={handleChange}
-        onBlur={onBlur}
+        onChange={handleInputChange}
+        onBlur={handleBlur}
         aria-describedby={`${id}-helper-text`}
       />
 

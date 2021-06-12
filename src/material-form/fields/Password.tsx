@@ -11,15 +11,15 @@ import VisibilityIcon from '@material-ui/icons/Visibility';
 import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
 import { BaseFieldProps } from '../types';
 import { validateField } from '../validate';
+import { useFormContext } from '../useFormContext';
 
-type PasswordProps = BaseFieldProps &
-  Pick<React.InputHTMLAttributes<HTMLInputElement>, 'id' | 'value' | 'onBlur'>;
+type PasswordProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputElement>, 'value'>;
 
 export default memo((props: PasswordProps) => {
   const {
+    value = '',
     name,
     id,
-    value = '',
     label,
     placeholder,
     helperText,
@@ -27,15 +27,13 @@ export default memo((props: PasswordProps) => {
     disabled,
     required,
     match,
-    onBlur,
-    onChange,
   } = props;
-
+  const { handleChange, handleBlur } = useFormContext();
   const [showPassword, setPasswordShow] = useState(false);
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
-    onChange?.(name, newValue, validateField(newValue, props));
+    handleChange(name, newValue, validateField(newValue, props));
   };
 
   const handleShowPassword = (event: never) => {
@@ -69,8 +67,8 @@ export default memo((props: PasswordProps) => {
         value={value}
         placeholder={placeholder}
         endAdornment={!match && showPasswordButton}
-        onChange={handleChange}
-        onBlur={onBlur}
+        onChange={handleInputChange}
+        onBlur={handleBlur}
         aria-describedby={`${id}-helper-text`}
       />
 

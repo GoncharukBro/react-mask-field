@@ -7,28 +7,17 @@ import Input from '@material-ui/core/Input';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import { BaseFieldProps } from '../types';
 import { validateField } from '../validate';
+import { useFormContext } from '../useFormContext';
 
-type EmailProps = BaseFieldProps &
-  Pick<React.InputHTMLAttributes<HTMLInputElement>, 'id' | 'value' | 'onBlur'>;
+type EmailProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputElement>, 'value'>;
 
 export default memo((props: EmailProps) => {
-  const {
-    name,
-    id,
-    value = '',
-    label,
-    placeholder,
-    helperText,
-    error,
-    disabled,
-    required,
-    onBlur,
-    onChange,
-  } = props;
+  const { value = '', name, id, label, placeholder, helperText, error, disabled, required } = props;
+  const { handleChange, handleBlur } = useFormContext();
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
-    onChange?.(name, newValue, validateField(newValue, { ...props, email: true }));
+    handleChange(name, newValue, validateField(newValue, { ...props, email: true }));
   };
 
   return (
@@ -41,8 +30,8 @@ export default memo((props: EmailProps) => {
         name={name}
         value={value}
         placeholder={placeholder}
-        onChange={handleChange}
-        onBlur={onBlur}
+        onChange={handleInputChange}
+        onBlur={handleBlur}
         aria-describedby={`${id}-helper-text`}
       />
 

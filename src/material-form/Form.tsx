@@ -24,6 +24,8 @@
 import { useReducer, useMemo, Children, cloneElement } from 'react';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
+import Collapse from '@material-ui/core/Collapse';
+import Alert from '@material-ui/lab/Alert';
 import Box from '@material-ui/core/Box';
 import { BaseFieldProps } from './types';
 import { FormContextProvider } from './context';
@@ -56,11 +58,9 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
     onSubmit,
   } = props;
 
-  const submiting = status === 'loading';
-  const submitSuccess = status === 'success';
-  const submitError = status === 'error';
-
   const [state, dispatch] = useReducer(reducer, { children, initialValues }, init);
+
+  const disableForm = disabled || status === 'loading' || status === 'success';
 
   // Инициализируем поля формы
   const fields = useMemo(() => {
@@ -84,10 +84,9 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
           <Grid item xs={xs || 12} sm={sm} md={md} lg={lg} xl={xl}>
             {cloneElement(child, {
               id: `form-${formName}-field-${other.name}`,
-              error: !!(other.error || submitError || formError || error),
+              error: !!(other.error || error || formError || status === 'error'),
               helperText: other.helperText || error,
-              disabled:
-                other.disabled || hasEmptyDependence || disabled || submiting || submitSuccess,
+              disabled: other.disabled || hasEmptyDependence || disableForm,
               required: other.required || hasNotEmptyDependence,
               value: state.values[other.name],
             })}
@@ -102,10 +101,8 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
     state.errors,
     formName,
     formError,
-    disabled,
-    submiting,
-    submitSuccess,
-    submitError,
+    status,
+    disableForm,
   ]);
 
   // Мемоизируем контект во избежание рендера всех полей формы,
@@ -151,7 +148,7 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
                 fullWidth
                 variant="contained"
                 id={`form-${formName}-reset-button`}
-                disabled={disabled || submiting || submitSuccess}
+                disabled={disableForm}
                 onClick={handleReset}
               >
                 Сбросить
@@ -164,12 +161,20 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
               fullWidth
               variant="contained"
               id={`form-${formName}-submit-button`}
-              disabled={disabled || submiting || submitSuccess || !state.isValid}
+              disabled={disableForm || !state.isValid}
             >
               Отправить
             </Button>
           </Grid>
         </Grid>
+
+        <Collapse in={!!formError}>
+          <Box mt={2}>
+            <Alert id={`form-${formName}-error-message`} severity="error">
+              <strong>Ошибка:</strong> {formError}
+            </Alert>
+          </Box>
+        </Collapse>
 
         {/* Отображаем текущий state */}
         {process.env.NODE_ENV !== 'production' && (

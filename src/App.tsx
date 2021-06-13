@@ -16,10 +16,16 @@ export default function App() {
     <div style={{ height: '100vh', display: 'flex' }}>
       <div style={{ width: 500, margin: 'auto' }}>
         <Form<AppFormData> name="appForm" enableReset onSubmit={handleSubmit}>
-          <Field.Text name="text" label="Введите текст" placeholder="Мой текст" />
-          <Field.Password name="password" label="Введите пароль" placeholder="Мой пароль" />
-          <Field.Numeric name="numeric" label="Введите номер" placeholder="Мой номер" />
-          <Field.Email name="email" label="Введите email" placeholder="Мой email" />
+          <Field.Text name="text" label="Введите текст" placeholder="Текст" />
+          <Field.Password name="password" label="Введите пароль" placeholder="Пароль" />
+          <Field.Password
+            name="confirmPassword"
+            label="Подтвердите пароль"
+            placeholder="Пароль"
+            match="password"
+          />
+          <Field.Numeric name="numeric" label="Введите номер" placeholder="Номер" />
+          <Field.Email name="email" label="Введите эл. почту" placeholder="Эл. почта" />
           <Field.Select
             name="simpleSelect"
             label="Выберите из списка"
@@ -36,7 +42,7 @@ export default function App() {
               { value: 3, render: 'Значение 3' },
             ]}
           />
-          <Field.Checkbox name="checkbox" label="Согласны?" />
+          <Field.Checkbox name="checkbox" label="Нажмите" />
         </Form>
       </div>
     </div>

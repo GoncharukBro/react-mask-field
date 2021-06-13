@@ -21,29 +21,13 @@
 // month - выбор месяца
 // week - выбор недели
 
-import {
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-  Children,
-  cloneElement,
-  isValidElement,
-} from 'react';
+import { useReducer, useMemo, Children, cloneElement } from 'react';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
 import Box from '@material-ui/core/Box';
-import { FormState, BaseFieldProps } from './types';
-import { validateField, validateForm } from './validate';
+import { BaseFieldProps } from './types';
 import { FormContextProvider } from './context';
-
-const initialState: FormState = {
-  isValid: false,
-  values: {},
-  errors: {},
-  touched: {},
-  dependencies: {},
-};
+import { reducer, init } from './reducer';
 
 type FormProps<T> = React.PropsWithChildren<{
   name: string;
@@ -56,7 +40,11 @@ type FormProps<T> = React.PropsWithChildren<{
   onSubmit: (data: T) => void;
 }>;
 
-export default function Form<T extends { [key: string]: any } = any>(props: FormProps<T>) {
+type Values<T> = {
+  [Property in keyof T]: string | boolean;
+};
+
+export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
   const {
     children,
     name: formName,
@@ -73,72 +61,7 @@ export default function Form<T extends { [key: string]: any } = any>(props: Form
   const submitSuccess = status === 'success';
   const submitError = status === 'error';
 
-  const [state, setState] = useState<FormState<T>>(initialState);
-
-  // Инициализацируем state
-  useEffect(() => {
-    const { errors, touched, dependencies } = initialState;
-    let { isValid, values } = initialState;
-    // Определяем наличие начальных значений
-    values = Object.keys(state.values).length ? state.values : initialValues || {};
-    // Изменяем начальное состояние формы в зависимости от свойств полей
-    Children.forEach(children as JSX.Element[], (child) => {
-      if (isValidElement(child)) {
-        const { name: fieldName, dependence, ...other } = child.props as BaseFieldProps;
-        // Проверяем поле на наличие ошибок
-        errors[fieldName] = validateField(values[fieldName], other);
-        // Проверяем поле на наличие значения
-        touched[fieldName] = !!values[fieldName];
-        // Если поле имеет зависимости, создаём пустой массив для последующего добавления в него значений
-        if (dependence && !dependencies[dependence]) {
-          dependencies[dependence] = [] as string[];
-        }
-        // Если поле имеет зависимости, пушим в ранее созданный массив имя текущего поля
-        if (dependence && dependencies[dependence]) {
-          (dependencies[dependence] as string[]).push(fieldName);
-        }
-      }
-    });
-    // Валидируем форму
-    isValid = validateForm(values, errors, dependencies);
-    setState({ isValid, values, errors, touched, dependencies });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Отправляем данные формы
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    onSubmit(state.values as any);
-  };
-
-  // Сбрасываем состояние формы
-  const handleReset = () => {
-    const { isValid, values, errors, touched } = initialState;
-    setState((prev) => ({ ...prev, isValid, values, errors, touched }));
-  };
-
-  // Реагируем на изменение значения поля
-  const handleChange = useCallback(
-    (fieldName: string, value: string | boolean, error: string | undefined) => {
-      setState((prev) => {
-        const values = { ...prev.values, [fieldName]: value };
-        const errors = { ...prev.errors, [fieldName]: error };
-        const isValid = validateForm(values, errors, prev.dependencies);
-        return { ...prev, isValid, values, errors };
-      });
-    },
-    []
-  );
-
-  // Реагируем на расфокус поля
-  const handleBlur = useCallback((event: React.FocusEvent<HTMLInputElement>) => {
-    const { name: fieldName } = event.target;
-    // Ставим проверку во избежание повторных срабатываний
-    if (!state.touched[fieldName]) {
-      setState((prev) => ({ ...prev, touched: { ...prev.touched, [fieldName]: true } }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [state, dispatch] = useReducer(reducer, { children, initialValues }, init);
 
   // Инициализируем поля формы
   const fields = useMemo(() => {
@@ -187,8 +110,28 @@ export default function Form<T extends { [key: string]: any } = any>(props: Form
   // Мемоизируем контект во избежание рендера всех полей формы,
   // в то время как изменен только один
   const context = useMemo(() => {
-    return { handleChange, handleBlur };
-  }, [handleBlur, handleChange]);
+    return {
+      // Реагируем на изменение значения поля
+      handleChange: (fieldName: string, value: string | boolean, error: string | undefined) => {
+        dispatch({ type: 'SET_VALUE', payload: { fieldName, value, error } });
+      },
+      // Реагируем на расфокус поля
+      handleBlur: (event: React.FocusEvent<HTMLInputElement>) => {
+        dispatch({ type: 'SET_TOUCHED', payload: { fieldName: event.target.name } });
+      },
+    };
+  }, []);
+
+  // Отправляем данные формы
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onSubmit(state.values as any);
+  };
+
+  // Сбрасываем состояние формы
+  const handleReset = (event: never) => {
+    dispatch({ type: 'RESET', payload: { children, initialValues } });
+  };
 
   return (
     <FormContextProvider value={context}>

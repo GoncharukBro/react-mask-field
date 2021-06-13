@@ -1,21 +1,21 @@
 import { Form, Field } from 'src/material-form';
 
 export default function App() {
-  interface AppFormData {
+  interface DemoFormData {
     myText: string;
     myPassword: string;
     myNumeric: string;
     myEmail: string;
   }
 
-  const handleSubmit = (data: AppFormData) => {
+  const handleSubmit = (data: DemoFormData) => {
     console.log(data);
   };
 
   return (
     <div style={{ height: '100vh', display: 'flex' }}>
       <div style={{ width: 500, margin: 'auto' }}>
-        <Form<AppFormData> name="appForm" enableReset onSubmit={handleSubmit}>
+        <Form<DemoFormData> name="demoForm" enableReset onSubmit={handleSubmit}>
           <Field.Text name="text" label="Введите текст" placeholder="Текст" />
           <Field.Password name="password" label="Введите пароль" placeholder="Пароль" />
           <Field.Password

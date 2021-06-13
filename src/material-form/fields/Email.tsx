@@ -1,10 +1,8 @@
-// Валидирует адрес электронной почты, добавляя автоподстановку
-
 import { memo } from 'react';
 import FormControl from '@material-ui/core/FormControl';
-import InputLabel from '@material-ui/core/InputLabel';
-import Input from '@material-ui/core/Input';
 import FormHelperText from '@material-ui/core/FormHelperText';
+import Input from '@material-ui/core/Input';
+import InputLabel from '@material-ui/core/InputLabel';
 import { BaseFieldProps } from '../types';
 import { validateField } from '../validate';
 import { useFormContext } from '../context';

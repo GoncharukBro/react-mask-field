@@ -1,8 +1,8 @@
 import { useMemo, memo } from 'react';
 import FormControl from '@material-ui/core/FormControl';
-import InputLabel from '@material-ui/core/InputLabel';
-import Select from '@material-ui/core/Select';
 import FormHelperText from '@material-ui/core/FormHelperText';
+import InputLabel from '@material-ui/core/InputLabel';
+import MuiSelect from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import { BaseFieldProps } from '../types';
 import { validateField } from '../validate';
@@ -20,7 +20,7 @@ type SelectProps = BaseFieldProps &
     values: SimpleValue[] | ComplexValue[];
   };
 
-export default memo((props: SelectProps) => {
+const Select = memo((props: SelectProps) => {
   const {
     value = '',
     values,
@@ -35,6 +35,8 @@ export default memo((props: SelectProps) => {
   } = props;
 
   const { setValue, setTouched } = useFormContext();
+
+  console.warn('Checkbox');
 
   const handleChange = (
     event: React.ChangeEvent<{ name?: string | undefined; value: unknown }>
@@ -65,7 +67,7 @@ export default memo((props: SelectProps) => {
     <FormControl fullWidth error={error} disabled={disabled} required={required}>
       <InputLabel id={`${id}-label`}>{label}</InputLabel>
 
-      <Select
+      <MuiSelect
         labelId={`${id}-label`}
         id={id}
         name={name}
@@ -80,9 +82,11 @@ export default memo((props: SelectProps) => {
           </MenuItem>
         )}
         {menuItems}
-      </Select>
+      </MuiSelect>
 
       {helperText && <FormHelperText id={`${id}-helper-text`}>{helperText}</FormHelperText>}
     </FormControl>
   );
 });
+
+export default Select;

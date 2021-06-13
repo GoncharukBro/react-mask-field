@@ -1,12 +1,8 @@
-// Позволяет выбрать более одного варианта из предложенных
-
 import { memo } from 'react';
-import {
-  FormControl,
-  FormControlLabel,
-  FormHelperText,
-  Checkbox as MuiCheckbox,
-} from '@material-ui/core';
+import FormControl from '@material-ui/core/FormControl';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormHelperText from '@material-ui/core/FormHelperText';
+import MuiCheckbox from '@material-ui/core/Checkbox';
 import { BaseFieldProps } from '../types';
 import { validateField } from '../validate';
 import { useFormContext } from '../context';

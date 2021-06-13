@@ -28,14 +28,18 @@ const Password = memo((props: PasswordProps) => {
     required,
     match,
   } = props;
-  const { handleChange, handleBlur } = useFormContext();
+  const { setValue, setTouched } = useFormContext();
   const [showPassword, setPasswordShow] = useState(false);
 
   console.warn('Password');
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
-    handleChange(name, newValue, validateField(newValue, props));
+    setValue(name, newValue, validateField(newValue, props));
+  };
+
+  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    setTouched(event.target.name);
   };
 
   const handleShowPassword = (event: never) => {
@@ -69,7 +73,7 @@ const Password = memo((props: PasswordProps) => {
         value={value}
         placeholder={placeholder}
         endAdornment={!match && showPasswordButton}
-        onChange={handleInputChange}
+        onChange={handleChange}
         onBlur={handleBlur}
         aria-describedby={`${id}-helper-text`}
       />

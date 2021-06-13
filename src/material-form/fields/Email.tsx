@@ -13,13 +13,17 @@ type EmailProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputEleme
 
 const Email = memo((props: EmailProps) => {
   const { value = '', name, id, label, placeholder, helperText, error, disabled, required } = props;
-  const { handleChange, handleBlur } = useFormContext();
+  const { setValue, setTouched } = useFormContext();
 
   console.warn('Email');
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
-    handleChange(name, newValue, validateField(newValue, { ...props, email: true }));
+    setValue(name, newValue, validateField(newValue, { ...props, email: true }));
+  };
+
+  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    setTouched(event.target.name);
   };
 
   return (
@@ -32,7 +36,7 @@ const Email = memo((props: EmailProps) => {
         name={name}
         value={value}
         placeholder={placeholder}
-        onChange={handleInputChange}
+        onChange={handleChange}
         onBlur={handleBlur}
         aria-describedby={`${id}-helper-text`}
       />

@@ -1,8 +1,8 @@
 import { createContext, useContext } from 'react';
 
 interface FormContextValue {
-  handleChange: (name: string, value: string | boolean, error: string | undefined) => void;
-  handleBlur: (event: React.FocusEvent<HTMLInputElement>) => void;
+  setValue: (name: string, value: string | boolean, error: string | undefined) => void;
+  setTouched: (name: string) => void;
 }
 
 const FormContext = createContext<FormContextValue | undefined>(undefined);

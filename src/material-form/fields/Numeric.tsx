@@ -13,14 +13,18 @@ type NumericProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputEle
 
 const Numeric = memo((props: NumericProps) => {
   const { value = '', name, id, label, placeholder, helperText, error, disabled, required } = props;
-  const { handleChange, handleBlur } = useFormContext();
+  const { setValue, setTouched } = useFormContext();
 
   console.warn('Numeric');
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     let newValue = event.target.value;
     newValue = Number.isNaN(Number(newValue)) ? (value as string) || '' : newValue;
-    handleChange(name, newValue, validateField(newValue, props));
+    setValue(name, newValue, validateField(newValue, props));
+  };
+
+  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    setTouched(event.target.name);
   };
 
   return (
@@ -33,7 +37,7 @@ const Numeric = memo((props: NumericProps) => {
         name={name}
         value={value}
         placeholder={placeholder}
-        onChange={handleInputChange}
+        onChange={handleChange}
         onBlur={handleBlur}
         aria-describedby={`${id}-helper-text`}
       />

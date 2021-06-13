@@ -106,12 +106,12 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
   const context = useMemo(() => {
     return {
       // Реагируем на изменение значения поля
-      handleChange: (fieldName: string, value: string | boolean, error: string | undefined) => {
+      setValue: (fieldName: string, value: string | boolean, error: string | undefined) => {
         dispatch({ type: 'SET_VALUE', payload: { fieldName, value, error } });
       },
       // Реагируем на расфокус поля
-      handleBlur: (event: React.FocusEvent<HTMLInputElement>) => {
-        dispatch({ type: 'SET_TOUCHED', payload: { fieldName: event.target.name } });
+      setTouched: (fieldName: string) => {
+        dispatch({ type: 'SET_TOUCHED', payload: { fieldName } });
       },
     };
   }, []);

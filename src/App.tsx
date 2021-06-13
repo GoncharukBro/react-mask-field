@@ -25,6 +25,7 @@ export default function App() {
           <Field.Password name="myPassword" label="Введите пароль" placeholder="Мой пароль" />
           <Field.Numeric name="myNumeric" label="Введите номер" placeholder="Мой номер" />
           <Field.Email name="myEmail" label="Введите email" placeholder="Мой email" />
+          <Field.Checkbox name="myCheckbox" label="Согласны?" />
         </Form>
       </div>
     </div>

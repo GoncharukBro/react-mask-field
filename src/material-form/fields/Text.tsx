@@ -13,13 +13,17 @@ type TextProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputElemen
 
 const Text = memo((props: TextProps) => {
   const { value = '', name, id, label, placeholder, helperText, error, disabled, required } = props;
-  const { handleChange, handleBlur } = useFormContext();
+  const { setValue, setTouched } = useFormContext();
 
   console.warn('Text');
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
-    handleChange(name, newValue, validateField(newValue, props));
+    setValue(name, newValue, validateField(newValue, props));
+  };
+
+  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    setTouched(event.target.name);
   };
 
   return (
@@ -32,7 +36,7 @@ const Text = memo((props: TextProps) => {
         name={name}
         value={value}
         placeholder={placeholder}
-        onChange={handleInputChange}
+        onChange={handleChange}
         onBlur={handleBlur}
         aria-describedby={`${id}-helper-text`}
       />

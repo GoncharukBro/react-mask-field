@@ -39,7 +39,7 @@ export default memo((props: SelectProps) => {
   const handleChange = (
     event: React.ChangeEvent<{ name?: string | undefined; value: unknown }>
   ) => {
-    const newValue = event.target.value as string;
+    const newValue = event.target.value as string | number;
     setValue(name, newValue, validateField(newValue, props));
   };
 

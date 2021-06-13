@@ -19,7 +19,7 @@ const Numeric = memo((props: NumericProps) => {
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     let newValue = event.target.value;
-    newValue = Number.isNaN(Number(newValue)) ? (value as string) || '' : newValue;
+    newValue = Number.isNaN(Number(newValue)) ? (value as string) : newValue;
     setValue(name, newValue, validateField(newValue, props));
   };
 

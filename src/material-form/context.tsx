@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 
 interface FormContextValue {
-  setValue: (name: string, value: string | boolean, error: string | undefined) => void;
+  setValue: (name: string, value: string | number | boolean, error: string | undefined) => void;
   setTouched: (name: string) => void;
 }
 

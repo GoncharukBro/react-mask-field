@@ -105,7 +105,11 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
   const context = useMemo(() => {
     return {
       // Реагируем на изменение значения поля
-      setValue: (fieldName: string, value: string | boolean, error: string | undefined) => {
+      setValue: (
+        fieldName: string,
+        value: string | number | boolean,
+        error: string | undefined
+      ) => {
         dispatch({ type: 'SET_VALUE', payload: { fieldName, value, error } });
       },
       // Реагируем на расфокус поля

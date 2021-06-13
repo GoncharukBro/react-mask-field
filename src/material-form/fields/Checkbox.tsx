@@ -1,3 +1,5 @@
+// Позволяет выбрать более одного варианта из предложенных
+
 import { memo } from 'react';
 import {
   FormControl,

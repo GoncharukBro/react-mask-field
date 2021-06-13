@@ -1,6 +1,7 @@
-import { Children, isValidElement } from 'react';
+import { Children } from 'react';
 import { FormState, BaseFieldProps } from './types';
 import { validateField, validateForm } from './validate';
+import Field from './Field';
 
 const initialState: FormState = {
   isValid: false,
@@ -17,7 +18,9 @@ export function init({ children, initialValues }: any) {
   values = initialValues || {};
   // Изменяем начальное состояние формы в зависимости от свойств полей
   Children.forEach(children, (child) => {
-    if (isValidElement(child)) {
+    const isField = Object.values(Field).includes(child.type);
+    // Выбираем только поля формы
+    if (isField) {
       const { name: fieldName, dependence, ...other } = child.props as BaseFieldProps;
       // Проверяем поле на наличие ошибок
       errors[fieldName] = validateField(values[fieldName], other);

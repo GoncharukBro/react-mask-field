@@ -35,7 +35,6 @@ type FormProps<T> = React.PropsWithChildren<{
   enableReset?: boolean;
   status?: 'idle' | 'loading' | 'success' | 'error';
   error?: string | null;
-  helperText?: string;
   disabled?: boolean;
   initialValues?: Partial<T>;
   onSubmit: (data: T) => void;
@@ -52,7 +51,6 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
     enableReset,
     status,
     error: formError,
-    helperText,
     initialValues,
     disabled,
     onSubmit,

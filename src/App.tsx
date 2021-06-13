@@ -17,7 +17,6 @@ export default function App() {
       <div style={{ width: 500, margin: 'auto' }}>
         <Form<AppFormData>
           name="appForm"
-          helperText="Я Вспомогаетльный текст"
           enableReset
           initialValues={{ myText: 'Коля' }}
           onSubmit={handleSubmit}

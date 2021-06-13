@@ -41,7 +41,7 @@ type FormProps<T> = React.PropsWithChildren<{
 }>;
 
 type Values<T> = {
-  [Property in keyof T]: string | boolean;
+  [Property in keyof T]: string | number | boolean;
 };
 
 export default function Form<T extends Values<T> = any>(props: FormProps<T>) {

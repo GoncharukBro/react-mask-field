@@ -34,7 +34,7 @@ type FormProps<T> = React.PropsWithChildren<{
   name: string;
   enableReset?: boolean;
   status?: 'idle' | 'loading' | 'success' | 'error';
-  error?: string | null;
+  error?: string;
   disabled?: boolean;
   initialValues?: Partial<T>;
   onSubmit: (data: T) => void;
@@ -87,7 +87,7 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
               error: !!(other.error || submitError || formError || error),
               helperText: other.helperText || error,
               disabled:
-                disabled || other.disabled || submiting || submitSuccess || hasEmptyDependence,
+                other.disabled || hasEmptyDependence || disabled || submiting || submitSuccess,
               required: other.required || hasNotEmptyDependence,
               value: state.values[other.name],
             })}
@@ -151,7 +151,7 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
                 fullWidth
                 variant="contained"
                 id={`form-${formName}-reset-button`}
-                disabled={!Object.values(state.values).length}
+                disabled={disabled || submiting || submitSuccess}
                 onClick={handleReset}
               >
                 Сбросить
@@ -164,7 +164,7 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
               fullWidth
               variant="contained"
               id={`form-${formName}-submit-button`}
-              disabled={disabled || !state.isValid || submiting || submitSuccess}
+              disabled={disabled || submiting || submitSuccess || !state.isValid}
             >
               Отправить
             </Button>

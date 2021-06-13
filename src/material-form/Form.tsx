@@ -1,7 +1,3 @@
-// button - кнопка
-// reset - кнопка для возвращения данных формы в первоначальное значение
-// submit - кнопка для отправки данных формы на сервер
-
 // checkbox - флажки позволяют выбрать более одного варианта из предложенных
 // file - поле для ввода имени файла, который пересылается на сервер
 // hidden - скрытое поле, оно никак не отображается на веб-странице
@@ -83,12 +79,12 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
         return (
           <Grid item xs={xs || 12} sm={sm} md={md} lg={lg} xl={xl}>
             {cloneElement(child, {
-              id: `form-${formName}-field-${other.name}`,
-              error: !!(other.error || error || formError || status === 'error'),
-              helperText: other.helperText || error,
-              disabled: other.disabled || hasEmptyDependence || disableForm,
-              required: other.required || hasNotEmptyDependence,
               value: state.values[other.name],
+              id: `form-${formName}-field-${other.name}`,
+              error: !!(error || formError || status === 'error' || other.error),
+              helperText: error || other.helperText,
+              disabled: disableForm || hasEmptyDependence || other.disabled,
+              required: hasNotEmptyDependence || other.required,
             })}
           </Grid>
         );
@@ -144,7 +140,7 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
           {enableReset && (
             <Grid item xs>
               <Button
-                type="button"
+                type="reset"
                 fullWidth
                 variant="contained"
                 id={`form-${formName}-reset-button`}

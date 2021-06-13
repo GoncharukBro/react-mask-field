@@ -39,9 +39,4 @@ export type BaseFieldProps = ValidationValues &
      * тогда поле с зависимостью становится обязательным, в противном случает оно отключено
      */
     dependence?: string;
-    onChange?: (
-      name: string,
-      value: string | number | boolean,
-      error: string | false | undefined
-    ) => void;
   };

@@ -28,6 +28,7 @@ import Box from '@material-ui/core/Box';
 import { BaseFieldProps } from './types';
 import { FormContextProvider } from './context';
 import { reducer, init } from './reducer';
+import Field from './Field';
 
 type FormProps<T> = React.PropsWithChildren<{
   name: string;
@@ -66,7 +67,9 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
   // Инициализируем поля формы
   const fields = useMemo(() => {
     return Children.map(children as JSX.Element[], (child) => {
-      if (child) {
+      const isField = Object.values(Field).includes(child.type);
+      // Выбираем только поля формы
+      if (isField) {
         const { xs, sm, md, lg, xl, ...other } = child.props as BaseFieldProps;
         // `true` если поле-зависимость не заполнено
         const hasEmptyDependence = !!(other.dependence && !state.values[other.dependence]);

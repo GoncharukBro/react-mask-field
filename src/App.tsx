@@ -26,6 +26,7 @@ export default function App() {
           />
           <Field.Numeric name="numeric" label="Введите номер" placeholder="Номер" />
           <Field.Email name="email" label="Введите эл. почту" placeholder="Эл. почта" />
+          <Field.Phone name="phone" label="Введите телефон" placeholder="Телефон" />
           <Field.Select
             name="simpleSelect"
             label="Выберите из списка"

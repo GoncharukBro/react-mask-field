@@ -33,6 +33,7 @@ export type BaseFieldProps = ValidationValues &
     helperText?: string;
     error?: boolean;
     disabled?: boolean;
+    maxLength?: number;
     /**
      * Определяет обязательность поля при валидной завимисоти.
      * Если в качестве зависимости указано поле с именем "checkbox" и данное поле имеет значение `true`,

@@ -1,8 +1,9 @@
-import { useRef, memo } from 'react';
+import { memo } from 'react';
 import FormControl from '@material-ui/core/FormControl';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
+import PhoneMask from '../utils/PhoneMask';
 import { BaseFieldProps } from '../types';
 import { validateField } from '../validate';
 import { useFormContext } from '../context';
@@ -24,7 +25,6 @@ const Phone = memo((props: PhoneProps) => {
     maxLength,
   } = props;
   const { setValue, setTouched } = useFormContext();
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value.replace(/\D/g, '');
@@ -41,10 +41,10 @@ const Phone = memo((props: PhoneProps) => {
 
       <Input
         type="tel"
+        inputComponent={PhoneMask}
         id={id}
         name={name}
         value={value}
-        inputRef={inputRef}
         placeholder={placeholder}
         inputProps={{ maxLength }}
         onChange={handleChange}

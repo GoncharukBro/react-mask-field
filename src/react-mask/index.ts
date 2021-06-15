@@ -9,6 +9,27 @@ function parse(value: string, mask: string, char: string) {
   // }, '');
 }
 
+// Устанавливаем позицию курсора
+// Нулевая задержка "setTimeout" нужна, чтобы смена позиции сработала после ввода значения
+const setPosition = (position: number, input: HTMLInputElement) => {
+  requestAnimationFrame(() => {
+    input.setSelectionRange(position, position);
+  });
+};
+
+// Нормализуем значение подставляя маску
+const normalize = (mask: string, char: string, input: HTMLInputElement) => {
+  const parsedValue = parse(input.value, mask, char);
+
+  return parsedValue.split('').reduce((prev, item) => {
+    return prev.replace(char, (match, offset) => {
+      setPosition(offset + 1, input);
+      // Возвращаем текущий символ введенного значения
+      return item;
+    });
+  }, mask);
+};
+
 function useMask(mask: string, char: string, ref: HTMLInputElement | null): string;
 function useMask(mask: string, char: string): (ref: HTMLInputElement | null) => void;
 function useMask(
@@ -17,46 +38,23 @@ function useMask(
   ref?: HTMLInputElement | null
 ): string | ((ref: HTMLInputElement | null) => void) {
   const input = useRef<HTMLInputElement | null>(null);
-
-  // Устанавливаем позицию курсора
-  // Нулевая задержка "setTimeout" нужна, чтобы смена позиции сработала после ввода значения
-  const setPosition = (position: number) => {
-    requestAnimationFrame(() => {
-      if (input.current) {
-        input.current.selectionStart = position;
-        input.current.selectionEnd = position;
-      }
-    });
-  };
-
-  const normalize = (value: string) => {
-    const parsedValue = parse(value, mask, char);
-
-    return parsedValue.split('').reduce((prev, item) => {
-      return prev.replace(char, (match, offset) => {
-        setPosition(offset + 1);
-        // Возвращаем текущий символ введенного значения
-        return item;
-      });
-    }, mask);
-  };
+  // Нормализуем значение подставляя маску
+  const normalizeValue = input.current ? normalize(mask, char, input.current) : mask;
 
   if (typeof ref !== 'undefined') {
     if (!input.current) {
       input.current = ref;
     }
-    if (input.current?.value) {
-      return normalize(input.current.value);
-    }
-    return mask;
+
+    return normalizeValue;
   }
 
   return (ref: HTMLInputElement | null) => {
     if (!input.current) {
       input.current = ref;
     }
-    if (input.current?.value) {
-      input.current.value = normalize(input.current.value);
+    if (input.current) {
+      input.current.value = normalizeValue;
     }
   };
 }

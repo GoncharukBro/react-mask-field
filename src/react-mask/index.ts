@@ -23,6 +23,7 @@ const normalize = (mask: string, char: string, input: HTMLInputElement) => {
 
   return parsedValue.split('').reduce((prev, item) => {
     return prev.replace(char, (match, offset) => {
+      // Устанавливаем текущую позицию курсора
       setPosition(offset + 1, input);
       // Возвращаем текущий символ введенного значения
       return item;

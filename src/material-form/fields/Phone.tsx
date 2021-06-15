@@ -22,7 +22,7 @@ const Phone = memo((props: PhoneProps) => {
     disabled,
     required,
     phone = true,
-    maxLength,
+    maxLength = 18,
   } = props;
   const { setValue, setTouched } = useFormContext();
 

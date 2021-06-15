@@ -10,13 +10,13 @@ function normalize(value: string, country?: 'ru' | 'other') {
     if (value.length > 1) {
       maksedValue += `(${value.substring(1, 4)}`;
     }
-    if (value.length >= 5) {
+    if (value.length > 4) {
       maksedValue += `) ${value.substring(4, 7)}`;
     }
-    if (value.length >= 8) {
+    if (value.length > 7) {
       maksedValue += `-${value.substring(7, 9)}`;
     }
-    if (value.length >= 10) {
+    if (value.length > 9) {
       maksedValue += `-${value.substring(9, 11)}`;
     }
   } else {
@@ -42,27 +42,21 @@ export default function PhoneMask({ ref, onChange, ...other }: PhoneMaskProps) {
       const value = '';
       setNormalizeValue(value);
       onChange?.({ ...event, target: { ...event.target, value } });
-      return;
-    }
-
-    // Если курсор находится в середине поля
-    if (event.target.value.length !== event.target.selectionStart) {
-      // Если введенные символ является нечисловым, оставляем значение без изменений
+    } else if (event.target.value.length !== event.target.selectionStart) {
+      // Если курсор находится в середине поля и введенные символ является нечисловым,
+      // оставляем значение без изменений
       if (event.data && /\D/g.test(event.data)) {
         const value = parseValue;
         setNormalizeValue(value);
         onChange?.({ ...event, target: { ...event.target, value } });
       }
-      // Завершаем выполнение функции если введенный символ отсутствует (при "Backspace")
-      return;
+    } else {
+      // Определяем по первому символу к какой стране принадлежит номер
+      const country = ['7', '8', '9'].includes(parseValue[0]) ? 'ru' : undefined;
+      const value = normalize(parseValue, country);
+      setNormalizeValue(value);
+      onChange?.({ ...event, target: { ...event.target, value } });
     }
-
-    // Определяем по первому символу к какой стране принадлежит номер
-    const country = ['7', '8', '9'].includes(parseValue[0]) ? 'ru' : undefined;
-
-    const value = normalize(parseValue, country);
-    setNormalizeValue(value);
-    onChange?.({ ...event, target: { ...event.target, value } });
   };
 
   const handleKeyDown = (event: any) => {

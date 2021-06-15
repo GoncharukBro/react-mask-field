@@ -10,10 +10,19 @@ import { useFormContext } from '../context';
 type NumericProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputElement>, 'value'>;
 
 const Numeric = memo((props: NumericProps) => {
-  const { value = '', name, id, label, placeholder, helperText, error, disabled, required } = props;
+  const {
+    value = '',
+    name,
+    id,
+    label,
+    placeholder,
+    helperText,
+    error,
+    disabled,
+    required,
+    maxLength,
+  } = props;
   const { setValue, setTouched } = useFormContext();
-
-  console.warn('Numeric');
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     let newValue = event.target.value;
@@ -35,6 +44,7 @@ const Numeric = memo((props: NumericProps) => {
         name={name}
         value={value}
         placeholder={placeholder}
+        inputProps={{ maxLength }}
         onChange={handleChange}
         onBlur={handleBlur}
         aria-describedby={`${id}-helper-text`}

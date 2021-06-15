@@ -10,10 +10,19 @@ import { useFormContext } from '../context';
 type TextProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputElement>, 'value'>;
 
 const Text = memo((props: TextProps) => {
-  const { value = '', name, id, label, placeholder, helperText, error, disabled, required } = props;
+  const {
+    value = '',
+    name,
+    id,
+    label,
+    placeholder,
+    helperText,
+    error,
+    disabled,
+    required,
+    maxLength,
+  } = props;
   const { setValue, setTouched } = useFormContext();
-
-  console.warn('Text');
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
@@ -34,6 +43,7 @@ const Text = memo((props: TextProps) => {
         name={name}
         value={value}
         placeholder={placeholder}
+        inputProps={{ maxLength }}
         onChange={handleChange}
         onBlur={handleBlur}
         aria-describedby={`${id}-helper-text`}

@@ -13,8 +13,6 @@ const Checkbox = memo((props: CheckboxProps) => {
   const { value = '', name, id, label, helperText, error, disabled, required } = props;
   const { setValue, setTouched } = useFormContext();
 
-  console.warn('Checkbox');
-
   const handleChange = (event: unknown, checked: boolean) => {
     setValue(name, checked, validateField(checked, props));
   };

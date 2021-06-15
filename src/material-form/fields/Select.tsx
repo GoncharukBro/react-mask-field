@@ -36,8 +36,6 @@ const Select = memo((props: SelectProps) => {
 
   const { setValue, setTouched } = useFormContext();
 
-  console.warn('Checkbox');
-
   const handleChange = (
     event: React.ChangeEvent<{ name?: string | undefined; value: unknown }>
   ) => {

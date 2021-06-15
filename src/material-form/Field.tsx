@@ -4,6 +4,7 @@ import Numeric from './fields/Numeric';
 import Email from './fields/Email';
 import Checkbox from './fields/Checkbox';
 import Select from './fields/Select';
+import Phone from './fields/Phone';
 
 export default function Field() {
   return <></>;
@@ -15,3 +16,4 @@ Field.Numeric = Numeric;
 Field.Email = Email;
 Field.Checkbox = Checkbox;
 Field.Select = Select;
+Field.Phone = Phone;

@@ -27,7 +27,7 @@ const Phone = memo((props: PhoneProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = event.target.value;
+    const newValue = event.target.value.replace(/\D/g, '');
     setValue(name, newValue, validateField(newValue, { ...props, phone }));
   };
 

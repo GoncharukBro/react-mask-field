@@ -37,7 +37,7 @@ export function validateField(
   }
   // Валидация номера телефона
   if (phone && value && typeof value === 'string') {
-    const rule = /^(8|\+*7)?(9)([0-9]{2})([0-9]{3})([0-9]{4})$/i.test(value);
+    const rule = /^(8|\+*[1-7])?([0-9]{3})([0-9]{3})([0-9]{4})$/i.test(value);
     const message = 'Номер телефона указан неверно';
     if (!rule) return message;
   }

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 function parse(value: string, mask: string, char: string) {
   return value.replace(/\D+/g, '');
@@ -31,25 +31,22 @@ const normalize = (mask: string, char: string, input: HTMLInputElement) => {
   }, mask);
 };
 
+const mask = '(___) ___-__-__';
+const char = '_';
+
 type MaskedInputProps = any;
 
 export default function MaskedInput({ value, onChange, onClick, ...other }: MaskedInputProps) {
+  const [normalizeValue, setNormalizeValue] = useState('');
   const input = useRef<HTMLInputElement>(null);
-  const mask = '(___) ___-__-__';
-  const char = '_';
-
-  // Нормализуем значение подставляя маску
-  const normalizeValue = input.current ? normalize(mask, char, input.current) : '';
 
   const handleChange = (event: React.ChangeEventHandler<HTMLInputElement>) => {
+    input.current && setNormalizeValue(normalize(mask, char, input.current));
     onChange?.(event);
   };
 
   const handleClick = (event: React.MouseEventHandler<HTMLInputElement>) => {
-    requestAnimationFrame(() => {
-      input.current && setPosition(normalizeValue.search(char), input.current);
-    });
-
+    input.current && setPosition(normalizeValue.search(char), input.current);
     onClick?.(event);
   };
 

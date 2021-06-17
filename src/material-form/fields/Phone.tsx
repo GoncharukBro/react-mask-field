@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo } from 'react';
+import { useState, memo } from 'react';
 import FormControl from '@material-ui/core/FormControl';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import Input from '@material-ui/core/Input';
@@ -8,24 +8,41 @@ import { BaseFieldProps } from '../types';
 import { validateField } from '../validate';
 import { useFormContext } from '../context';
 
-// Нормализуем значение подставляя маску
-// function masked(value: string) {
-//   let maksedValue = '';
-//   // Определяем по первому символу к какой стране принадлежит номер
-//   const isPhoneRu = ['7', '8', '9'].includes(value[0]);
+function masked(value: string) {
+  let maksedValue = '';
+  // Определяем по первому символу к какой стране принадлежит номер
+  const isPhoneRu = ['7', '8', '9'].includes(value[0]);
 
-//   if (isPhoneRu) {
-//     maksedValue = `${value[0] === '8' ? '8' : '+7'}`;
-//     if (value.length > 1) maksedValue += ` (${value.substring(1, 4)}`;
-//     if (value.length > 4) maksedValue += `) ${value.substring(4, 7)}`;
-//     if (value.length > 7) maksedValue += `-${value.substring(7, 9)}`;
-//     if (value.length > 9) maksedValue += `-${value.substring(9, 11)}`;
-//   } else {
-//     maksedValue = `+${value}`;
-//   }
+  if (isPhoneRu) {
+    // Форматируем код города
+    if (value[0] === '7') {
+      maksedValue = '+7';
+    }
+    if (value[0] === '8') {
+      maksedValue = '8';
+    }
+    if (value[0] === '9') {
+      maksedValue = `+7 (${value[0]}`;
+    }
 
-//   return maksedValue;
-// }
+    if (value.length > 1) {
+      maksedValue += ' (';
+      maksedValue += value.substring(1, 4);
+    }
+    if (value.length > 4) {
+      maksedValue += ') ';
+      maksedValue += value.substring(4, 11);
+    }
+  } else {
+    maksedValue = `+${value[0]}`;
+    if (value.length > 1) {
+      maksedValue += ' ';
+      maksedValue += value.substring(1, 11);
+    }
+  }
+
+  return maksedValue;
+}
 
 function TextMaskCustom({ inputRef, ...other }: any) {
   return <MaskedInput {...other} ref={inputRef} mask="(___) ___-__-__" char="_" />;
@@ -51,27 +68,26 @@ const Phone = memo((props: PhoneProps) => {
   const [maskedValue, setMaskedValue] = useState('');
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // let parseValue = event.target.value.replace(/\D/g, ''); // Оставляем только числовые значения
-    // parseValue = parseValue[0] === '9' ? `7${parseValue}` : parseValue;
+    const parseValue = event.target.value.replace(/\D/g, ''); // Оставляем только числовые значения
 
-    // let value = '';
+    let value = '';
 
-    // // Проверяем, находится ли курсор в середине поля
-    // if (parseValue && event.target.value.length !== event.target.selectionStart) {
-    //   // Если введенные символ является нечисловым, оставляем значение без изменений
-    //   // При "Backspace" event.data принимает значение `null`
-    //   if ((event as any).data && /\D/g.test((event as any).data)) {
-    //     value = parseValue;
-    //   } else {
-    //     return;
-    //   }
-    // } else if (parseValue) {
-    //   value = masked(parseValue);
-    // }
+    // Проверяем, не находится ли курсор в конце значения
+    if (parseValue && event.target.value.length !== event.target.selectionStart) {
+      // Если введенные символ является нечисловым, оставляем значение без изменений
+      // При "Backspace" event.data принимает значение `null`
+      if ((event as any).data && /\D/g.test((event as any).data)) {
+        value = parseValue;
+      } else {
+        return;
+      }
+    } else if (parseValue) {
+      value = masked(parseValue);
+    }
 
-    // setMaskedValue(value);
+    setMaskedValue(value);
 
-    const newValue = event.target.value.replace(/\D/g, '');
+    const newValue = value.replace(/\D/g, '');
     setValue(name, newValue, validateField(newValue, { ...props, phone }));
   };
 
@@ -87,10 +103,10 @@ const Phone = memo((props: PhoneProps) => {
         type="tel"
         id={id}
         name={name}
-        value={value}
+        value={maskedValue}
         placeholder={placeholder}
         inputProps={{ maxLength }}
-        inputComponent={TextMaskCustom}
+        // inputComponent={TextMaskCustom}
         onChange={handleChange}
         onBlur={handleBlur}
         aria-describedby={`${id}-helper-text`}

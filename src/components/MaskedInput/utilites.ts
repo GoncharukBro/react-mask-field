@@ -1,10 +1,8 @@
-export function parse(value: string, mask: string, char: string) {
-  return value.replace(/\D+/g, '');
-
-  // return mask.split('').reduce((prev, item, index) => {
-  //   const hasItem = item === char && value[index] && value[index] !== char;
-  //   return hasItem ? prev + value[index] : prev;
-  // }, '');
+function parse(value: string, mask: string, char: string) {
+  return mask.split('').reduce((prev, item, index) => {
+    const hasItem = item === char && value[index] && value[index] !== char;
+    return hasItem ? prev + value[index] : prev;
+  }, '');
 }
 
 // Устанавливаем позицию курсора
@@ -17,7 +15,7 @@ export const setPosition = (position: number, input: HTMLInputElement) => {
 
 // Нормализуем значение подставляя маску
 export const masked = (mask: string, char: string, input: HTMLInputElement) => {
-  const parsedValue = parse(input.value || '', mask, char);
+  const parsedValue = input.value.replace(/\D+/g, '');
 
   return parsedValue.split('').reduce((prev, item) => {
     return prev.replace(char, (match, offset) => {

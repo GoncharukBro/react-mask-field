@@ -45,7 +45,7 @@ function masked(value: string) {
 }
 
 function TextMaskCustom({ inputRef, ...other }: any) {
-  return <MaskedInput {...other} ref={inputRef} mask="(___)   ___-__-__" char="_" />;
+  return <MaskedInput {...other} ref={inputRef} mask="+7 (___) ___-__-__" char="_" />;
 }
 
 type PhoneProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputElement>, 'value'>;
@@ -62,7 +62,7 @@ const Phone = memo((props: PhoneProps) => {
     disabled,
     required,
     phone = true,
-    maxLength = 18,
+    maxLength,
   } = props;
   const { setValue, setTouched } = useFormContext();
   const [maskedValue, setMaskedValue] = useState('');

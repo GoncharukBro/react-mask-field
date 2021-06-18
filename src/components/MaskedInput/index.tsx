@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef, forwardRef } from 'react';
-import { masked, setPosition } from './utilites';
+import { getUserData, masked } from './utilites';
 
-type MaskedInputProps = any;
+interface MaskedInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  mask: string;
+  char: string;
+}
 
 function MaskedInput(props: MaskedInputProps, ref: any) {
-  const { mask, char, value, onChange, onClick, ...other } = props;
-  const [maskedValue, setMaskedValue] = useState(value || '');
+  const { mask, char, onChange, ...other } = props;
   const inputRef = useRef<HTMLInputElement>(null);
+  const [state, setState] = useState({ value: '', selectionStart: 0, userData: '' });
 
   // Добавляем ссылку на элемент для родительских компонентов
   useEffect(() => {
@@ -20,27 +23,40 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
   }, [ref]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = masked(mask, char, event.target);
-    setMaskedValue(newValue);
+    const { selectionStart, value } = event.target as any;
+    const { inputType } = event.nativeEvent as any;
+
+    const userData = getUserData(state, { type: inputType, payload: { value, selectionStart } });
+    const newValue = masked(userData, mask, char, event.target);
+
+    setState((prev) => ({
+      ...prev,
+      value: newValue,
+      selectionStart: selectionStart || 0,
+      userData,
+    }));
+
+    // console.log(event);
+    console.log(
+      inputType,
+      '|',
+      'selectionStart:',
+      selectionStart,
+      '|',
+      'value:',
+      value,
+      '|',
+      'userData:',
+      userData
+    );
+
     // eslint-disable-next-line no-param-reassign
     event.target.value = newValue;
+
     onChange?.(event);
   };
 
-  const handleClick = (event: React.MouseEvent<HTMLInputElement>) => {
-    setPosition(maskedValue.search(char), event.target as any);
-    onClick?.(event);
-  };
-
-  return (
-    <input
-      {...other}
-      ref={inputRef}
-      value={maskedValue}
-      onChange={handleChange}
-      onClick={handleClick}
-    />
-  );
+  return <input {...other} ref={inputRef} value={state.value} onChange={handleChange} />;
 }
 
 export default forwardRef(MaskedInput);

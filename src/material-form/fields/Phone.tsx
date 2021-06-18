@@ -45,7 +45,7 @@ function masked(value: string) {
 }
 
 function TextMaskCustom({ inputRef, ...other }: any) {
-  return <MaskedInput {...other} ref={inputRef} mask="(___) ___-__-__" char="_" />;
+  return <MaskedInput {...other} ref={inputRef} mask="(___)   ___-__-__" char="_" />;
 }
 
 type PhoneProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputElement>, 'value'>;
@@ -68,26 +68,26 @@ const Phone = memo((props: PhoneProps) => {
   const [maskedValue, setMaskedValue] = useState('');
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const parseValue = event.target.value.replace(/\D/g, ''); // Оставляем только числовые значения
+    // const parseValue = event.target.value.replace(/\D/g, ''); // Оставляем только числовые значения
 
-    let value = '';
+    // let value = '';
 
-    // Проверяем, не находится ли курсор в конце значения
-    if (parseValue && event.target.value.length !== event.target.selectionStart) {
-      // Если введенные символ является нечисловым, оставляем значение без изменений
-      // При "Backspace" event.data принимает значение `null`
-      if ((event as any).data && /\D/g.test((event as any).data)) {
-        value = parseValue;
-      } else {
-        return;
-      }
-    } else if (parseValue) {
-      value = masked(parseValue);
-    }
+    // // Проверяем, не находится ли курсор в конце значения
+    // if (parseValue && event.target.value.length !== event.target.selectionStart) {
+    //   // Если введенные символ является нечисловым, оставляем значение без изменений
+    //   // При "Backspace" event.data принимает значение `null`
+    //   if ((event as any).data && /\D/g.test((event as any).data)) {
+    //     value = parseValue;
+    //   } else {
+    //     return;
+    //   }
+    // } else if (parseValue) {
+    //   value = masked(parseValue);
+    // }
 
-    setMaskedValue(value);
+    // setMaskedValue(value);
 
-    const newValue = value.replace(/\D/g, '');
+    const newValue = event.target.value.replace(/\D/g, '');
     setValue(name, newValue, validateField(newValue, { ...props, phone }));
   };
 
@@ -103,10 +103,10 @@ const Phone = memo((props: PhoneProps) => {
         type="tel"
         id={id}
         name={name}
-        value={maskedValue}
+        value={value}
         placeholder={placeholder}
         inputProps={{ maxLength }}
-        // inputComponent={TextMaskCustom}
+        inputComponent={TextMaskCustom}
         onChange={handleChange}
         onBlur={handleBlur}
         aria-describedby={`${id}-helper-text`}

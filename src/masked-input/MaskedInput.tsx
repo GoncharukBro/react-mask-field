@@ -32,7 +32,7 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     if (typeof ref === 'function') {
       ref(inputRef.current);
     }
-    if (typeof ref === 'object') {
+    if (typeof ref === 'object' && ref !== null) {
       // eslint-disable-next-line no-param-reassign
       ref.current = inputRef.current;
     }

@@ -9,19 +9,14 @@ import { BaseFieldProps } from '../types';
 import { validateField } from '../validate';
 import { useFormContext } from '../context';
 
-function PhoneMask({
-  inputRef,
-  value,
-  ...other
-}: React.PropsWithChildren<InputBaseComponentProps>) {
+function PhoneMask({ inputRef, ...other }: React.PropsWithChildren<InputBaseComponentProps>) {
   // Определяем по первому символу к какой стране принадлежит номер
-  const isPhoneRu = ['7', '8', '9'].includes(value[0]);
+  const isPhoneRu = ['7', '8', '9'].includes(other.value[0]);
 
   return (
     <MaskedInput
       {...other}
       ref={inputRef}
-      value={value}
       mask={isPhoneRu ? '+_ (___) ___-__-__' : '+_ __________'}
       char="_"
     />

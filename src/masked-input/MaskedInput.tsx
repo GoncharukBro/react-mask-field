@@ -9,23 +9,34 @@ import {
 } from './utilites';
 import { AST, Range, ReplacedData } from './types';
 
-let selectionStartBeforeChange: number | null = null;
-let selectionEndBeforeChange: number | null = null;
-
 interface MaskedInputState {
   maskedValue: string;
   replacedValue: string;
 }
 
 interface MaskedInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  component?: React.ComponentClass<any> | React.FunctionComponent<any>;
   mask: string;
   char: string;
   showMask?: boolean;
   onReplace?: (ast: AST) => void;
 }
 
+let selectionStartBeforeChange: number | null = null;
+let selectionEndBeforeChange: number | null = null;
+
 function MaskedInput(props: MaskedInputProps, ref: any) {
-  const { mask, char, showMask, placeholder, onReplace, onChange, onSelect, ...other } = props;
+  const {
+    component: Component,
+    mask,
+    char,
+    showMask,
+    placeholder,
+    onReplace,
+    onChange,
+    onSelect,
+    ...other
+  } = props;
   const inputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<MaskedInputState>({ maskedValue: '', replacedValue: '' });
 
@@ -83,10 +94,13 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
       // Если `showMask === false` окончанием значения будет последний пользовательский символ
       if (!showMask) {
         const lastReplacedSymbol = getLastReplacedSymbol(nextAST);
+
         if (lastReplacedSymbol) {
           maskedValue = maskedValue.slice(0, lastReplacedSymbol.index + 1);
         }
       }
+
+      onReplace?.(nextAST);
     }
 
     setState((prev) => ({ ...prev, maskedValue, replacedValue: replacedData.value }));
@@ -105,16 +119,20 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     onSelect?.(event);
   };
 
-  return (
-    <input
-      {...other}
-      ref={inputRef}
-      value={state.maskedValue}
-      placeholder={placeholder || mask}
-      onChange={handleChange}
-      onSelect={handleSelect}
-    />
-  );
+  const inputProps = {
+    ...other,
+    ref: inputRef,
+    value: state.maskedValue,
+    placeholder: placeholder || mask,
+    onChange: handleChange,
+    onSelect: handleSelect,
+  };
+
+  if (Component) {
+    return <Component {...inputProps} />;
+  }
+
+  return <input {...inputProps} />;
 }
 
 export default forwardRef(MaskedInput);

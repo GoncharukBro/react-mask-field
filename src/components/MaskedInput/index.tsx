@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef, forwardRef } from 'react';
-import { generateAST, masked, getCursorPosition, setCursorPosition } from './utilites';
+import {
+  generateAST,
+  masked,
+  getCursorPosition,
+  setCursorPosition,
+  getReplacedValue,
+} from './utilites';
 import { AST, Range } from './types';
 
 interface MaskedInputState {
@@ -40,32 +46,15 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     let { replacedValue } = state;
     const prevAST = generateAST(state.value, mask);
 
-    // Получаем значения введенные пользователем
-    function getReplacedValueAfterInsert() {
+    if (['insertText', 'insertFromPaste'].includes(inputType)) {
       // Определяем диапозон изменяемых символов
       const range: Range = [selectionStartBeforeChange, selectionEndBeforeChange];
       // Находим добавленные символы
       const addedSymbols = value.slice(range[0], selectionStartAfterChange);
-
-      let symbolsBeforeRange = '';
-      let symbolsAfterRange = '';
-
-      prevAST.forEach(({ symbol, own }, index) => {
-        // Если символ находится перед диапозоном изменяемых символов
-        if (index < range[0] && own === 'user') {
-          symbolsBeforeRange += symbol;
-        }
-        // Если символ находится после диапозона изменяемых символов
-        if (index >= range[1] && own === 'user') {
-          symbolsAfterRange += symbol;
-        }
-      });
-
-      return symbolsBeforeRange + addedSymbols + symbolsAfterRange;
+      replacedValue = getReplacedValue(prevAST, range, addedSymbols);
     }
 
-    // Получаем значения введенные пользователем
-    function getReplacedValueAfterDelete() {
+    if (['deleteContentBackward', 'deleteContentForward', 'deleteByCut'].includes(inputType)) {
       // Подсчитываем количество удаленных символов
       const countDeletedSymbols = Math.abs(value.length - state.value.length);
       // Определяем диапозон изменяемых символов
@@ -73,38 +62,7 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
         selectionStartAfterChange,
         selectionStartAfterChange + countDeletedSymbols,
       ];
-
-      let symbolsBeforeRange = '';
-      let symbolsAfterRange = '';
-
-      prevAST.forEach(({ symbol, own }, index) => {
-        // Если символ находится перед диапозоном изменяемых символов
-        if (index < range[0] && own === 'user') {
-          symbolsBeforeRange += symbol;
-        }
-        // Если символ находится после диапозона изменяемых символов
-        if (index >= range[1] && own === 'user') {
-          symbolsAfterRange += symbol;
-        }
-      });
-
-      return symbolsBeforeRange + symbolsAfterRange;
-    }
-
-    if (inputType === 'insertText') {
-      replacedValue = getReplacedValueAfterInsert();
-    }
-    if (inputType === 'insertFromPaste') {
-      replacedValue = getReplacedValueAfterInsert();
-    }
-    if (inputType === 'deleteContentBackward') {
-      replacedValue = getReplacedValueAfterDelete();
-    }
-    if (inputType === 'deleteContentForward') {
-      replacedValue = getReplacedValueAfterDelete();
-    }
-    if (inputType === 'deleteByCut') {
-      replacedValue = getReplacedValueAfterDelete();
+      replacedValue = getReplacedValue(prevAST, range);
     }
 
     // Формируем значение с маской
@@ -112,7 +70,7 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
 
     // Устанавливаем позицию курсора
     const nextAST = generateAST(maskedValue, mask);
-    const position = getCursorPosition(nextAST) || maskedValue.search(char);
+    const position = getCursorPosition(nextAST, maskedValue, char);
     setCursorPosition(event.target, position);
 
     setState((prev) => ({ ...prev, value: maskedValue, replacedValue }));

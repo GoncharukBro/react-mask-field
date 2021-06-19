@@ -1,4 +1,4 @@
-import { AST } from './types';
+import { AST, Range } from './types';
 
 // Генерирует дерево синтаксического анализа
 export function generateAST(value: string, mask: string): AST {
@@ -16,7 +16,7 @@ export function masked(value: string, mask: string, char: string) {
 }
 
 // Получает позицию курсора для последующей установки
-export function getCursorPosition(ast: AST) {
+export function getCursorPosition(ast: AST, value: string, char: string) {
   // Находим индекс последнего символа пользовательского значения, не являющегося частью маски
   const lastSymbol = ast.reverse().find((item) => {
     return item.own === 'user';
@@ -25,6 +25,8 @@ export function getCursorPosition(ast: AST) {
   if (lastSymbol) {
     return lastSymbol.index + 1;
   }
+
+  return value.search(char);
 }
 
 // Устанавливает позицию курсора
@@ -33,4 +35,25 @@ export function setCursorPosition(input: HTMLInputElement, position: number) {
   requestAnimationFrame(() => {
     input.setSelectionRange(position, position);
   });
+}
+
+// Получаем значения введенные пользователем
+export function getReplacedValue(ast: AST, range: Range, addedSymbols?: string) {
+  let symbolsBeforeRange = '';
+  let symbolsAfterRange = '';
+
+  ast.forEach(({ symbol, own }, index) => {
+    if (own === 'user') {
+      // Если символ находится перед диапозоном изменяемых символов
+      if (index < range[0]) {
+        symbolsBeforeRange += symbol;
+      }
+      // Если символ находится после диапозона изменяемых символов
+      if (index >= range[1]) {
+        symbolsAfterRange += symbol;
+      }
+    }
+  });
+
+  return symbolsBeforeRange + (addedSymbols || '') + symbolsAfterRange;
 }

@@ -4,9 +4,9 @@ import {
   masked,
   getCursorPosition,
   setCursorPosition,
-  getReplacedValue,
+  getReplacedData,
 } from './utilites';
-import { AST, Range } from './types';
+import { AST, Range, ReplacedData } from './types';
 
 interface MaskedInputState {
   maskedValue: string;
@@ -43,18 +43,8 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     const { inputType } = event.nativeEvent as any;
 
     // Выбираем пользовательское значение
-    let { replacedValue } = state;
+    let replacedData: ReplacedData = { value: state.replacedValue } as any;
     const prevAST = generateAST(state.maskedValue, mask);
-
-    /// //////////////////////////////////////////////////
-    // Находим добавленные символы
-    const addedSymbols = value.slice(selectionStartBeforeChange, selectionStartAfterChange);
-    // Находим ближайший символ пользовательского значения, не являющегося частью маски
-    const closestSymbol = prevAST.find((item) => {
-      return selectionStartAfterChange - addedSymbols.length <= item.index && item.own === 'user';
-    });
-    console.warn(!!closestSymbol);
-    /// //////////////////////////////////////////////////
 
     if (['insertText', 'insertFromPaste'].includes(inputType)) {
       if (selectionStartBeforeChange !== null && selectionEndBeforeChange !== null) {
@@ -63,7 +53,7 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
         console.warn('range', range);
         // Находим добавленные символы
         const addedSymbols = value.slice(range[0], selectionStartAfterChange);
-        replacedValue = getReplacedValue(prevAST, range, addedSymbols);
+        replacedData = getReplacedData(prevAST, range, addedSymbols);
       }
     }
 
@@ -75,20 +65,20 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
         selectionStartAfterChange,
         selectionStartAfterChange + countDeletedSymbols,
       ];
-      replacedValue = getReplacedValue(prevAST, range);
+      replacedData = getReplacedData(prevAST, range);
     }
 
     // Формируем значение с маской
-    const maskedValue = masked(replacedValue, mask, char);
+    const maskedValue = masked(replacedData.value, mask, char);
 
     // Устанавливаем позицию курсора
     const nextAST = generateAST(maskedValue, mask);
     const position = getCursorPosition(nextAST, maskedValue, char);
     setCursorPosition(event.target, position);
 
-    setState((prev) => ({ ...prev, maskedValue, replacedValue }));
+    setState((prev) => ({ ...prev, maskedValue, replacedValue: replacedData.value }));
 
-    console.log(inputType, '|', selectionStartAfterChange, '|', value, '|', replacedValue);
+    console.log(inputType, '|', selectionStartAfterChange, '|', value, '|', replacedData.value);
 
     // eslint-disable-next-line no-param-reassign
     event.target.value = maskedValue;

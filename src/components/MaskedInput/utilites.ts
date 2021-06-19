@@ -38,22 +38,24 @@ export function setCursorPosition(input: HTMLInputElement, position: number) {
 }
 
 // Получаем значения введенные пользователем
-export function getReplacedValue(ast: AST, range: Range, addedSymbols?: string) {
-  let symbolsBeforeRange = '';
-  let symbolsAfterRange = '';
+export function getReplacedData(ast: AST, range: Range, added?: string) {
+  let beforeRange = '';
+  let afterRange = '';
 
   ast.forEach(({ symbol, own }, index) => {
     if (own === 'user') {
       // Если символ находится перед диапозоном изменяемых символов
       if (index < range[0]) {
-        symbolsBeforeRange += symbol;
+        beforeRange += symbol;
       }
       // Если символ находится после диапозона изменяемых символов
       if (index >= range[1]) {
-        symbolsAfterRange += symbol;
+        afterRange += symbol;
       }
     }
   });
 
-  return symbolsBeforeRange + (addedSymbols || '') + symbolsAfterRange;
+  const value = beforeRange + (added || '') + afterRange;
+
+  return { value, added, beforeRange, afterRange };
 }

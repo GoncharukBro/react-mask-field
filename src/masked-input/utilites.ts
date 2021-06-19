@@ -30,6 +30,16 @@ export function masked(value: string, mask: string, char: string) {
 }
 
 /**
+ * Находит последний символ введенный пользователем, не являющийся частью маски
+ * @param ast анализ сформированного значения с маской
+ * @returns объект содержащий информацию о символе
+ */
+export function getLastReplacedSymbol(ast: AST) {
+  const reversedAST = [...ast].reverse();
+  return reversedAST.find(({ own }) => own === 'user');
+}
+
+/**
  * Получает позицию курсора для последующей установки.
  * Позиция курсора определяется по порядку возможных вариантов действий:
  * 1. действие в начале строки;
@@ -56,7 +66,8 @@ export function getCursorPosition(replacedData: ReplacedData, ast: AST) {
   // Находим первый символ пользовательского значения после диапазона изменяемых символов
   if (afterRange) {
     const replacedSymbols = ast.filter(({ own }) => own === 'user');
-    const lastReplacedSymbol = replacedSymbols.reverse().find((item, index) => {
+    const reversedReplacedSymbols = [...replacedSymbols].reverse();
+    const lastReplacedSymbol = reversedReplacedSymbols.find((item, index) => {
       return afterRange.length === index;
     });
 
@@ -67,7 +78,7 @@ export function getCursorPosition(replacedData: ReplacedData, ast: AST) {
 
   // Действие в конце строки
   // Находим последний символ пользовательского значения
-  const lastSymbol = ast.reverse().find(({ own }) => own === 'user');
+  const lastSymbol = getLastReplacedSymbol(ast);
 
   if (lastSymbol) {
     return lastSymbol.index + 1;

@@ -17,7 +17,7 @@ export function masked(value: string, mask: string, char: string) {
 
 // Получает позицию курсора для последующей установки
 export function getCursorPosition(ast: AST, value: string, char: string) {
-  // Находим индекс последнего символа пользовательского значения, не являющегося частью маски
+  // Находим последний символ пользовательского значения, не являющегося частью маски
   const lastSymbol = ast.reverse().find((item) => {
     return item.own === 'user';
   });

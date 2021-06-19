@@ -9,7 +9,7 @@ import {
 import { AST, Range } from './types';
 
 interface MaskedInputState {
-  value: string;
+  maskedValue: string;
   replacedValue: string;
 }
 
@@ -20,12 +20,12 @@ interface MaskedInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 function MaskedInput(props: MaskedInputProps, ref: any) {
-  const { mask, char, onReplace, onChange, onSelect, ...other } = props;
+  const { mask, char, value, onReplace, onChange, onSelect, ...other } = props;
   const inputRef = useRef<HTMLInputElement>(null);
-  const [state, setState] = useState<MaskedInputState>({ value: mask, replacedValue: '' });
+  const [state, setState] = useState<MaskedInputState>({ maskedValue: mask, replacedValue: '' });
 
-  let selectionStartBeforeChange = 0;
-  let selectionEndBeforeChange = 0;
+  let selectionStartBeforeChange: number | null = null;
+  let selectionEndBeforeChange: number | null = null;
 
   // Добавляем ссылку на элемент для родительских компонентов
   useEffect(() => {
@@ -44,19 +44,32 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
 
     // Выбираем пользовательское значение
     let { replacedValue } = state;
-    const prevAST = generateAST(state.value, mask);
+    const prevAST = generateAST(state.maskedValue, mask);
+
+    /// //////////////////////////////////////////////////
+    // Находим добавленные символы
+    const addedSymbols = value.slice(selectionStartBeforeChange, selectionStartAfterChange);
+    // Находим ближайший символ пользовательского значения, не являющегося частью маски
+    const closestSymbol = prevAST.find((item) => {
+      return selectionStartAfterChange - addedSymbols.length <= item.index && item.own === 'user';
+    });
+    console.warn(!!closestSymbol);
+    /// //////////////////////////////////////////////////
 
     if (['insertText', 'insertFromPaste'].includes(inputType)) {
-      // Определяем диапозон изменяемых символов
-      const range: Range = [selectionStartBeforeChange, selectionEndBeforeChange];
-      // Находим добавленные символы
-      const addedSymbols = value.slice(range[0], selectionStartAfterChange);
-      replacedValue = getReplacedValue(prevAST, range, addedSymbols);
+      if (selectionStartBeforeChange !== null && selectionEndBeforeChange !== null) {
+        // Определяем диапозон изменяемых символов
+        const range: Range = [selectionStartBeforeChange, selectionEndBeforeChange];
+        console.warn('range', range);
+        // Находим добавленные символы
+        const addedSymbols = value.slice(range[0], selectionStartAfterChange);
+        replacedValue = getReplacedValue(prevAST, range, addedSymbols);
+      }
     }
 
     if (['deleteContentBackward', 'deleteContentForward', 'deleteByCut'].includes(inputType)) {
       // Подсчитываем количество удаленных символов
-      const countDeletedSymbols = Math.abs(value.length - state.value.length);
+      const countDeletedSymbols = Math.abs(value.length - state.maskedValue.length);
       // Определяем диапозон изменяемых символов
       const range: Range = [
         selectionStartAfterChange,
@@ -73,7 +86,7 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     const position = getCursorPosition(nextAST, maskedValue, char);
     setCursorPosition(event.target, position);
 
-    setState((prev) => ({ ...prev, value: maskedValue, replacedValue }));
+    setState((prev) => ({ ...prev, maskedValue, replacedValue }));
 
     console.log(inputType, '|', selectionStartAfterChange, '|', value, '|', replacedValue);
 
@@ -94,7 +107,7 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     <input
       {...other}
       ref={inputRef}
-      value={state.value}
+      value={state.maskedValue}
       onChange={handleChange}
       onSelect={handleSelect}
     />

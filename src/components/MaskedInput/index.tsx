@@ -67,8 +67,13 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
 
     // Получаем значения введенные пользователем пользователя
     function getReplacedValueAfterDelete() {
+      // Подсчитываем количество удаленных символов
+      const countDeletedSymbols = Math.abs(value.length - state.value.length);
       // Определяем изменяемый диапазон символов
-      const range: Range = [selectionStartAfterChange, selectionEndBeforeChange];
+      const range: Range = [
+        selectionStartAfterChange,
+        selectionStartAfterChange + countDeletedSymbols,
+      ];
 
       let beforeRange = '';
       let afterRange = '';

@@ -45,18 +45,7 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     let replacedData: ReplacedData = { value: state.replacedValue } as any;
     const prevAST = generateAST(state.maskedValue, mask);
 
-    if (inputType.includes('insert')) {
-      if (selectionStartBeforeChange !== null && selectionEndBeforeChange !== null) {
-        // Определяем диапозон изменяемых символов
-        const range: Range = [selectionStartBeforeChange, selectionEndBeforeChange];
-        // Находим добавленные символы
-        const addedSymbols = value.slice(range[0], selectionStartAfterChange);
-        // Получаем информацию о пользовательском значении
-        replacedData = getReplacedData(prevAST, range, addedSymbols);
-      }
-    }
-
-    if (inputType.includes('delete')) {
+    if (inputType?.includes('delete')) {
       // Подсчитываем количество удаленных символов
       const countDeletedSymbols = state.maskedValue.length - value.length;
       // Определяем диапозон изменяемых символов
@@ -66,6 +55,15 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
       ];
       // Получаем информацию о пользовательском значении
       replacedData = getReplacedData(prevAST, range);
+    } else if (inputType?.includes('insert') || value) {
+      if (selectionStartBeforeChange !== null && selectionEndBeforeChange !== null) {
+        // Определяем диапозон изменяемых символов
+        const range: Range = [selectionStartBeforeChange, selectionEndBeforeChange];
+        // Находим добавленные символы
+        const addedSymbols = value.slice(range[0], selectionStartAfterChange);
+        // Получаем информацию о пользовательском значении
+        replacedData = getReplacedData(prevAST, range, addedSymbols);
+      }
     }
 
     let maskedValue = '';

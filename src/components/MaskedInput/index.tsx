@@ -8,6 +8,9 @@ import {
 } from './utilites';
 import { AST, Range, ReplacedData } from './types';
 
+let selectionStartBeforeChange: number | null = null;
+let selectionEndBeforeChange: number | null = null;
+
 interface MaskedInputState {
   maskedValue: string;
   replacedValue: string;
@@ -23,9 +26,6 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
   const { mask, char, value, onReplace, onChange, onSelect, ...other } = props;
   const inputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<MaskedInputState>({ maskedValue: mask, replacedValue: '' });
-
-  let selectionStartBeforeChange: number | null = null;
-  let selectionEndBeforeChange: number | null = null;
 
   // Добавляем ссылку на элемент для родительских компонентов
   useEffect(() => {
@@ -46,13 +46,15 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     let replacedData: ReplacedData = { value: state.replacedValue } as any;
     const prevAST = generateAST(state.maskedValue, mask);
 
+    console.log(selectionStartBeforeChange, selectionEndBeforeChange);
+
     if (['insertText', 'insertFromPaste'].includes(inputType)) {
       if (selectionStartBeforeChange !== null && selectionEndBeforeChange !== null) {
         // Определяем диапозон изменяемых символов
         const range: Range = [selectionStartBeforeChange, selectionEndBeforeChange];
-        console.warn('range', range);
         // Находим добавленные символы
         const addedSymbols = value.slice(range[0], selectionStartAfterChange);
+
         replacedData = getReplacedData(prevAST, range, addedSymbols);
       }
     }
@@ -73,6 +75,35 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
 
     // Устанавливаем позицию курсора
     const nextAST = generateAST(maskedValue, mask);
+
+    console.warn(replacedData);
+
+    // Получает позицию курсора для последующей установки
+    function getCursorPosition(ast: AST, value: string, char: string) {
+      // Находим последний символ пользовательского значения
+      if (replacedData.afterRange) {
+        const replacedSymbols = nextAST.filter(({ own }) => own === 'user');
+        const firstSymbolAfterRange = replacedSymbols.reverse().find((item, index) => {
+          return replacedData.afterRange.length === index;
+        });
+
+        if (firstSymbolAfterRange) {
+          return firstSymbolAfterRange.index + 1;
+        }
+      }
+
+      // Находим последний символ пользовательского значения, не являющегося частью маски
+      const lastSymbol = ast.reverse().find((item) => {
+        return item.own === 'user';
+      });
+
+      if (lastSymbol) {
+        return lastSymbol.index + 1;
+      }
+
+      return value.search(char);
+    }
+
     const position = getCursorPosition(nextAST, maskedValue, char);
     setCursorPosition(event.target, position);
 
@@ -89,7 +120,6 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     // Регистрируем диапозон изменяемых значений
     selectionStartBeforeChange = event.target.selectionStart;
     selectionEndBeforeChange = event.target.selectionEnd;
-    console.log(selectionStartBeforeChange, selectionEndBeforeChange);
     onSelect?.(event);
   };
 

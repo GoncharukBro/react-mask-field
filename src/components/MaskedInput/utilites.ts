@@ -1,4 +1,4 @@
-import { AST, Range } from './types';
+import { AST, Range, ReplacedData } from './types';
 
 // Генерирует дерево синтаксического анализа
 export function generateAST(value: string, mask: string): AST {
@@ -16,7 +16,19 @@ export function masked(value: string, mask: string, char: string) {
 }
 
 // Получает позицию курсора для последующей установки
-export function getCursorPosition(ast: AST, value: string, char: string) {
+export function getCursorPosition(replacedData: ReplacedData, ast: AST) {
+  // Находим последний символ пользовательского значения
+  if (replacedData.afterRange) {
+    const replacedSymbols = ast.filter(({ own }) => own === 'user');
+    const firstSymbolAfterRange = replacedSymbols.reverse().find((item, index) => {
+      return replacedData.afterRange.length === index;
+    });
+
+    if (firstSymbolAfterRange) {
+      return firstSymbolAfterRange.index + 1;
+    }
+  }
+
   // Находим последний символ пользовательского значения, не являющегося частью маски
   const lastSymbol = ast.reverse().find((item) => {
     return item.own === 'user';
@@ -25,8 +37,6 @@ export function getCursorPosition(ast: AST, value: string, char: string) {
   if (lastSymbol) {
     return lastSymbol.index + 1;
   }
-
-  return value.search(char);
 }
 
 // Устанавливает позицию курсора
@@ -56,6 +66,5 @@ export function getReplacedData(ast: AST, range: Range, added?: string) {
   });
 
   const value = beforeRange + (added || '') + afterRange;
-
   return { value, added, beforeRange, afterRange };
 }

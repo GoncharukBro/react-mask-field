@@ -46,15 +46,12 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     let replacedData: ReplacedData = { value: state.replacedValue } as any;
     const prevAST = generateAST(state.maskedValue, mask);
 
-    console.log(selectionStartBeforeChange, selectionEndBeforeChange);
-
     if (['insertText', 'insertFromPaste'].includes(inputType)) {
       if (selectionStartBeforeChange !== null && selectionEndBeforeChange !== null) {
         // Определяем диапозон изменяемых символов
         const range: Range = [selectionStartBeforeChange, selectionEndBeforeChange];
         // Находим добавленные символы
         const addedSymbols = value.slice(range[0], selectionStartAfterChange);
-
         replacedData = getReplacedData(prevAST, range, addedSymbols);
       }
     }
@@ -75,36 +72,7 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
 
     // Устанавливаем позицию курсора
     const nextAST = generateAST(maskedValue, mask);
-
-    console.warn(replacedData);
-
-    // Получает позицию курсора для последующей установки
-    function getCursorPosition(ast: AST, value: string, char: string) {
-      // Находим последний символ пользовательского значения
-      if (replacedData.afterRange) {
-        const replacedSymbols = nextAST.filter(({ own }) => own === 'user');
-        const firstSymbolAfterRange = replacedSymbols.reverse().find((item, index) => {
-          return replacedData.afterRange.length === index;
-        });
-
-        if (firstSymbolAfterRange) {
-          return firstSymbolAfterRange.index + 1;
-        }
-      }
-
-      // Находим последний символ пользовательского значения, не являющегося частью маски
-      const lastSymbol = ast.reverse().find((item) => {
-        return item.own === 'user';
-      });
-
-      if (lastSymbol) {
-        return lastSymbol.index + 1;
-      }
-
-      return value.search(char);
-    }
-
-    const position = getCursorPosition(nextAST, maskedValue, char);
+    const position = getCursorPosition(replacedData, nextAST) || value.search(char);
     setCursorPosition(event.target, position);
 
     setState((prev) => ({ ...prev, maskedValue, replacedValue: replacedData.value }));
@@ -117,7 +85,7 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
   };
 
   const handleSelect = (event: any) => {
-    // Регистрируем диапозон изменяемых значений
+    // Кэшируем диапозон изменяемых значений
     selectionStartBeforeChange = event.target.selectionStart;
     selectionEndBeforeChange = event.target.selectionEnd;
     onSelect?.(event);

@@ -40,56 +40,55 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     let { replacedValue } = state;
     const prevAST = generateAST(state.value, mask);
 
-    // Получаем значения введенные пользователем пользователя
+    // Получаем значения введенные пользователем
     function getReplacedValueAfterInsert() {
-      // Определяем изменяемый диапазон символов
+      // Определяем диапозон изменяемых символов
       const range: Range = [selectionStartBeforeChange, selectionEndBeforeChange];
       // Находим добавленные символы
       const addedSymbols = value.slice(range[0], selectionStartAfterChange);
 
-      let beforeRange = '';
-      let afterRange = '';
+      let symbolsBeforeRange = '';
+      let symbolsAfterRange = '';
 
-      // Выбераем пользовательские символы до и после изменяемого диапозона символов
       prevAST.forEach(({ symbol, own }, index) => {
-        // Если символ находится перед изменяемым диапозоном символов
+        // Если символ находится перед диапозоном изменяемых символов
         if (index < range[0] && own === 'user') {
-          beforeRange += symbol;
+          symbolsBeforeRange += symbol;
         }
-        // Если символ находится после изменяемого диапозона символов
+        // Если символ находится после диапозона изменяемых символов
         if (index >= range[1] && own === 'user') {
-          afterRange += symbol;
+          symbolsAfterRange += symbol;
         }
       });
 
-      return beforeRange + addedSymbols + afterRange;
+      return symbolsBeforeRange + addedSymbols + symbolsAfterRange;
     }
 
-    // Получаем значения введенные пользователем пользователя
+    // Получаем значения введенные пользователем
     function getReplacedValueAfterDelete() {
       // Подсчитываем количество удаленных символов
       const countDeletedSymbols = Math.abs(value.length - state.value.length);
-      // Определяем изменяемый диапазон символов
+      // Определяем диапозон изменяемых символов
       const range: Range = [
         selectionStartAfterChange,
         selectionStartAfterChange + countDeletedSymbols,
       ];
 
-      let beforeRange = '';
-      let afterRange = '';
+      let symbolsBeforeRange = '';
+      let symbolsAfterRange = '';
 
       prevAST.forEach(({ symbol, own }, index) => {
-        // Если символ находится перед изменяемым диапозоном символов
+        // Если символ находится перед диапозоном изменяемых символов
         if (index < range[0] && own === 'user') {
-          beforeRange += symbol;
+          symbolsBeforeRange += symbol;
         }
-        // Если символ находится после изменяемого диапозона символов
+        // Если символ находится после диапозона изменяемых символов
         if (index >= range[1] && own === 'user') {
-          afterRange += symbol;
+          symbolsAfterRange += symbol;
         }
       });
 
-      return beforeRange + afterRange;
+      return symbolsBeforeRange + symbolsAfterRange;
     }
 
     if (inputType === 'insertText') {
@@ -126,6 +125,7 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
   };
 
   const handleSelect = (event: any) => {
+    // Регистрируем диапозон изменяемых значений
     selectionStartBeforeChange = event.target.selectionStart;
     selectionEndBeforeChange = event.target.selectionEnd;
     console.log(selectionStartBeforeChange, selectionEndBeforeChange);

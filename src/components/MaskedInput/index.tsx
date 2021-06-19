@@ -23,9 +23,9 @@ interface MaskedInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 function MaskedInput(props: MaskedInputProps, ref: any) {
-  const { mask, char, value, onReplace, onChange, onSelect, ...other } = props;
+  const { mask, char, value, placeholder, onReplace, onChange, onSelect, ...other } = props;
   const inputRef = useRef<HTMLInputElement>(null);
-  const [state, setState] = useState<MaskedInputState>({ maskedValue: mask, replacedValue: '' });
+  const [state, setState] = useState<MaskedInputState>({ maskedValue: '', replacedValue: '' });
 
   // Добавляем ссылку на элемент для родительских компонентов
   useEffect(() => {
@@ -67,13 +67,16 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
       replacedData = getReplacedData(prevAST, range);
     }
 
-    // Формируем значение с маской
-    const maskedValue = masked(replacedData.value, mask, char);
+    let maskedValue = '';
 
-    // Устанавливаем позицию курсора
-    const nextAST = generateAST(maskedValue, mask);
-    const position = getCursorPosition(replacedData, nextAST) || value.search(char);
-    setCursorPosition(event.target, position);
+    if (replacedData.value) {
+      // Формируем значение с маской
+      maskedValue = masked(replacedData.value, mask, char);
+      // Устанавливаем позицию курсора
+      const nextAST = generateAST(maskedValue, mask);
+      const position = getCursorPosition(replacedData, nextAST) || value.search(char);
+      setCursorPosition(event.target, position);
+    }
 
     setState((prev) => ({ ...prev, maskedValue, replacedValue: replacedData.value }));
 
@@ -96,6 +99,7 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
       {...other}
       ref={inputRef}
       value={state.maskedValue}
+      placeholder={placeholder || mask}
       onChange={handleChange}
       onSelect={handleSelect}
     />

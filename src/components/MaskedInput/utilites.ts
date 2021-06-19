@@ -40,11 +40,24 @@ export function masked(value: string, mask: string, char: string) {
  * @returns позиция курсора или `undefined` если по заданным параметрам ничего не нашлось
  */
 export function getCursorPosition(replacedData: ReplacedData, ast: AST) {
-  // Находим последний символ пользовательского значения
-  if (replacedData.afterRange) {
+  const { beforeRange, afterRange } = replacedData;
+
+  // Действие в начале строки
+  // Находим первый символ пользовательского значения
+  if (!beforeRange && afterRange) {
+    const firstSymbol = ast.find(({ own }) => own === 'user');
+
+    if (firstSymbol) {
+      return firstSymbol.index;
+    }
+  }
+
+  // Действие в середине строки
+  // Находим первый символ пользовательского значения после диапазона изменяемых символов
+  if (afterRange) {
     const replacedSymbols = ast.filter(({ own }) => own === 'user');
     const lastReplacedSymbol = replacedSymbols.reverse().find((item, index) => {
-      return replacedData.afterRange.length === index;
+      return afterRange.length === index;
     });
 
     if (lastReplacedSymbol) {
@@ -52,10 +65,9 @@ export function getCursorPosition(replacedData: ReplacedData, ast: AST) {
     }
   }
 
-  // Находим последний символ пользовательского значения, не являющегося частью маски.
-  const lastSymbol = ast.reverse().find((item) => {
-    return item.own === 'user';
-  });
+  // Действие в конце строки
+  // Находим последний символ пользовательского значения
+  const lastSymbol = ast.reverse().find(({ own }) => own === 'user');
 
   if (lastSymbol) {
     return lastSymbol.index + 1;

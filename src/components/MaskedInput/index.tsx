@@ -42,28 +42,29 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     const { selectionStart: selectionStartAfterChange, value } = event.target as any;
     const { inputType } = event.nativeEvent as any;
 
-    // Выбираем пользовательское значение
     let replacedData: ReplacedData = { value: state.replacedValue } as any;
     const prevAST = generateAST(state.maskedValue, mask);
 
-    if (['insertText', 'insertFromPaste'].includes(inputType)) {
+    if (inputType.includes('insert')) {
       if (selectionStartBeforeChange !== null && selectionEndBeforeChange !== null) {
         // Определяем диапозон изменяемых символов
         const range: Range = [selectionStartBeforeChange, selectionEndBeforeChange];
         // Находим добавленные символы
         const addedSymbols = value.slice(range[0], selectionStartAfterChange);
+        // Получаем информацию о пользовательском значении
         replacedData = getReplacedData(prevAST, range, addedSymbols);
       }
     }
 
-    if (['deleteContentBackward', 'deleteContentForward', 'deleteByCut'].includes(inputType)) {
+    if (inputType.includes('delete')) {
       // Подсчитываем количество удаленных символов
-      const countDeletedSymbols = Math.abs(value.length - state.maskedValue.length);
+      const countDeletedSymbols = state.maskedValue.length - value.length;
       // Определяем диапозон изменяемых символов
       const range: Range = [
         selectionStartAfterChange,
         selectionStartAfterChange + countDeletedSymbols,
       ];
+      // Получаем информацию о пользовательском значении
       replacedData = getReplacedData(prevAST, range);
     }
 

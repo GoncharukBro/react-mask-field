@@ -19,11 +19,13 @@ interface MaskedInputState {
 interface MaskedInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   mask: string;
   char: string;
+  showMask?: boolean;
   onReplace?: (value: AST) => void;
 }
 
 function MaskedInput(props: MaskedInputProps, ref: any) {
-  const { mask, char, value, placeholder, onReplace, onChange, onSelect, ...other } = props;
+  const { mask, char, showMask, value, placeholder, onReplace, onChange, onSelect, ...other } =
+    props;
   const inputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<MaskedInputState>({ maskedValue: '', replacedValue: '' });
 

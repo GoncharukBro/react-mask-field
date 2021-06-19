@@ -45,7 +45,7 @@ function masked(value: string) {
 }
 
 function TextMaskCustom({ inputRef, ...other }: any) {
-  return <MaskedInput {...other} ref={inputRef} mask="+7 (___) ___-__-__" char="_" />;
+  return <MaskedInput {...other} ref={inputRef} mask="+7 (___) ___-__-__" char="_" showMask />;
 }
 
 type PhoneProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputElement>, 'value'>;

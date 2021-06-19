@@ -5,6 +5,7 @@ import {
   getCursorPosition,
   setCursorPosition,
   getReplacedData,
+  getLastReplacedSymbol,
 } from './utilites';
 import { AST, Range, ReplacedData } from './types';
 
@@ -20,12 +21,11 @@ interface MaskedInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   mask: string;
   char: string;
   showMask?: boolean;
-  onReplace?: (value: AST) => void;
+  onReplace?: (ast: AST) => void;
 }
 
 function MaskedInput(props: MaskedInputProps, ref: any) {
-  const { mask, char, showMask, value, placeholder, onReplace, onChange, onSelect, ...other } =
-    props;
+  const { mask, char, showMask, placeholder, onReplace, onChange, onSelect, ...other } = props;
   const inputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<MaskedInputState>({ maskedValue: '', replacedValue: '' });
 
@@ -73,15 +73,25 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     if (replacedData.value) {
       // Формируем значение с маской
       maskedValue = masked(replacedData.value, mask, char);
-      // Устанавливаем позицию курсора
       const nextAST = generateAST(maskedValue, mask);
-      const position = getCursorPosition(replacedData, nextAST) || value.search(char);
+
+      // Устанавливаем позицию курсора
+      const position =
+        getCursorPosition(replacedData, nextAST) || value.search(char) || value.length;
       setCursorPosition(event.target, position);
+
+      // Если `showMask === false` окончанием значения будет последний пользовательский символ
+      if (!showMask) {
+        const lastReplacedSymbol = getLastReplacedSymbol(nextAST);
+        if (lastReplacedSymbol) {
+          maskedValue = maskedValue.slice(0, lastReplacedSymbol.index + 1);
+        }
+      }
     }
 
     setState((prev) => ({ ...prev, maskedValue, replacedValue: replacedData.value }));
 
-    console.log(inputType, '|', selectionStartAfterChange, '|', value, '|', replacedData.value);
+    console.log(value, '|', replacedData.value);
 
     // eslint-disable-next-line no-param-reassign
     event.target.value = maskedValue;

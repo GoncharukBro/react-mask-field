@@ -7,7 +7,33 @@ import {
   getReplacedData,
   getLastReplacedSymbol,
 } from './utilites';
-import { AST, Range, ReplacedData } from './types';
+import { Range, ReplacedData } from './types';
+
+function effect(input: any, replacedData: any, mask: any, char: any, showMask: any) {
+  let maskedValue = '';
+
+  if (input && replacedData.value) {
+    // Формируем значение с маской
+    maskedValue = masked(replacedData.value, mask, char);
+    const nextAST = generateAST(maskedValue, mask);
+
+    // Устанавливаем позицию курсора
+    const position =
+      getCursorPosition(replacedData, nextAST) || maskedValue.search(char) || maskedValue.length;
+    setCursorPosition(input, position);
+
+    // Если `showMask === false` окончанием значения будет последний пользовательский символ
+    if (!showMask) {
+      const lastReplacedSymbol = getLastReplacedSymbol(nextAST);
+
+      if (lastReplacedSymbol) {
+        maskedValue = maskedValue.slice(0, lastReplacedSymbol.index + 1);
+      }
+    }
+  }
+
+  return maskedValue;
+}
 
 interface MaskedInputState {
   maskedValue: string;
@@ -19,7 +45,6 @@ interface MaskedInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   mask: string;
   char: string;
   showMask?: boolean;
-  onReplace?: (ast: AST) => void;
 }
 
 let selectionStartBeforeChange: number | null = null;
@@ -33,7 +58,6 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     showMask,
     value,
     placeholder,
-    onReplace,
     onChange,
     onSelect,
     ...other
@@ -88,35 +112,13 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
       }
     }
 
-    let maskedValue = '';
-
-    if (inputRef.current && replacedData.value) {
-      // Формируем значение с маской
-      maskedValue = masked(replacedData.value, mask, char);
-      const nextAST = generateAST(maskedValue, mask);
-
-      // Устанавливаем позицию курсора
-      const position =
-        getCursorPosition(replacedData, nextAST) || maskedValue.search(char) || maskedValue.length;
-      setCursorPosition(inputRef.current, position);
-
-      // Если `showMask === false` окончанием значения будет последний пользовательский символ
-      if (!showMask) {
-        const lastReplacedSymbol = getLastReplacedSymbol(nextAST);
-
-        if (lastReplacedSymbol) {
-          maskedValue = maskedValue.slice(0, lastReplacedSymbol.index + 1);
-        }
-      }
-    }
+    const maskedValue = effect(inputRef.current, replacedData, mask, char, showMask);
 
     setState((prev) => ({ ...prev, maskedValue, replacedData }));
 
-    console.log(value, '|', replacedData.value);
+    console.log({ maskedValue, replacedData });
 
-    // eslint-disable-next-line no-param-reassign
-    event.target.value = maskedValue;
-    onChange?.(event);
+    (onChange as any)?.(event, maskedValue, replacedData.value);
   };
 
   const handleSelect = (event: any) => {

@@ -35,8 +35,8 @@ const Phone = memo((props: PhoneProps) => {
   } = props;
   const { setValue, setTouched } = useFormContext();
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = event.target.value.replace(/\D/g, '');
+  const handleChange = (event: never, value: string) => {
+    const newValue = value.replace(/\D/g, '');
     setValue(name, newValue, validateField(newValue, { ...props, phone }));
   };
 
@@ -56,7 +56,7 @@ const Phone = memo((props: PhoneProps) => {
         placeholder={placeholder}
         inputProps={{ maxLength }}
         inputComponent={PhoneMask}
-        onChange={handleChange}
+        onChange={handleChange as any}
         onBlur={handleBlur}
         aria-describedby={`${id}-helper-text`}
       />

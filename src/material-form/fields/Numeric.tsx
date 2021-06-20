@@ -22,7 +22,7 @@ const Numeric = memo((props: NumericProps) => {
     required,
     maxLength,
   } = props;
-  const { setValue, setTouched } = useFormContext();
+  const { setValue, setFocus } = useFormContext();
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     let newValue = event.target.value;
@@ -31,7 +31,7 @@ const Numeric = memo((props: NumericProps) => {
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    setTouched(event.target.name);
+    setFocus(event.target.name);
   };
 
   return (

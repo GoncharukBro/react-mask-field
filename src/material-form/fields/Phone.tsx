@@ -29,7 +29,7 @@ const Phone = memo((props: PhoneProps) => {
     phone = true,
     maxLength,
   } = props;
-  const { setValue, setTouched } = useFormContext();
+  const { setValue, setFocus } = useFormContext();
 
   const handleChange = (event: never, value: string) => {
     const newValue = value.replace(/\D/g, '');
@@ -37,7 +37,7 @@ const Phone = memo((props: PhoneProps) => {
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    setTouched(event.target.name);
+    setFocus(event.target.name);
   };
 
   return (

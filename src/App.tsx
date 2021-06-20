@@ -16,7 +16,13 @@ export default function App() {
     <div style={{ height: '100vh', display: 'flex' }}>
       <div style={{ width: 500, margin: 'auto' }}>
         <Form<DemoFormData> name="demoForm" enableReset onSubmit={handleSubmit}>
-          <Field.Text name="text" label="Введите текст" placeholder="Текст" minLength={6} />
+          <Field.Text
+            name="text"
+            label="Введите текст"
+            placeholder="Текст"
+            minLength={6}
+            required
+          />
           <Field.Password name="password" label="Введите пароль" placeholder="Пароль" />
           <Field.Password
             name="confirmPassword"

@@ -27,7 +27,7 @@ const Password = memo((props: PasswordProps) => {
     match,
     maxLength,
   } = props;
-  const { setValue, setTouched } = useFormContext();
+  const { setValue, setFocus } = useFormContext();
   const [showPassword, setPasswordShow] = useState(false);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,7 +36,7 @@ const Password = memo((props: PasswordProps) => {
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    setTouched(event.target.name);
+    setFocus(event.target.name);
   };
 
   const handleShowPassword = (event: never) => {

@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react';
 
 interface FormContextValue {
   setValue: (name: string, value: string | number | boolean, error: string | undefined) => void;
-  setTouched: (name: string) => void;
+  setFocus: (name: string) => void;
 }
 
 const FormContext = createContext<FormContextValue | undefined>(undefined);

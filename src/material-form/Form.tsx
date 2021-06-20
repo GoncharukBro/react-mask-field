@@ -113,8 +113,8 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
         dispatch({ type: 'SET_VALUE', payload: { fieldName, value, error } });
       },
       // Реагируем на расфокус поля
-      setTouched: (fieldName: string) => {
-        dispatch({ type: 'SET_TOUCHED', payload: { fieldName } });
+      setFocus: (fieldName: string) => {
+        dispatch({ type: 'SET_FOCUS', payload: { fieldName } });
       },
     };
   }, []);

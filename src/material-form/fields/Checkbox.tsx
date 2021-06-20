@@ -11,14 +11,14 @@ type CheckboxProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputEl
 
 const Checkbox = memo((props: CheckboxProps) => {
   const { value = '', name, id, label, helperText, error, disabled, required } = props;
-  const { setValue, setTouched } = useFormContext();
+  const { setValue, setFocus } = useFormContext();
 
   const handleChange = (event: unknown, checked: boolean) => {
     setValue(name, checked, validateField(checked, props));
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLButtonElement>) => {
-    setTouched(event.target.name);
+    setFocus(event.target.name);
   };
 
   return (

@@ -34,7 +34,7 @@ const Select = memo((props: SelectProps) => {
     required,
   } = props;
 
-  const { setValue, setTouched } = useFormContext();
+  const { setValue, setFocus } = useFormContext();
 
   const handleChange = (
     event: React.ChangeEvent<{ name?: string | undefined; value: unknown }>
@@ -44,7 +44,7 @@ const Select = memo((props: SelectProps) => {
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    setTouched(event.target.name);
+    setFocus(event.target.name);
   };
 
   // Список отображаемых значений

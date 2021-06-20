@@ -58,7 +58,7 @@ export function reducer(state: FormState, action: Action) {
       return { ...state, isValid, values, errors };
     }
 
-    case 'SET_TOUCHED': {
+    case 'SET_FOCUS': {
       const { fieldName } = action.payload;
 
       if (!state.touched[fieldName]) {

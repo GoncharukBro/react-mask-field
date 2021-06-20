@@ -23,7 +23,7 @@ const Email = memo((props: EmailProps) => {
     email = true,
     maxLength,
   } = props;
-  const { setValue, setTouched } = useFormContext();
+  const { setValue, setFocus } = useFormContext();
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
@@ -31,7 +31,7 @@ const Email = memo((props: EmailProps) => {
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    setTouched(event.target.name);
+    setFocus(event.target.name);
   };
 
   return (

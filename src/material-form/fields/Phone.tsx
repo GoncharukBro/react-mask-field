@@ -37,7 +37,11 @@ const Phone = memo((props: PhoneProps) => {
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    setFocus(event.target.name);
+    setFocus(event.target.name, false);
+  };
+
+  const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
+    setFocus(event.target.name, true);
   };
 
   return (
@@ -54,6 +58,7 @@ const Phone = memo((props: PhoneProps) => {
         inputComponent={PhoneMask}
         onChange={handleChange as any}
         onBlur={handleBlur}
+        onFocus={handleFocus}
         aria-describedby={`${id}-helper-text`}
       />
 

@@ -4,6 +4,9 @@ export interface FormState<T = any> {
   errors: {
     [Property in keyof T]?: string | undefined;
   };
+  focus: {
+    [Property in keyof T]?: boolean;
+  };
   touched: {
     [Property in keyof T]?: boolean;
   };

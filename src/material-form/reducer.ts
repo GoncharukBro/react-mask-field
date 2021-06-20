@@ -7,12 +7,13 @@ const initialState: FormState = {
   isValid: false,
   values: {},
   errors: {},
+  focus: {},
   touched: {},
   dependencies: {},
 };
 
 export function init({ children, initialValues }: any) {
-  const { errors, touched, dependencies } = initialState;
+  const { errors, focus, touched, dependencies } = initialState;
   let { isValid, values } = initialState;
   // Определяем наличие начальных значений
   values = initialValues || {};
@@ -25,6 +26,7 @@ export function init({ children, initialValues }: any) {
       // Проверяем поле на наличие ошибок
       errors[fieldName] = validateField(values[fieldName], other);
       // Проверяем поле на наличие значения
+      focus[fieldName] = false;
       touched[fieldName] = !!values[fieldName];
       // Если поле имеет зависимости, создаём пустой массив для последующего добавления в него значений
       if (dependence && !dependencies[dependence]) {
@@ -39,7 +41,7 @@ export function init({ children, initialValues }: any) {
   // Валидируем форму
   isValid = validateForm(values, errors, dependencies);
 
-  return { isValid, values, errors, touched, dependencies };
+  return { isValid, values, errors, focus, touched, dependencies };
 }
 
 interface Action {
@@ -59,13 +61,13 @@ export function reducer(state: FormState, action: Action) {
     }
 
     case 'SET_FOCUS': {
-      const { fieldName } = action.payload;
+      const { fieldName, focus } = action.payload;
 
-      if (!state.touched[fieldName]) {
-        const touched = { ...state.touched, [fieldName]: true };
-        return { ...state, touched };
-      }
-      return state;
+      return {
+        ...state,
+        focus: { ...state.focus, [fieldName]: focus },
+        touched: { ...state.touched, [fieldName]: true },
+      };
     }
 
     case 'RESET': {

@@ -31,7 +31,11 @@ const Email = memo((props: EmailProps) => {
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    setFocus(event.target.name);
+    setFocus(event.target.name, false);
+  };
+
+  const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
+    setFocus(event.target.name, true);
   };
 
   return (
@@ -47,6 +51,7 @@ const Email = memo((props: EmailProps) => {
         inputProps={{ maxLength }}
         onChange={handleChange}
         onBlur={handleBlur}
+        onFocus={handleFocus}
         aria-describedby={`${id}-helper-text`}
       />
 

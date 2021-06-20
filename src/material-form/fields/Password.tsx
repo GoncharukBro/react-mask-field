@@ -36,7 +36,11 @@ const Password = memo((props: PasswordProps) => {
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    setFocus(event.target.name);
+    setFocus(event.target.name, false);
+  };
+
+  const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
+    setFocus(event.target.name, true);
   };
 
   const handleShowPassword = (event: never) => {
@@ -73,6 +77,7 @@ const Password = memo((props: PasswordProps) => {
         endAdornment={!match && showPasswordButton}
         onChange={handleChange}
         onBlur={handleBlur}
+        onFocus={handleFocus}
         aria-describedby={`${id}-helper-text`}
       />
 

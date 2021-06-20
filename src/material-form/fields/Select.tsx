@@ -44,7 +44,11 @@ const Select = memo((props: SelectProps) => {
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    setFocus(event.target.name);
+    setFocus(event.target.name, false);
+  };
+
+  const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
+    setFocus(event.target.name, true);
   };
 
   // Список отображаемых значений
@@ -72,6 +76,7 @@ const Select = memo((props: SelectProps) => {
         value={value}
         onChange={handleChange}
         onBlur={handleBlur}
+        onFocus={handleFocus}
         aria-describedby={`${id}-helper-text`}
       >
         {placeholder && (

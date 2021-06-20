@@ -18,7 +18,11 @@ const Checkbox = memo((props: CheckboxProps) => {
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLButtonElement>) => {
-    setFocus(event.target.name);
+    setFocus(event.target.name, false);
+  };
+
+  const handleFocus = (event: React.FocusEvent<HTMLButtonElement>) => {
+    setFocus(event.target.name, true);
   };
 
   return (
@@ -32,6 +36,7 @@ const Checkbox = memo((props: CheckboxProps) => {
             checked={!!value}
             onChange={handleChange}
             onBlur={handleBlur}
+            onFocus={handleFocus}
             aria-describedby={`${id}-helper-text`}
           />
         }

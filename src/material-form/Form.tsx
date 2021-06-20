@@ -69,7 +69,8 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
         // `true` если поле-зависимость заполнено
         const hasNotEmptyDependence = !!(other.dependence && state.values[other.dependence]);
         // Определяем ошибку только после того, как поле было "тронуто"
-        let error = state.touched[other.name] ? state.errors[other.name] : undefined;
+        const enableError = state.touched[other.name] && !state.focus[other.name];
+        let error = enableError ? state.errors[other.name] : undefined;
         // Убираем текст ошибки если поле-зависимость не заполнено,
         // так как при незаполненом поле-зависимости текущее поле не будет активно
         error = hasEmptyDependence ? undefined : error;
@@ -92,8 +93,9 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
   }, [
     children,
     state.values,
-    state.touched,
     state.errors,
+    state.focus,
+    state.touched,
     formName,
     formError,
     status,
@@ -113,8 +115,8 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
         dispatch({ type: 'SET_VALUE', payload: { fieldName, value, error } });
       },
       // Реагируем на расфокус поля
-      setFocus: (fieldName: string) => {
-        dispatch({ type: 'SET_FOCUS', payload: { fieldName } });
+      setFocus: (fieldName: string, focus: boolean) => {
+        dispatch({ type: 'SET_FOCUS', payload: { fieldName, focus } });
       },
     };
   }, []);

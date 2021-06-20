@@ -30,7 +30,11 @@ const Text = memo((props: TextProps) => {
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    setFocus(event.target.name);
+    setFocus(event.target.name, false);
+  };
+
+  const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
+    setFocus(event.target.name, true);
   };
 
   return (
@@ -46,6 +50,7 @@ const Text = memo((props: TextProps) => {
         inputProps={{ maxLength }}
         onChange={handleChange}
         onBlur={handleBlur}
+        onFocus={handleFocus}
         aria-describedby={`${id}-helper-text`}
       />
 

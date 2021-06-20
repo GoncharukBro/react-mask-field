@@ -88,6 +88,10 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
       }
     }
 
+    // Подсчитываем количество символов для замены и обрезаем лишнее
+    const countReplacedChars = mask.split('').filter((item) => item === char).length;
+    replacedData.value = replacedData.value.slice(0, countReplacedChars);
+
     // Если `number === true`, будут учитываться только цифры
     if (number) {
       replacedData.value = replacedData.value.replace(/\D/g, '');

@@ -1,56 +1,91 @@
-import { Form, Field } from 'src/material-form';
+import { useState, forwardRef } from 'react';
+import TextField from '@material-ui/core/TextField';
+import { MaskedInput } from 'src/masked-input';
+
+const CustomComponent = forwardRef((props: any, ref: any) => {
+  return <input ref={ref} {...props} />;
+});
+
+function TextFieldMask({ inputRef, ...other }: any) {
+  return <MaskedInput {...other} ref={inputRef} mask="+7 (___) ___-__-__" char="_" />;
+}
 
 export default function App() {
-  interface DemoFormData {
-    myText: string;
-    myPassword: string;
-    myNumeric: string;
-    myEmail: string;
-  }
-
-  const handleSubmit = (data: DemoFormData) => {
-    console.log(data);
-  };
+  const [maskedInputData, setMaskedInputData] = useState({
+    maskedValue: '',
+    replacedValue: '',
+  });
+  const [customComponentData, setCustomComponentData] = useState({
+    maskedValue: '',
+    replacedValue: '',
+  });
+  const [textFieldData, setTextFieldData] = useState({
+    maskedValue: '',
+    replacedValue: '',
+  });
 
   return (
     <div style={{ height: '100vh', display: 'flex' }}>
       <div style={{ width: 500, margin: 'auto' }}>
-        <Form<DemoFormData> name="demoForm" enableReset onSubmit={handleSubmit}>
-          <Field.Text
-            name="text"
-            label="Введите текст"
-            placeholder="Текст"
-            minLength={6}
-            required
-          />
-          <Field.Password name="password" label="Введите пароль" placeholder="Пароль" />
-          <Field.Password
-            name="confirmPassword"
-            label="Подтвердите пароль"
-            placeholder="Пароль"
-            match="password"
-          />
-          <Field.Numeric name="numeric" label="Введите номер" placeholder="Номер" />
-          <Field.Email name="email" label="Введите эл. почту" placeholder="Эл. почта" />
-          <Field.Phone name="phone" label="Введите телефон" placeholder="Телефон" />
-          <Field.Select
-            name="simpleSelect"
-            label="Выберите из списка"
-            placeholder="Не выбрано"
-            values={['Значение 1', 'Значение 2', 'Значение 3']}
-          />
-          <Field.Select
-            name="complexSelect"
-            label="Выберите из списка"
-            placeholder="Не выбрано"
-            values={[
-              { value: 1, render: 'Значение 1' },
-              { value: 2, render: 'Значение 2' },
-              { value: 3, render: 'Значение 3' },
-            ]}
-          />
-          <Field.Checkbox name="checkbox" label="Нажмите" />
-        </Form>
+        <h2>Нативное использование</h2>
+
+        <p>Не контролируемый компонент</p>
+        <MaskedInput mask="+7 (___) ___-__-__" char="_" />
+
+        <p>Контролируемый компонент</p>
+        <MaskedInput
+          mask="+7 (___) ___-__-__"
+          char="_"
+          value={maskedInputData.maskedValue}
+          onChange={(event, maskedValue, replacedValue) => {
+            setMaskedInputData({ maskedValue, replacedValue });
+          }}
+        />
+        <pre>{JSON.stringify(maskedInputData, null, 2)}</pre>
+
+        <br />
+        {/* ********************************************************************* */}
+        <br />
+
+        <h2>Интеграция с пользовательскими компонентами</h2>
+
+        <p>Не контролируемый компонент</p>
+        <MaskedInput component={CustomComponent} mask="+7 (___) ___-__-__" char="_" />
+
+        <p>Контролируемый компонент</p>
+        <MaskedInput
+          component={CustomComponent}
+          mask="+7 (___) ___-__-__"
+          char="_"
+          value={customComponentData.maskedValue}
+          onChange={
+            ((event: never, maskedValue: string, replacedValue: string) => {
+              setCustomComponentData({ maskedValue, replacedValue });
+            }) as any
+          }
+        />
+        <pre>{JSON.stringify(customComponentData, null, 2)}</pre>
+
+        <br />
+        {/* ********************************************************************* */}
+        <br />
+
+        <h2>Интеграция с Material UI. Способ 2</h2>
+
+        <p>Не контролируемый компонент</p>
+        <TextField InputProps={{ inputComponent: TextFieldMask }} />
+
+        <p>Контролируемый компонент</p>
+        <TextField
+          InputProps={{ inputComponent: TextFieldMask }}
+          value={textFieldData.maskedValue}
+          onChange={
+            ((event: never, maskedValue: string, replacedValue: string) => {
+              setTextFieldData({ maskedValue, replacedValue });
+            }) as any
+          }
+        />
+        <pre>{JSON.stringify(textFieldData, null, 2)}</pre>
       </div>
     </div>
   );

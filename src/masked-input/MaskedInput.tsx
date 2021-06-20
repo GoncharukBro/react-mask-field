@@ -18,6 +18,7 @@ interface MaskedInputProps extends Omit<React.InputHTMLAttributes<HTMLInputEleme
   component?: React.ComponentClass<any> | React.FunctionComponent<any>;
   mask: string;
   char: string;
+  number?: boolean;
   showMask?: boolean;
   onChange?: (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -34,6 +35,7 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     component: Component,
     mask,
     char,
+    number,
     showMask,
     value,
     placeholder,
@@ -86,6 +88,11 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
       }
     }
 
+    // Если `number === true`, будут учитываться только цифры
+    if (number) {
+      replacedData.value = replacedData.value.replace(/\D/g, '');
+    }
+
     let maskedValue = '';
 
     if (inputRef.current && replacedData.value) {
@@ -108,9 +115,9 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
       }
     }
 
+    // console.log(maskedValue, '|', replacedData.value);
     setState((prev) => ({ ...prev, maskedValue, replacedData }));
     onChange?.(event, maskedValue, replacedData.value);
-    console.log({ maskedValue, replacedData });
   };
 
   const handleSelect = (event: any) => {

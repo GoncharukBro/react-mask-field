@@ -10,7 +10,7 @@ import { validateField } from '../validate';
 import { useFormContext } from '../context';
 
 function PhoneMask({ inputRef, ...other }: React.PropsWithChildren<InputBaseComponentProps>) {
-  return <MaskedInput {...other} ref={inputRef} mask="+7 (___) ___-__-__" char="_" />;
+  return <MaskedInput {...other} ref={inputRef} mask="+7 (___) ___-__-__" char="_" number />;
 }
 
 type PhoneProps = BaseFieldProps & Pick<React.InputHTMLAttributes<HTMLInputElement>, 'value'>;

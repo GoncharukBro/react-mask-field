@@ -26,7 +26,7 @@ export default function App() {
 
   return (
     <div style={{ height: '100vh', display: 'flex' }}>
-      <div style={{ width: 500, margin: 'auto' }}>
+      <div style={{ width: 600, margin: 'auto' }}>
         <h2>Нативное использование</h2>
 
         <p>Не контролируемый компонент</p>
@@ -72,7 +72,7 @@ export default function App() {
         {/* ********************************************************************* */}
         <br />
 
-        <h2>Интеграция с Material UI. Способ 2</h2>
+        <h2>Интеграция с компонентами Material UI</h2>
 
         <p>Не контролируемый компонент</p>
         <TextField InputProps={{ inputComponent: TextFieldMask }} />

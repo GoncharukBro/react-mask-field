@@ -49,8 +49,8 @@ export function getLastReplacedSymbol(ast: AST) {
  * @param ast анализ сформированного значения с маской
  * @returns позиция курсора или `undefined` если по заданным параметрам ничего не нашлось
  */
-export function getCursorPosition(replacedData: ReplacedData, ast: AST) {
-  const { beforeRange, afterRange } = replacedData;
+export function getCursorPosition(type: string, ast: AST, replacedData: ReplacedData) {
+  const { beforeRange, added, afterRange } = replacedData;
 
   // Действие в начале строки
   // Находим первый символ пользовательского значения
@@ -58,7 +58,7 @@ export function getCursorPosition(replacedData: ReplacedData, ast: AST) {
     const firstSymbol = ast.find(({ own }) => own === 'user');
 
     if (firstSymbol) {
-      return firstSymbol.index;
+      return firstSymbol.index + (type?.includes('delete') ? 0 : 1);
     }
   }
 
@@ -66,13 +66,12 @@ export function getCursorPosition(replacedData: ReplacedData, ast: AST) {
   // Находим первый символ пользовательского значения после диапазона изменяемых символов
   if (afterRange) {
     const replacedSymbols = ast.filter(({ own }) => own === 'user');
-    const reversedReplacedSymbols = [...replacedSymbols].reverse();
-    const lastReplacedSymbol = reversedReplacedSymbols.find((item, index) => {
-      return afterRange.length === index;
+    const lastAddedSymbol = replacedSymbols.find((item, index) => {
+      return beforeRange.length + (added?.length || 0) === index + 1;
     });
 
-    if (lastReplacedSymbol) {
-      return lastReplacedSymbol.index + 1;
+    if (lastAddedSymbol) {
+      return lastAddedSymbol.index + 1;
     }
   }
 
@@ -124,5 +123,5 @@ export function getReplacedData(ast: AST, range: Range, added?: string) {
   });
 
   const value = beforeRange + (added || '') + afterRange;
-  return { value, added, beforeRange, afterRange };
+  return { value, beforeRange, added, afterRange };
 }

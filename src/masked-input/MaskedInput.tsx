@@ -106,7 +106,9 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
 
       // Устанавливаем позицию курсора
       const position =
-        getCursorPosition(replacedData, nextAST) || maskedValue.search(char) || maskedValue.length;
+        getCursorPosition(inputType, nextAST, replacedData) ||
+        maskedValue.search(char) ||
+        maskedValue.length;
       setCursorPosition(inputRef.current, position);
 
       // Если `showMask === false` окончанием значения будет последний пользовательский символ

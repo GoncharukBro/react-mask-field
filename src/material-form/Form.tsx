@@ -72,7 +72,7 @@ export default function Form<T extends Values<T> = any>(props: FormProps<T>) {
         let error = state.touched[other.name] ? state.errors[other.name] : undefined;
         // Убираем текст ошибки если поле-зависимость не заполнено,
         // так как при незаполненом поле-зависимости текущее поле не будет активно
-        error = hasEmptyDependence ? undefined : state.errors[other.name];
+        error = hasEmptyDependence ? undefined : error;
 
         // Клонируем поля с задаными свойствами
         return (

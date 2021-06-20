@@ -40,11 +40,17 @@ interface MaskedInputState {
   replacedData: ReplacedData;
 }
 
-interface MaskedInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface MaskedInputProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement>, 'onChange'> {
   component?: React.ComponentClass<any> | React.FunctionComponent<any>;
   mask: string;
   char: string;
   showMask?: boolean;
+  onChange?: (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    maskedValue: string,
+    replacedValue: string
+  ) => void;
 }
 
 let selectionStartBeforeChange: number | null = null;
@@ -118,7 +124,7 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
 
     console.log({ maskedValue, replacedData });
 
-    (onChange as any)?.(event, maskedValue, replacedData.value);
+    onChange?.(event, maskedValue, replacedData.value);
   };
 
   const handleSelect = (event: any) => {

@@ -9,45 +9,18 @@ import {
 } from './utilites';
 import { Range, ReplacedData } from './types';
 
-function effect(input: any, replacedData: any, mask: any, char: any, showMask: any) {
-  let maskedValue = '';
-
-  if (input && replacedData.value) {
-    // Формируем значение с маской
-    maskedValue = masked(replacedData.value, mask, char);
-    const nextAST = generateAST(maskedValue, mask);
-
-    // Устанавливаем позицию курсора
-    const position =
-      getCursorPosition(replacedData, nextAST) || maskedValue.search(char) || maskedValue.length;
-    setCursorPosition(input, position);
-
-    // Если `showMask === false` окончанием значения будет последний пользовательский символ
-    if (!showMask) {
-      const lastReplacedSymbol = getLastReplacedSymbol(nextAST);
-
-      if (lastReplacedSymbol) {
-        maskedValue = maskedValue.slice(0, lastReplacedSymbol.index + 1);
-      }
-    }
-  }
-
-  return maskedValue;
-}
-
 interface MaskedInputState {
   maskedValue: string;
   replacedData: ReplacedData;
 }
 
-interface MaskedInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement>, 'onChange'> {
+interface MaskedInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   component?: React.ComponentClass<any> | React.FunctionComponent<any>;
   mask: string;
   char: string;
   showMask?: boolean;
   onChange?: (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    event: React.ChangeEvent<HTMLInputElement>,
     maskedValue: string,
     replacedValue: string
   ) => void;
@@ -71,12 +44,7 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<MaskedInputState>({
     maskedValue: '',
-    replacedData: {
-      value: '',
-      added: '',
-      beforeRange: '',
-      afterRange: '',
-    },
+    replacedData: { value: '', added: '', beforeRange: '', afterRange: '' },
   });
 
   // Добавляем ссылку на элемент для родительских компонентов
@@ -118,13 +86,31 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
       }
     }
 
-    const maskedValue = effect(inputRef.current, replacedData, mask, char, showMask);
+    let maskedValue = '';
+
+    if (inputRef.current && replacedData.value) {
+      // Формируем значение с маской
+      maskedValue = masked(replacedData.value, mask, char);
+      const nextAST = generateAST(maskedValue, mask);
+
+      // Устанавливаем позицию курсора
+      const position =
+        getCursorPosition(replacedData, nextAST) || maskedValue.search(char) || maskedValue.length;
+      setCursorPosition(inputRef.current, position);
+
+      // Если `showMask === false` окончанием значения будет последний пользовательский символ
+      if (!showMask) {
+        const lastReplacedSymbol = getLastReplacedSymbol(nextAST);
+
+        if (lastReplacedSymbol) {
+          maskedValue = maskedValue.slice(0, lastReplacedSymbol.index + 1);
+        }
+      }
+    }
 
     setState((prev) => ({ ...prev, maskedValue, replacedData }));
-
-    console.log({ maskedValue, replacedData });
-
     onChange?.(event, maskedValue, replacedData.value);
+    console.log({ maskedValue, replacedData });
   };
 
   const handleSelect = (event: any) => {

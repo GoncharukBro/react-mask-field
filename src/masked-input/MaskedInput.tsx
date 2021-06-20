@@ -90,15 +90,15 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
 
     let maskedValue = '';
 
-    if (replacedData.value) {
+    if (inputRef.current && replacedData.value) {
       // Формируем значение с маской
       maskedValue = masked(replacedData.value, mask, char);
       const nextAST = generateAST(maskedValue, mask);
 
       // Устанавливаем позицию курсора
       const position =
-        getCursorPosition(replacedData, nextAST) || value.search(char) || value.length;
-      setCursorPosition(event.target, position);
+        getCursorPosition(replacedData, nextAST) || maskedValue.search(char) || maskedValue.length;
+      setCursorPosition(inputRef.current, position);
 
       // Если `showMask === false` окончанием значения будет последний пользовательский символ
       if (!showMask) {

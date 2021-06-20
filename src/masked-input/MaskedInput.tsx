@@ -11,7 +11,7 @@ import { AST, Range, ReplacedData } from './types';
 
 interface MaskedInputState {
   maskedValue: string;
-  replacedValue: string;
+  replacedData: ReplacedData;
 }
 
 interface MaskedInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -31,6 +31,7 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     mask,
     char,
     showMask,
+    value,
     placeholder,
     onReplace,
     onChange,
@@ -38,7 +39,15 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     ...other
   } = props;
   const inputRef = useRef<HTMLInputElement>(null);
-  const [state, setState] = useState<MaskedInputState>({ maskedValue: '', replacedValue: '' });
+  const [state, setState] = useState<MaskedInputState>({
+    maskedValue: '',
+    replacedData: {
+      value: '',
+      added: '',
+      beforeRange: '',
+      afterRange: '',
+    },
+  });
 
   // Добавляем ссылку на элемент для родительских компонентов
   useEffect(() => {
@@ -55,8 +64,8 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     const { selectionStart: selectionStartAfterChange, value } = event.target as any;
     const { inputType } = event.nativeEvent as any;
 
-    let replacedData: ReplacedData = { value: state.replacedValue } as any;
     const prevAST = generateAST(state.maskedValue, mask);
+    let { replacedData } = state;
 
     if (inputType?.includes('delete')) {
       // Подсчитываем количество удаленных символов
@@ -99,11 +108,9 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
           maskedValue = maskedValue.slice(0, lastReplacedSymbol.index + 1);
         }
       }
-
-      onReplace?.(nextAST);
     }
 
-    setState((prev) => ({ ...prev, maskedValue, replacedValue: replacedData.value }));
+    setState((prev) => ({ ...prev, maskedValue, replacedData }));
 
     console.log(value, '|', replacedData.value);
 

@@ -133,10 +133,11 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
       const nextAST = generateAST(maskedValue, mask);
 
       // Устанавливаем позицию курсора
-      const position =
-        getCursorPosition(inputType, nextAST, replacedData) ||
-        maskedValue.search(char) ||
-        maskedValue.length;
+      let position = getCursorPosition(inputType, nextAST, replacedData);
+      if (position === undefined) {
+        const firstChar = maskedValue.search(char);
+        position = firstChar !== undefined ? firstChar : maskedValue.length;
+      }
       setCursorPosition(inputRef.current, position);
 
       // Если `showMask === false` окончанием значения будет последний пользовательский символ

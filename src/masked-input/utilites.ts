@@ -17,19 +17,6 @@ export function generateAST(value: string, mask: string): AST {
 }
 
 /**
- * Заменяет все символы "char" введенными пользовательскими данными.
- * @param value введенное пользовательское значение
- * @param mask маска
- * @param char символ для замены
- * @returns сгенерированное значение с маской
- */
-export function masked(value: string, mask: string, char: string) {
-  return value.split('').reduce((prev, item) => {
-    return prev.replace(char, item);
-  }, mask);
-}
-
-/**
  * Находит последний символ введенный пользователем, не являющийся частью маски
  * @param ast анализ сформированного значения с маской
  * @returns объект содержащий информацию о символе
@@ -135,4 +122,31 @@ export function getReplacedData(ast: AST, range: Range, added?: string) {
 
   const value = beforeRange + (added || '') + afterRange;
   return { value, beforeRange, added, afterRange };
+}
+
+/**
+ * Заменяет все символы "char" введенными пользовательскими данными.
+ * @param value введенное пользовательское значение
+ * @param mask маска
+ * @param char символ для замены
+ * @returns сгенерированное значение с маской
+ */
+export function masked(value: string, mask: string, char: string) {
+  return value.split('').reduce((prev, item) => {
+    return prev.replace(char, item);
+  }, mask);
+}
+
+/**
+ * Обрезает символы с конца до последнего пользовательского символа
+ * @param value значение с маской
+ * @param ast анализ сформированного значения с маской
+ * @returns строка с удалением неиспользуемого окончания
+ */
+export function cutExcess(value: string, ast: AST) {
+  const lastReplacedSymbol = getLastReplacedSymbol(ast);
+
+  if (lastReplacedSymbol) {
+    return value.slice(0, lastReplacedSymbol.index + 1);
+  }
 }

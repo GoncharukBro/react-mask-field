@@ -5,7 +5,7 @@ import {
   getCursorPosition,
   setCursorPosition,
   getReplacedData,
-  getLastReplacedSymbol,
+  cutExcess,
 } from './utilites';
 import { Range, ReplacedData } from './types';
 
@@ -74,10 +74,17 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
         });
 
       // Маскируем значение если оно не является маскированным
-      const maskedValue = isReplacedValue ? masked(value, mask, char) : value;
+      let maskedValue = isReplacedValue ? masked(value, mask, char) : value;
+      const nextAST = generateAST(maskedValue, mask);
+
+      // Если `showMask === false` окончанием значения будет последний пользовательский символ
+      if (!showMask) {
+        maskedValue = cutExcess(maskedValue, nextAST) || maskedValue;
+      }
+
       setState((prev) => ({ ...prev, maskedValue }));
     }
-  }, [char, mask, value]);
+  }, [char, mask, showMask, value]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value, selectionStart: selectionStartAfterChange } = event.target;
@@ -138,11 +145,7 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
 
       // Если `showMask === false` окончанием значения будет последний пользовательский символ
       if (!showMask) {
-        const lastReplacedSymbol = getLastReplacedSymbol(nextAST);
-
-        if (lastReplacedSymbol) {
-          maskedValue = maskedValue.slice(0, lastReplacedSymbol.index + 1);
-        }
+        maskedValue = cutExcess(maskedValue, nextAST) || maskedValue;
       }
     }
 

@@ -16,7 +16,7 @@ interface MaskedInputState {
 
 interface MaskedInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> {
-  component?: React.ComponentClass<any> | React.FunctionComponent<any>;
+  component?: React.ComponentClass<unknown> | React.FunctionComponent<unknown>;
   mask: string;
   char: string;
   number?: boolean;
@@ -32,7 +32,7 @@ interface MaskedInputProps
 let selectionStartBeforeChange: number | null = null;
 let selectionEndBeforeChange: number | null = null;
 
-function MaskedInput(props: MaskedInputProps, ref: any) {
+function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) {
   const {
     component: Component,
     mask,

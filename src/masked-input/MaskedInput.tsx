@@ -22,11 +22,7 @@ interface MaskedInputProps
   number?: boolean;
   showMask?: boolean;
   value?: string;
-  onChange?: (
-    event: React.ChangeEvent<HTMLInputElement>,
-    maskedValue: string,
-    replacedValue: string
-  ) => void;
+  onChange?: (event: React.ChangeEvent<HTMLInputElement>, value: string) => void;
 }
 
 let selectionStartBeforeChange: number | null = null;
@@ -150,7 +146,15 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
     }
 
     setState((prev) => ({ ...prev, maskedValue, replacedData }));
-    onChange?.(event, maskedValue, replacedData.value);
+
+    // eslint-disable-next-line no-param-reassign
+    event.target.value = maskedValue;
+    if (event.nativeEvent.target) {
+      // eslint-disable-next-line no-param-reassign
+      (event.nativeEvent.target as any).value = maskedValue;
+    }
+
+    onChange?.(event, replacedData.value);
   };
 
   const handleSelect = (event: React.SyntheticEvent<HTMLInputElement, Event>) => {

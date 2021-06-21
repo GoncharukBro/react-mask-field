@@ -40,8 +40,8 @@ export default function App() {
           char="_"
           number
           value={maskedInputData.maskedValue}
-          onChange={(event, maskedValue, replacedValue) => {
-            setMaskedInputData({ maskedValue, replacedValue });
+          onChange={(event, value) => {
+            setMaskedInputData({ maskedValue: event.target.value, replacedValue: value });
           }}
         />
         <pre>{JSON.stringify(maskedInputData, null, 2)}</pre>
@@ -56,8 +56,8 @@ export default function App() {
           char="_"
           number
           value={customComponentData.replacedValue}
-          onChange={(event, maskedValue, replacedValue) => {
-            setCustomComponentData({ maskedValue, replacedValue });
+          onChange={(event, value) => {
+            setCustomComponentData({ maskedValue: event.target.value, replacedValue: value });
           }}
         />
         <pre>{JSON.stringify(customComponentData, null, 2)}</pre>
@@ -70,8 +70,8 @@ export default function App() {
           InputProps={{ inputComponent: TextFieldMask }}
           value={textFieldData.replacedValue}
           onChange={
-            ((event: never, maskedValue: string, replacedValue: string) => {
-              setTextFieldData({ maskedValue, replacedValue });
+            ((event: React.ChangeEvent<HTMLInputElement>, value: string) => {
+              setTextFieldData({ maskedValue: event.target.value, replacedValue: value });
             }) as any
           }
         />

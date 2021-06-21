@@ -26,13 +26,9 @@ export default function App() {
 
   return (
     <div style={{ height: '100vh', display: 'flex' }}>
-      <div style={{ width: 600, margin: 'auto' }}>
-        <h2>Нативное использование</h2>
+      <div style={{ width: 500, margin: 'auto' }}>
+        <h4>Нативное использование</h4>
 
-        <p>Не контролируемый компонент</p>
-        <MaskedInput mask="+7 (___) ___-__-__" char="_" number />
-
-        <p>Контролируемый компонент</p>
         <MaskedInput
           mask="+7 (___) ___-__-__"
           char="_"
@@ -45,42 +41,28 @@ export default function App() {
         <pre>{JSON.stringify(maskedInputData, null, 2)}</pre>
 
         <br />
-        {/* ********************************************************************* */}
-        <br />
 
-        <h2>Интеграция с пользовательскими компонентами</h2>
+        <h4>Интеграция с пользовательскими компонентами</h4>
 
-        <p>Не контролируемый компонент</p>
-        <MaskedInput component={CustomComponent} mask="+7 (___) ___-__-__" char="_" number />
-
-        <p>Контролируемый компонент</p>
         <MaskedInput
           component={CustomComponent}
           mask="+7 (___) ___-__-__"
           char="_"
           number
-          value={customComponentData.maskedValue}
-          onChange={
-            ((event: never, maskedValue: string, replacedValue: string) => {
-              setCustomComponentData({ maskedValue, replacedValue });
-            }) as any
-          }
+          value={customComponentData.replacedValue}
+          onChange={(event, maskedValue, replacedValue) => {
+            setCustomComponentData({ maskedValue, replacedValue });
+          }}
         />
         <pre>{JSON.stringify(customComponentData, null, 2)}</pre>
 
         <br />
-        {/* ********************************************************************* */}
-        <br />
 
-        <h2>Интеграция с компонентами Material UI</h2>
+        <h4>Интеграция с компонентами Material UI</h4>
 
-        <p>Не контролируемый компонент</p>
-        <TextField InputProps={{ inputComponent: TextFieldMask }} />
-
-        <p>Контролируемый компонент</p>
         <TextField
           InputProps={{ inputComponent: TextFieldMask }}
-          value={textFieldData.maskedValue}
+          value={textFieldData.replacedValue}
           onChange={
             ((event: never, maskedValue: string, replacedValue: string) => {
               setTextFieldData({ maskedValue, replacedValue });

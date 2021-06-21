@@ -37,8 +37,8 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     char,
     number,
     showMask,
-    value,
     placeholder,
+    value,
     onChange,
     onSelect,
     ...other
@@ -59,6 +59,18 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
       ref.current = inputRef.current;
     }
   }, [ref]);
+
+  useEffect(() => {
+    if (value) {
+      const isReplacedValue = mask
+        .slice(0, (value as string).length)
+        .split('')
+        .find((item, index) => item !== char && item !== (value as string)[index]);
+
+      const maskedValue = isReplacedValue ? masked(value as string, mask, char) : (value as string);
+      setState((prev) => ({ ...prev, maskedValue }));
+    }
+  }, [char, mask, value]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { selectionStart: selectionStartAfterChange, value } = event.target as any;
@@ -88,14 +100,17 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
       }
     }
 
+    // Если `number === true`, будут учитываться только цифры
+    if (number && /\D/g.test(replacedData.value)) {
+      return;
+    }
+
+    // Не учитываем символы равные "char"
+    replacedData.value = replacedData.value.replace(char, '');
+
     // Подсчитываем количество символов для замены и обрезаем лишнее
     const countReplacedChars = mask.split('').filter((item) => item === char).length;
     replacedData.value = replacedData.value.slice(0, countReplacedChars);
-
-    // Если `number === true`, будут учитываться только цифры
-    if (number) {
-      replacedData.value = replacedData.value.replace(/\D/g, '');
-    }
 
     let maskedValue = '';
 
@@ -121,7 +136,6 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
       }
     }
 
-    // console.log(maskedValue, '|', replacedData.value);
     setState((prev) => ({ ...prev, maskedValue, replacedData }));
     onChange?.(event, maskedValue, replacedData.value);
   };

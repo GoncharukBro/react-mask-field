@@ -14,12 +14,14 @@ interface MaskedInputState {
   replacedData: ReplacedData;
 }
 
-interface MaskedInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
+interface MaskedInputProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> {
   component?: React.ComponentClass<any> | React.FunctionComponent<any>;
   mask: string;
   char: string;
   number?: boolean;
   showMask?: boolean;
+  value?: string;
   onChange?: (
     event: React.ChangeEvent<HTMLInputElement>,
     maskedValue: string,
@@ -60,26 +62,31 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     }
   }, [ref]);
 
+  // Контролируем значение
   useEffect(() => {
     if (value) {
+      // Проверяем является ли значение маскированным
       const isReplacedValue = mask
-        .slice(0, (value as string).length)
+        .slice(0, value.length)
         .split('')
-        .find((item, index) => item !== char && item !== (value as string)[index]);
+        .find((item, index) => {
+          return item !== char && item !== value[index];
+        });
 
-      const maskedValue = isReplacedValue ? masked(value as string, mask, char) : (value as string);
+      // Маскируем значение если оно не является маскированным
+      const maskedValue = isReplacedValue ? masked(value, mask, char) : value;
       setState((prev) => ({ ...prev, maskedValue }));
     }
   }, [char, mask, value]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { selectionStart: selectionStartAfterChange, value } = event.target as any;
+    const { value, selectionStart: selectionStartAfterChange } = event.target;
     const { inputType } = event.nativeEvent as any;
 
     const prevAST = generateAST(state.maskedValue, mask);
     let { replacedData } = state;
 
-    if (inputType?.includes('delete')) {
+    if (inputType?.includes('delete') && selectionStartAfterChange !== null) {
       // Подсчитываем количество удаленных символов
       const countDeletedSymbols = state.maskedValue.length - value.length;
       // Определяем диапозон изменяемых символов
@@ -89,15 +96,18 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
       ];
       // Получаем информацию о пользовательском значении
       replacedData = getReplacedData(prevAST, range);
-    } else if (inputType?.includes('insert') || value) {
-      if (selectionStartBeforeChange !== null && selectionEndBeforeChange !== null) {
-        // Определяем диапозон изменяемых символов
-        const range: Range = [selectionStartBeforeChange, selectionEndBeforeChange];
-        // Находим добавленные символы
-        const addedSymbols = value.slice(range[0], selectionStartAfterChange);
-        // Получаем информацию о пользовательском значении
-        replacedData = getReplacedData(prevAST, range, addedSymbols);
-      }
+    } else if (
+      (inputType?.includes('insert') || value) &&
+      selectionStartBeforeChange !== null &&
+      selectionEndBeforeChange !== null &&
+      selectionStartAfterChange !== null
+    ) {
+      // Определяем диапозон изменяемых символов
+      const range: Range = [selectionStartBeforeChange, selectionEndBeforeChange];
+      // Находим добавленные символы
+      const addedSymbols = value.slice(range[0], selectionStartAfterChange);
+      // Получаем информацию о пользовательском значении
+      replacedData = getReplacedData(prevAST, range, addedSymbols);
     }
 
     // Если `number === true`, будут учитываться только цифры
@@ -140,10 +150,11 @@ function MaskedInput(props: MaskedInputProps, ref: any) {
     onChange?.(event, maskedValue, replacedData.value);
   };
 
-  const handleSelect = (event: any) => {
+  const handleSelect = (event: React.SyntheticEvent<HTMLInputElement, Event>) => {
+    const { selectionStart, selectionEnd } = event.target as any;
     // Кэшируем диапозон изменяемых значений
-    selectionStartBeforeChange = event.target.selectionStart;
-    selectionEndBeforeChange = event.target.selectionEnd;
+    selectionStartBeforeChange = selectionStart;
+    selectionEndBeforeChange = selectionEnd;
     onSelect?.(event);
   };
 

@@ -71,6 +71,17 @@ export function getCursorPosition(type: string, ast: AST, replacedData: Replaced
     });
 
     if (lastAddedSymbol) {
+      // При нажатой кнопке "delete", оставляем курсор на месте
+      if (type === 'deleteContentForward') {
+        const symbol = replacedSymbols.find((item) => {
+          return lastAddedSymbol.index < item.index;
+        });
+
+        if (symbol) {
+          return symbol.index;
+        }
+      }
+
       return lastAddedSymbol.index + 1;
     }
   }

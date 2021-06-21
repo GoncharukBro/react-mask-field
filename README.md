@@ -2,11 +2,13 @@
 
 Компонент MaskedInput позволяет накладывать маску на поле ввода.
 
+Вот так просто можно реализовать любую маску:
+
 ```javascript
 import { useState } from 'react';
 import { MaskedInput } from 'src/masked-input';
 
-export default function App() {
+export default function Example() {
   const [state, setState] = useState({ maskedValue: '', replacedValue: '' });
 
   const handleChange = (event, maskedValue, replacedValue) => {
@@ -24,6 +26,21 @@ export default function App() {
   );
 }
 ```
+
+Одной из ключевых особенностей компонента MaskedInput является то, что он опирается только на вводимые пользователем символы, за счет чего вы можете смело включать абсолютно любые символы в маску не опасаясь за "неожиданное поведение" компонента.
+
+### Уникальные свойства компонента
+
+- `mask` - маска в формате строки, использует `char` для замены пользователем;
+- `char` - символ для замены используемый в маске (не учитывается при на боре текста);
+- `number` - учитывает только числовые символы.
+
+Также вы можете передавать в компонент MaskedInput все свойства доступные элементу `input`.
+
+Компонент InputMask не мутирует объект события `event`, вместо этого он предоставляет два дополнительных параметра:
+
+- `maskedValue` - содержащий маскированное значение;
+- `replacedValue` - содержащий символы введенные пользователем без учета символов маски.
 
 ## Интеграция пользовательскими компонентами
 
@@ -43,7 +60,7 @@ const CustomComponent = forwardRef((props, ref) => {
 });
 
 // Компонент с MaskedInput
-export default function App() {
+export default function Example() {
   const [state, setState] = useState({ maskedValue: '', replacedValue: '' });
 
   const handleChange = (event, maskedValue, replacedValue) => {
@@ -82,7 +99,7 @@ function TextFieldMask({ inputRef, ...other }) {
 }
 
 // Компонент с Material UI
-export default function App() {
+export default function Example() {
   const [state, setState] = useState({ maskedValue: '', replacedValue: '' });
 
   const handleChange = (event, maskedValue, replacedValue) => {
@@ -98,3 +115,27 @@ export default function App() {
   );
 }
 ```
+
+Если вы используете TypeScript вам необходимо передать обработчик событий с типом `any`.
+
+Вот так:
+
+```typescript
+export default function Example() {
+  const [state, setState] = useState({ maskedValue: '', replacedValue: '' });
+
+  const handleChange = (event: never, maskedValue: string, replacedValue: string) => {
+    setState({ maskedValue, replacedValue });
+  };
+
+  return (
+    <TextField
+      InputProps={{ inputComponent: TextFieldMask }}
+      value={state.replacedValue}
+      onChange={handleChange as any}
+    />
+  );
+}
+```
+
+Это компромиссное решение, ведь, как уже было сказано компонент InputMask не мутирует объект события `event`, вместо этого он предоставляет два дополнительных параметра, что не соответствует ожидаемому типу компонентами Material UI.

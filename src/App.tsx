@@ -2,9 +2,14 @@ import { useState, forwardRef } from 'react';
 import TextField from '@material-ui/core/TextField';
 import { MaskedInput } from 'src/masked-input';
 
-const CustomComponent = forwardRef((props: any, ref: any) => {
-  return <input ref={ref} {...props} />;
-});
+const CustomComponent = forwardRef(
+  (
+    props: React.InputHTMLAttributes<HTMLInputElement>,
+    ref: React.ForwardedRef<HTMLInputElement>
+  ) => {
+    return <input ref={ref} {...props} />;
+  }
+);
 
 function TextFieldMask({ inputRef, ...other }: any) {
   return <MaskedInput {...other} ref={inputRef} mask="+7 (___) ___-__-__" char="_" number />;

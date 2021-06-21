@@ -1,46 +1,100 @@
-# Getting Started with Create React App
+# React Masked Input
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Компонент MaskedInput позволяет накладывать маску на поле ввода.
 
-## Available Scripts
+```javascript
+import { useState } from 'react';
+import { MaskedInput } from 'src/masked-input';
 
-In the project directory, you can run:
+export default function App() {
+  const [state, setState] = useState({ maskedValue: '', replacedValue: '' });
 
-### `npm start`
+  const handleChange = (event, maskedValue, replacedValue) => {
+    setState({ maskedValue, replacedValue });
+  };
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+  return (
+    <MaskedInput
+      mask="+7 (___) ___-__-__"
+      char="_"
+      number
+      value={state.maskedValue}
+      onChange={handleChange}
+    />
+  );
+}
+```
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Интеграция пользовательскими компонентами
 
-### `npm test`
+MaskedInput позволяет с лёгкостью интегрировать пользовательские компоненты, давая возможность использовать собственные стилизованные компоненты.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Для этого необходимо передать пользовательский компонент в метод `forwardRef`, предоставляемый React. `forwardRef` позволяет автоматически передавать значение `ref` дочернему элементу ([подробнее](https://ru.reactjs.org/docs/forwarding-refs.html)).
 
-### `npm run build`
+Вот как это делается:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```javascript
+import { useState, forwardRef } from 'react';
+import { MaskedInput } from 'src/masked-input';
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+// Пользовательский компонент
+const CustomComponent = forwardRef((props, ref) => {
+  return <input ref={ref} {...props} />;
+});
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+// Компонент с MaskedInput
+export default function App() {
+  const [state, setState] = useState({ maskedValue: '', replacedValue: '' });
 
-### `npm run eject`
+  const handleChange = (event, maskedValue, replacedValue) => {
+    setState({ maskedValue, replacedValue });
+  };
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+  return (
+    <MaskedInput
+      component={CustomComponent}
+      mask="+7 (___) ___-__-__"
+      char="_"
+      number
+      value={state.replacedValue}
+      onChange={handleChange}
+    />
+  );
+}
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Интеграция с компонентами Material UI
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+Если вы используете Material UI, вам необходимо создать свой компонент и передать его как свойство `inputComponent`.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+Ваш компонент должен передавать свойство `inputRef`, в качестве значения для свойства `ref` компонента MaskedInput.
 
-## Learn More
+Вот как это делается:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```javascript
+import { useState } from 'react';
+import TextField from '@material-ui/core/TextField';
+import { MaskedInput } from 'src/masked-input';
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+// Компонент с MaskedInput
+function TextFieldMask({ inputRef, ...other }) {
+  return <MaskedInput {...other} ref={inputRef} mask="+7 (___) ___-__-__" char="_" number />;
+}
+
+// Компонент с Material UI
+export default function App() {
+  const [state, setState] = useState({ maskedValue: '', replacedValue: '' });
+
+  const handleChange = (event, maskedValue, replacedValue) => {
+    setState({ maskedValue, replacedValue });
+  };
+
+  return (
+    <TextField
+      InputProps={{ inputComponent: TextFieldMask }}
+      value={state.replacedValue}
+      onChange={handleChange}
+    />
+  );
+}
+```

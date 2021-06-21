@@ -9,10 +9,10 @@ import { useState } from 'react';
 import { MaskedInput } from 'src/masked-input';
 
 export default function Example() {
-  const [state, setState] = useState({ maskedValue: '', replacedValue: '' });
+  const [state, setState] = useState({ maskedValue: '', value: '' });
 
-  const handleChange = (event, maskedValue, replacedValue) => {
-    setState({ maskedValue, replacedValue });
+  const handleChange = (event, value) => {
+    setState({ maskedValue: event.target.value, value });
   };
 
   return (
@@ -20,7 +20,7 @@ export default function Example() {
       mask="+7 (___) ___-__-__"
       char="_"
       number
-      value={state.maskedValue}
+      value={state.value}
       onChange={handleChange}
     />
   );
@@ -37,10 +37,11 @@ export default function Example() {
 
 Также вы можете передавать в компонент MaskedInput все свойства доступные элементу `input`.
 
-Компонент InputMask не мутирует объект события `event`, вместо этого он предоставляет два дополнительных параметра:
+Компонент InputMask предоставляет дополнительный параметр в обработчик события `onChange`, содержащий символы введенные пользователем без учета символов маски.
 
-- `maskedValue` - содержащий маскированное значение;
-- `replacedValue` - содержащий символы введенные пользователем без учета символов маски.
+### Важно
+
+Для корректной работы маски, рекомендуется помещать в качестве значения `value` либо значение из `event.target.value`, либо из дополнительного параметра `value` события `onChange`.
 
 ## Интеграция пользовательскими компонентами
 
@@ -61,10 +62,10 @@ const CustomComponent = forwardRef((props, ref) => {
 
 // Компонент с MaskedInput
 export default function Example() {
-  const [state, setState] = useState({ maskedValue: '', replacedValue: '' });
+  const [state, setState] = useState({ maskedValue: '', value: '' });
 
-  const handleChange = (event, maskedValue, replacedValue) => {
-    setState({ maskedValue, replacedValue });
+  const handleChange = (event, value) => {
+    setState({ maskedValue: event.target.value, value });
   };
 
   return (
@@ -73,7 +74,7 @@ export default function Example() {
       mask="+7 (___) ___-__-__"
       char="_"
       number
-      value={state.replacedValue}
+      value={state.value}
       onChange={handleChange}
     />
   );
@@ -100,42 +101,42 @@ function TextFieldMask({ inputRef, ...other }) {
 
 // Компонент с Material UI
 export default function Example() {
-  const [state, setState] = useState({ maskedValue: '', replacedValue: '' });
+  const [state, setState] = useState({ maskedValue: '', value: '' });
 
-  const handleChange = (event, maskedValue, replacedValue) => {
-    setState({ maskedValue, replacedValue });
+  const handleChange = (event, value) => {
+    setState({ maskedValue: event.target.value, value });
   };
 
   return (
     <TextField
       InputProps={{ inputComponent: TextFieldMask }}
-      value={state.replacedValue}
+      value={state.value}
       onChange={handleChange}
     />
   );
 }
 ```
 
-Если вы используете TypeScript вам необходимо передать обработчик событий с типом `any`.
+Если вы используете TypeScript и хотите получить значение из второго параметра, вам необходимо передать обработчик событий с типом `any`.
 
 Вот так:
 
 ```typescript
 export default function Example() {
-  const [state, setState] = useState({ maskedValue: '', replacedValue: '' });
+  const [state, setState] = useState({ maskedValue: '', value: '' });
 
-  const handleChange = (event: never, maskedValue: string, replacedValue: string) => {
-    setState({ maskedValue, replacedValue });
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
+    setState({ maskedValue: event.target.value, value });
   };
 
   return (
     <TextField
       InputProps={{ inputComponent: TextFieldMask }}
-      value={state.replacedValue}
+      value={state.value}
       onChange={handleChange as any}
     />
   );
 }
 ```
 
-Это компромиссное решение, ведь, как уже было сказано компонент InputMask не мутирует объект события `event`, вместо этого он предоставляет два дополнительных параметра, что не соответствует ожидаемому типу компонентами Material UI.
+Это компромиссное решение, так как наличие второго параметра не соответствует ожидаемому типу элемента `input`.

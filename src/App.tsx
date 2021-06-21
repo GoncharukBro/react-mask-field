@@ -17,18 +17,17 @@ function TextFieldMask({ inputRef, ...other }: InputBaseComponentProps) {
 }
 
 export default function App() {
-  const [maskedInputData, setMaskedInputData] = useState({
-    maskedValue: '',
-    replacedValue: '',
-  });
-  const [customComponentData, setCustomComponentData] = useState({
-    maskedValue: '',
-    replacedValue: '',
-  });
-  const [textFieldData, setTextFieldData] = useState({
-    maskedValue: '',
-    replacedValue: '',
-  });
+  const [maskedInputData, setMaskedInputData] = useState({ maskedValue: '', value: '' });
+  const [customComponentData, setCustomComponentData] = useState({ maskedValue: '', value: '' });
+  const [textFieldData, setTextFieldData] = useState({ maskedValue: '', value: '' });
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
+    const newValue = value[0] === '9' ? `7${value}` : value;
+    setMaskedInputData({ maskedValue: event.target.value, value });
+  };
+
+  const isPhoneRu = ['7', '8', '9'].includes(maskedInputData.value[0]);
+  const mask = '_+_ __________';
 
   return (
     <div style={{ height: '100vh', display: 'flex' }}>
@@ -36,13 +35,12 @@ export default function App() {
         <h4>Нативное использование</h4>
 
         <MaskedInput
-          mask="+7 (___) ___-__-__"
+          mask={mask}
           char="_"
           number
-          value={maskedInputData.maskedValue}
-          onChange={(event, value) => {
-            setMaskedInputData({ maskedValue: event.target.value, replacedValue: value });
-          }}
+          placeholder="Телефон"
+          value={maskedInputData.value}
+          onChange={handleChange}
         />
         <pre>{JSON.stringify(maskedInputData, null, 2)}</pre>
 
@@ -55,9 +53,9 @@ export default function App() {
           mask="+7 (___) ___-__-__"
           char="_"
           number
-          value={customComponentData.replacedValue}
+          value={customComponentData.value}
           onChange={(event, value) => {
-            setCustomComponentData({ maskedValue: event.target.value, replacedValue: value });
+            setCustomComponentData({ maskedValue: event.target.value, value });
           }}
         />
         <pre>{JSON.stringify(customComponentData, null, 2)}</pre>
@@ -68,10 +66,10 @@ export default function App() {
 
         <TextField
           InputProps={{ inputComponent: TextFieldMask }}
-          value={textFieldData.replacedValue}
+          value={textFieldData.value}
           onChange={
             ((event: React.ChangeEvent<HTMLInputElement>, value: string) => {
-              setTextFieldData({ maskedValue: event.target.value, replacedValue: value });
+              setTextFieldData({ maskedValue: event.target.value, value });
             }) as any
           }
         />

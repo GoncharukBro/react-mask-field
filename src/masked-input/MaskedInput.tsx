@@ -117,14 +117,13 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value: inputValue, selectionStart: selectionStartAfterChange } = event.target;
-    const { inputType } = event.nativeEvent as any;
 
     // Кэшируем тип ввода
-    type = inputType;
+    type = (event.nativeEvent as any).inputType;
 
     const prevAST = generateAST(state.maskedValue, mask);
 
-    if (inputType?.includes('delete') && selectionStartAfterChange !== null) {
+    if (type?.includes('delete') && selectionStartAfterChange !== null) {
       // Подсчитываем количество удаленных символов
       const countDeletedSymbols = state.maskedValue.length - inputValue.length;
       // Определяем диапозон изменяемых символов
@@ -135,7 +134,7 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
       // Получаем информацию о пользовательском значении
       replacedData = getReplacedData(prevAST, range);
     } else if (
-      (inputType?.includes('insert') || inputValue) &&
+      (type?.includes('insert') || inputValue) &&
       selectionStartBeforeChange !== null &&
       selectionEndBeforeChange !== null &&
       selectionStartAfterChange !== null

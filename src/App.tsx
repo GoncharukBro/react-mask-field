@@ -23,15 +23,14 @@ export default function App() {
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
     let newValue = value;
+    if (newValue[0] === '8') {
+      newValue = `7${newValue.slice(1)}`;
+    }
     if (newValue[0] === '9') {
       newValue = `7${newValue}`;
     }
     setMaskedInputData({ maskedValue: event.target.value, value: newValue });
   };
-
-  const isPhoneRu = ['7', '8'].includes(maskedInputData.value[0]);
-  const maskRu = maskedInputData.value[0] === '8' ? '_ (___) ___-__-__' : '+_ (___) ___-__-__';
-  const mask = isPhoneRu ? maskRu : '+_ __________';
 
   return (
     <div style={{ height: '100vh', display: 'flex' }}>
@@ -39,7 +38,7 @@ export default function App() {
         <h4>Нативное использование</h4>
 
         <MaskedInput
-          mask={mask}
+          mask={maskedInputData.value[0] === '7' ? '+_ (___) ___-__-__' : '+_ __________'}
           char="_"
           number
           placeholder="Телефон"

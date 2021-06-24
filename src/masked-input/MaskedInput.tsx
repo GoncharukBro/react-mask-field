@@ -7,11 +7,40 @@ import {
   getReplacedData,
   cutExcess,
 } from './utilites';
-import { Range, ReplacedData } from './types';
+import { Range, ReplacedData, AST } from './types';
+
+let type: any = null;
+let replacedData: ReplacedData = { value: '', added: '', beforeRange: '', afterRange: '' };
+let selectionStartBeforeChange: number | null = null;
+let selectionEndBeforeChange: number | null = null;
+
+// Применяем позиционирование курсора
+function applyCursorPosition(input: HTMLInputElement, ast: AST, maskedValue: string, char: string) {
+  let position = getCursorPosition(type, ast, replacedData);
+
+  if (position === undefined) {
+    const firstChar = maskedValue.search(char);
+    position = firstChar !== undefined ? firstChar : maskedValue.length;
+  }
+
+  setCursorPosition(input, position);
+}
+
+function getMaskedData(value: string, mask: string, char: string, showMask: boolean | undefined) {
+  // Формируем значение с маской
+  let maskedValue = masked(value, mask, char);
+  const nextAST = generateAST(maskedValue, mask);
+
+  // Если `showMask === false` окончанием значения будет последний пользовательский символ
+  if (!showMask) {
+    maskedValue = cutExcess(maskedValue, nextAST) || maskedValue;
+  }
+
+  return { maskedValue, ast: nextAST };
+}
 
 interface MaskedInputState {
   maskedValue: string;
-  replacedData: ReplacedData;
 }
 
 interface MaskedInputProps
@@ -24,9 +53,6 @@ interface MaskedInputProps
   value?: string;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>, value: string) => void;
 }
-
-let selectionStartBeforeChange: number | null = null;
-let selectionEndBeforeChange: number | null = null;
 
 function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) {
   const {
@@ -42,10 +68,7 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
     ...other
   } = props;
   const inputRef = useRef<HTMLInputElement>(null);
-  const [state, setState] = useState<MaskedInputState>({
-    maskedValue: '',
-    replacedData: { value: '', added: '', beforeRange: '', afterRange: '' },
-  });
+  const [state, setState] = useState<MaskedInputState>({ maskedValue: '' });
 
   // Добавляем ссылку на элемент для родительских компонентов
   useEffect(() => {
@@ -60,38 +83,49 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
 
   // Контролируем значение
   useEffect(() => {
-    if (value) {
+    if (value !== undefined) {
       // Проверяем является ли значение маскированным
-      const isReplacedValue = mask
+      const isReplacedValue = !!mask
         .slice(0, value.length)
         .split('')
         .find((item, index) => {
           return item !== char && item !== value[index];
         });
 
-      // Маскируем значение если оно не является маскированным
-      let maskedValue = isReplacedValue ? masked(value, mask, char) : value;
-      const nextAST = generateAST(maskedValue, mask);
+      let replacedValue = value;
 
-      // Если `showMask === false` окончанием значения будет последний пользовательский символ
-      if (!showMask) {
-        maskedValue = cutExcess(maskedValue, nextAST) || maskedValue;
+      // Если значение маскированное выбираем из него все пользовательские символы
+      if (!isReplacedValue) {
+        replacedValue = mask.split('').reduce((prev, item, index) => {
+          const hasItem = item === char && value[index] && value[index] !== char;
+          return hasItem ? prev + value[index] : prev;
+        }, '');
       }
 
-      setState((prev) => ({ ...prev, maskedValue }));
+      let maskedValue = '';
+
+      if (inputRef.current && value) {
+        const { maskedValue: value, ast } = getMaskedData(replacedValue, mask, char, showMask);
+        maskedValue = value;
+        applyCursorPosition(inputRef.current, ast, maskedValue, char);
+      }
+
+      setState({ maskedValue });
     }
-  }, [char, mask, showMask, value]);
+  }, [value, char, mask, showMask]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { value, selectionStart: selectionStartAfterChange } = event.target;
+    const { value: inputValue, selectionStart: selectionStartAfterChange } = event.target;
     const { inputType } = event.nativeEvent as any;
 
+    // Кэшируем тип ввода
+    type = inputType;
+
     const prevAST = generateAST(state.maskedValue, mask);
-    let { replacedData } = state;
 
     if (inputType?.includes('delete') && selectionStartAfterChange !== null) {
       // Подсчитываем количество удаленных символов
-      const countDeletedSymbols = state.maskedValue.length - value.length;
+      const countDeletedSymbols = state.maskedValue.length - inputValue.length;
       // Определяем диапозон изменяемых символов
       const range: Range = [
         selectionStartAfterChange,
@@ -100,7 +134,7 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
       // Получаем информацию о пользовательском значении
       replacedData = getReplacedData(prevAST, range);
     } else if (
-      (inputType?.includes('insert') || value) &&
+      (inputType?.includes('insert') || inputValue) &&
       selectionStartBeforeChange !== null &&
       selectionEndBeforeChange !== null &&
       selectionStartAfterChange !== null
@@ -108,7 +142,7 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
       // Определяем диапозон изменяемых символов
       const range: Range = [selectionStartBeforeChange, selectionEndBeforeChange];
       // Находим добавленные символы
-      const addedSymbols = value.slice(range[0], selectionStartAfterChange);
+      const addedSymbols = inputValue.slice(range[0], selectionStartAfterChange);
       // Получаем информацию о пользовательском значении
       replacedData = getReplacedData(prevAST, range, addedSymbols);
     }
@@ -128,25 +162,14 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
     let maskedValue = '';
 
     if (inputRef.current && replacedData.value) {
-      // Формируем значение с маской
-      maskedValue = masked(replacedData.value, mask, char);
-      const nextAST = generateAST(maskedValue, mask);
-
-      // Устанавливаем позицию курсора
-      let position = getCursorPosition(inputType, nextAST, replacedData);
-      if (position === undefined) {
-        const firstChar = maskedValue.search(char);
-        position = firstChar !== undefined ? firstChar : maskedValue.length;
-      }
-      setCursorPosition(inputRef.current, position);
-
-      // Если `showMask === false` окончанием значения будет последний пользовательский символ
-      if (!showMask) {
-        maskedValue = cutExcess(maskedValue, nextAST) || maskedValue;
-      }
+      const { maskedValue: value, ast } = getMaskedData(replacedData.value, mask, char, showMask);
+      maskedValue = value;
+      applyCursorPosition(inputRef.current, ast, maskedValue, char);
     }
 
-    setState((prev) => ({ ...prev, maskedValue, replacedData }));
+    if (value === undefined) {
+      setState({ maskedValue });
+    }
 
     // eslint-disable-next-line no-param-reassign
     event.target.value = maskedValue;
@@ -160,9 +183,11 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
 
   const handleSelect = (event: React.SyntheticEvent<HTMLInputElement, Event>) => {
     const { selectionStart, selectionEnd } = event.target as any;
+
     // Кэшируем диапозон изменяемых значений
     selectionStartBeforeChange = selectionStart;
     selectionEndBeforeChange = selectionEnd;
+
     onSelect?.(event);
   };
 

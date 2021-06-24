@@ -22,12 +22,16 @@ export default function App() {
   const [textFieldData, setTextFieldData] = useState({ maskedValue: '', value: '' });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
-    const newValue = value[0] === '9' ? `7${value}` : value;
-    setMaskedInputData({ maskedValue: event.target.value, value });
+    let newValue = value;
+    if (newValue[0] === '9') {
+      newValue = `7${newValue}`;
+    }
+    setMaskedInputData({ maskedValue: event.target.value, value: newValue });
   };
 
-  const isPhoneRu = ['7', '8', '9'].includes(maskedInputData.value[0]);
-  const mask = '_+_ __________';
+  const isPhoneRu = ['7', '8'].includes(maskedInputData.value[0]);
+  const maskRu = maskedInputData.value[0] === '8' ? '_ (___) ___-__-__' : '+_ (___) ___-__-__';
+  const mask = isPhoneRu ? maskRu : '+_ __________';
 
   return (
     <div style={{ height: '100vh', display: 'flex' }}>

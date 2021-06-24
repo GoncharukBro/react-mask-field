@@ -104,15 +104,16 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
 
       let maskedValue = '';
 
-      if (inputRef.current && value) {
+      if (inputRef.current && replacedValue) {
         const { maskedValue: value, ast } = getMaskedData(replacedValue, mask, char, showMask);
         maskedValue = value;
+
         applyCursorPosition(inputRef.current, ast, maskedValue, char);
       }
 
       setState({ maskedValue });
     }
-  }, [value, char, mask, showMask]);
+  }, [value, mask, char, showMask]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value: inputValue, selectionStart: selectionStartAfterChange } = event.target;
@@ -164,6 +165,7 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
     if (inputRef.current && replacedData.value) {
       const { maskedValue: value, ast } = getMaskedData(replacedData.value, mask, char, showMask);
       maskedValue = value;
+
       applyCursorPosition(inputRef.current, ast, maskedValue, char);
     }
 

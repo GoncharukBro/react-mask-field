@@ -13,7 +13,7 @@ const CustomComponent = forwardRef(
 );
 
 function TextFieldMask({ inputRef, ...other }: InputBaseComponentProps) {
-  return <MaskedInput {...other} ref={inputRef} mask="+7 (___) ___-__-__" char="_" number />;
+  return <MaskedInput {...other} ref={inputRef} mask="+7 (___) ___-__-__" char="_" set={/\d/} />;
 }
 
 export default function App() {
@@ -40,7 +40,7 @@ export default function App() {
         <MaskedInput
           mask={maskedInputData.value[0] === '7' ? '+_ (___) ___-__-__' : '+_ __________'}
           char="_"
-          number
+          set={/\d/}
           placeholder="Телефон"
           value={maskedInputData.value}
           onChange={handleChange}
@@ -55,7 +55,7 @@ export default function App() {
           component={CustomComponent}
           mask="+7 (___) ___-__-__"
           char="_"
-          number
+          set={/\d/}
           value={customComponentData.value}
           onChange={(event, value) => {
             setCustomComponentData({ maskedValue: event.target.value, value });

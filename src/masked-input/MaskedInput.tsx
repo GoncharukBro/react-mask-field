@@ -48,7 +48,7 @@ interface MaskedInputProps
   component?: React.ComponentClass<unknown> | React.FunctionComponent<unknown>;
   mask: string;
   char: string;
-  number?: boolean;
+  set?: RegExp;
   showMask?: boolean;
   value?: string;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>, value: string) => void;
@@ -59,7 +59,7 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
     component: Component,
     mask,
     char,
-    number,
+    set,
     showMask,
     placeholder,
     value,
@@ -147,8 +147,14 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
       replacedData = getReplacedData(prevAST, range, addedSymbols);
     }
 
-    // Если `number === true`, будут учитываться только цифры
-    if (number && /\D/g.test(replacedData.value)) {
+    // Учитывает только символы указанные в `set`
+    const regExp = set && new RegExp(set);
+
+    const hasUnallowedChar = replacedData.value.split('').find((item) => {
+      return regExp && !regExp.test(item);
+    });
+
+    if (hasUnallowedChar) {
       return;
     }
 

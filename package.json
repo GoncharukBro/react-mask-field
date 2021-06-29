@@ -1,8 +1,18 @@
 {
   "name": "masked-input",
   "version": "0.1.0",
-  "author": "goncharuk.bro@gmail.com",
-  "private": true,
+  "author": "Nikolay Goncharuk <goncharuk.bro@gmail.com>",
+  "description": "React input component accepting custom mask",
+  "keywords": [
+    "react",
+    "react-component",
+    "input",
+    "mask",
+    "masked",
+    "text mask",
+    "text formatting"
+  ],
+  "license": "UNLICENSED",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",

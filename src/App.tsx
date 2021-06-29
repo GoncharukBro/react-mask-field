@@ -41,6 +41,7 @@ export default function App() {
           mask={maskedInputData.value[0] === '7' ? '+_ (___) ___-__-__' : '+_ __________'}
           char="_"
           set={/\d/}
+          showMask
           placeholder="Телефон"
           value={maskedInputData.value}
           onChange={handleChange}

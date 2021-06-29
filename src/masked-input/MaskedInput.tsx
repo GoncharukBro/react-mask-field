@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, forwardRef } from 'react';
-import { generateAST, getChangedData, getMaskedData, applyCursorPosition } from './utilites';
+import { generateAST, getChangedData, getMaskedData, setCursorPosition } from './utilites';
 import { Range, ChangedData } from './types';
 
 interface MaskedInputState {
@@ -57,18 +57,18 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
   useEffect(() => {
     if (value !== undefined) {
       // Проверяем является ли значение маскированным
-      const isReplacedValue = !!mask
+      const isChangedValue = !!mask
         .slice(0, value.length)
         .split('')
         .find((item, index) => {
           return item !== char && item !== value[index];
         });
 
-      let replacedValue = value;
+      let changedValue = value;
 
       // Если значение маскированное выбираем из него все пользовательские символы
-      if (!isReplacedValue) {
-        replacedValue = mask.split('').reduce((prev, item, index) => {
+      if (!isChangedValue) {
+        changedValue = mask.split('').reduce((prev, item, index) => {
           const hasItem = item === char && value[index] && value[index] !== char;
           return hasItem ? prev + value[index] : prev;
         }, '');
@@ -76,11 +76,11 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
 
       let maskedValue = '';
 
-      if (inputRef.current && replacedValue) {
-        const maskedData = getMaskedData(replacedValue, mask, char, showMask);
+      if (inputRef.current && changedValue) {
+        const maskedData = getMaskedData(changedValue, mask, char, showMask);
         maskedValue = maskedData.maskedValue;
 
-        applyCursorPosition(inputRef.current, type.current, changedData.current, maskedData, char);
+        setCursorPosition(inputRef.current, type.current, changedData.current, maskedData, char);
       }
 
       setState({ maskedValue });
@@ -132,8 +132,8 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
     changedData.current.value = changedData.current.value.replace(char, '');
 
     // Подсчитываем количество символов для замены и обрезаем лишнее
-    const countReplacedChars = mask.split('').filter((item) => item === char).length;
-    changedData.current.value = changedData.current.value.slice(0, countReplacedChars);
+    const countChangedChars = mask.split('').filter((item) => item === char).length;
+    changedData.current.value = changedData.current.value.slice(0, countChangedChars);
 
     let maskedValue = '';
 
@@ -141,7 +141,7 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
       const maskedData = getMaskedData(changedData.current.value, mask, char, showMask);
       maskedValue = maskedData.maskedValue;
 
-      applyCursorPosition(inputRef.current, type.current, changedData.current, maskedData, char);
+      setCursorPosition(inputRef.current, type.current, changedData.current, maskedData, char);
     }
 
     if (value === undefined) {

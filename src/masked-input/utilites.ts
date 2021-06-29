@@ -150,3 +150,56 @@ export function cutExcess(value: string, ast: AST) {
     return value.slice(0, lastReplacedSymbol.index + 1);
   }
 }
+
+/**
+ * Применяем позиционирование курсора
+ * @param input html-элемент ввода
+ * @param type тип ввода
+ * @param replacedData объект содержащий информацию о пользовательском значении
+ * @param ast синтаксический анализ маскированного значения
+ * @param maskedValue маскированное значение
+ * @param char символ для замены
+ */
+export function applyCursorPosition(
+  input: HTMLInputElement,
+  type: any,
+  replacedData: ReplacedData,
+  ast: AST, // TODO: один объект
+  maskedValue: string, // TODO: один объект
+  char: string
+) {
+  let position = getCursorPosition(type, ast, replacedData);
+
+  if (position === undefined) {
+    const firstChar = maskedValue.search(char);
+    position = firstChar !== undefined ? firstChar : maskedValue.length;
+  }
+
+  setCursorPosition(input, position);
+}
+
+/**
+ *  Получаем данные маскированного значения
+ * @param value пользовательское значение
+ * @param mask маска
+ * @param char символ для замены
+ * @param showMask атрибут определяющий, стоит ли показывать маску полностью
+ * @returns объект с данными маскированного значение
+ */
+export function getMaskedData(
+  value: string,
+  mask: string,
+  char: string,
+  showMask: boolean | undefined
+) {
+  let maskedValue = masked(value, mask, char);
+  const ast = generateAST(maskedValue, mask);
+
+  // Если `showMask === false` окончанием значения
+  // будет последний пользовательский символ
+  if (!showMask) {
+    maskedValue = cutExcess(maskedValue, ast) || maskedValue;
+  }
+
+  return { maskedValue, ast };
+}

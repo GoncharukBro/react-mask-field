@@ -1,4 +1,4 @@
-import { AST, Range, ReplacedData } from './types';
+import { Range, AST, ChangedData, MaskedData } from './types';
 
 /**
  * Генерирует дерево синтаксического анализа (AST).
@@ -32,12 +32,12 @@ export function getLastReplacedSymbol(ast: AST) {
  * 1. действие в начале строки;
  * 2. действие в середине строки;
  * 3. действие в конце строки.
- * @param replacedData данные введенные пользователем
+ * @param changedData данные введенные пользователем
  * @param ast анализ сформированного значения с маской
  * @returns позиция курсора или `undefined` если по заданным параметрам ничего не нашлось
  */
-export function getCursorPosition(type: string, ast: AST, replacedData: ReplacedData) {
-  const { beforeRange, added, afterRange } = replacedData;
+export function getCursorPosition(type: string, ast: AST, changedData: ChangedData) {
+  const { beforeRange, added, afterRange } = changedData;
 
   // Действие в начале строки
   // Находим первый символ пользовательского значения
@@ -103,7 +103,7 @@ export function setCursorPosition(input: HTMLInputElement, position: number) {
  * @param added добавленные символы в строку (при событии `insert`)
  * @returns объект содержащий информацию о пользовательском значении
  */
-export function getReplacedData(ast: AST, range: Range, added?: string) {
+export function getChangedData(ast: AST, range: Range, added?: string): ChangedData {
   let beforeRange = '';
   let afterRange = '';
 
@@ -155,24 +155,22 @@ export function cutExcess(value: string, ast: AST) {
  * Применяем позиционирование курсора
  * @param input html-элемент ввода
  * @param type тип ввода
- * @param replacedData объект содержащий информацию о пользовательском значении
- * @param ast синтаксический анализ маскированного значения
- * @param maskedValue маскированное значение
+ * @param changedData объект содержащий информацию о пользовательском значении
+ * @param maskedData объект с данными маскированного значения
  * @param char символ для замены
  */
 export function applyCursorPosition(
   input: HTMLInputElement,
   type: any,
-  replacedData: ReplacedData,
-  ast: AST, // TODO: один объект
-  maskedValue: string, // TODO: один объект
+  changedData: ChangedData,
+  maskedData: MaskedData,
   char: string
 ) {
-  let position = getCursorPosition(type, ast, replacedData);
+  let position = getCursorPosition(type, maskedData.ast, changedData);
 
   if (position === undefined) {
-    const firstChar = maskedValue.search(char);
-    position = firstChar !== undefined ? firstChar : maskedValue.length;
+    const firstChar = maskedData.maskedValue.search(char);
+    position = firstChar !== undefined ? firstChar : maskedData.maskedValue.length;
   }
 
   setCursorPosition(input, position);
@@ -191,7 +189,7 @@ export function getMaskedData(
   mask: string,
   char: string,
   showMask: boolean | undefined
-) {
+): MaskedData {
   let maskedValue = masked(value, mask, char);
   const ast = generateAST(maskedValue, mask);
 

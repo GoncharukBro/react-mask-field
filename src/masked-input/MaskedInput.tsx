@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, forwardRef } from 'react';
-import { generateAST, getChangedData, getMaskedData, setCursorPosition } from './utilites';
+import { generateAST, getChangedData, getMaskedData, setCursorPosition } from './utils';
 import { Range, ChangedData } from './types';
 
 interface MaskedInputState {

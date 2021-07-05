@@ -2,11 +2,11 @@ import { useState, forwardRef } from 'react';
 import TextField from '@material-ui/core/TextField';
 import { InputBaseComponentProps } from '@material-ui/core/InputBase';
 import { ComponentStory, Meta } from '@storybook/react';
-import MaskedInputComponent, { MaskedInputProps } from './MaskField';
+import MaskFieldComponent, { MaskFieldProps } from './MaskField';
 
 export default {
   title: 'Example',
-  component: MaskedInputComponent,
+  component: MaskFieldComponent,
   argTypes: {
     mask: {
       description: 'Маска ввода',
@@ -21,9 +21,9 @@ export default {
       description: 'Атрибут определяющий будет ли отображена маска ввода',
     },
   },
-} as Meta<MaskedInputProps>;
+} as Meta<MaskFieldProps>;
 
-export const MaskedInput: ComponentStory<typeof MaskedInputComponent> = (args) => {
+export const MaskField: ComponentStory<typeof MaskFieldComponent> = (args) => {
   const [data, setData] = useState({ maskedValue: '', value: '' });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
@@ -41,7 +41,7 @@ export const MaskedInput: ComponentStory<typeof MaskedInputComponent> = (args) =
 
   return (
     <>
-      <MaskedInputComponent
+      <MaskFieldComponent
         {...args}
         mask={mask}
         set={/\d/}
@@ -53,7 +53,7 @@ export const MaskedInput: ComponentStory<typeof MaskedInputComponent> = (args) =
   );
 };
 
-MaskedInput.args = {
+MaskField.args = {
   char: '_',
   showMask: false,
 };
@@ -65,7 +65,7 @@ const ForwardInput = forwardRef(
   ) => <input ref={ref} {...props} />
 );
 
-export const CustomComponent: ComponentStory<typeof MaskedInputComponent> = (args) => {
+export const CustomComponent: ComponentStory<typeof MaskFieldComponent> = (args) => {
   const [data, setData] = useState({ maskedValue: '', value: '' });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
@@ -74,7 +74,7 @@ export const CustomComponent: ComponentStory<typeof MaskedInputComponent> = (arg
 
   return (
     <>
-      <MaskedInputComponent
+      <MaskFieldComponent
         {...args}
         component={ForwardInput}
         set={/\d/}
@@ -93,10 +93,10 @@ CustomComponent.args = {
 };
 
 function TextFieldMask({ inputRef, ...other }: InputBaseComponentProps) {
-  return <MaskedInput {...other} ref={inputRef} mask="+7 (___) ___-__-__" char="_" set={/\d/} />;
+  return <MaskField {...other} ref={inputRef} mask="+7 (___) ___-__-__" char="_" set={/\d/} />;
 }
 
-export const MaterialUIComponent: ComponentStory<typeof MaskedInputComponent> = () => {
+export const MaterialUIComponent: ComponentStory<typeof MaskFieldComponent> = () => {
   const [data, setData] = useState({ maskedValue: '', value: '' });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {

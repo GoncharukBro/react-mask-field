@@ -2,11 +2,11 @@ import { useState, useEffect, useRef, forwardRef } from 'react';
 import { generateAST, getChangedData, getMaskedData, setCursorPosition } from './utils';
 import { Range, ChangedData } from './types';
 
-interface MaskedInputState {
+interface MaskFieldState {
   maskedValue: string;
 }
 
-export interface MaskedInputProps
+export interface MaskFieldProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> {
   component?: React.ComponentClass<unknown> | React.FunctionComponent<unknown>;
   mask: string;
@@ -17,7 +17,7 @@ export interface MaskedInputProps
   onChange?: (event: React.ChangeEvent<HTMLInputElement>, value: string) => void;
 }
 
-function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) {
+function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
   const {
     component: Component,
     mask,
@@ -40,7 +40,7 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
   });
   const selectionStartBeforeChange = useRef<number | null>(null);
   const selectionEndBeforeChange = useRef<number | null>(null);
-  const [state, setState] = useState<MaskedInputState>({ maskedValue: '' });
+  const [state, setState] = useState<MaskFieldState>({ maskedValue: '' });
 
   // Добавляем ссылку на элемент для родительских компонентов
   useEffect(() => {
@@ -182,4 +182,4 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
   return <input {...inputProps} />;
 }
 
-export default forwardRef(MaskedInput);
+export default forwardRef(MaskField);

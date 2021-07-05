@@ -1,15 +1,15 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import MaskedInput from './MaskField';
+import MaskField from './MaskField';
 
-const maskedInput = <MaskedInput mask="+7 (___) ___-__-__" char="_" />;
+const maskField = <MaskField mask="+7 (___) ___-__-__" char="_" />;
 
 function getInputElement() {
   return screen.getByRole('textbox') as HTMLInputElement;
 }
 
 test('type', () => {
-  render(maskedInput);
+  render(maskField);
 
   const input = getInputElement();
   userEvent.type(input, '9123456789');

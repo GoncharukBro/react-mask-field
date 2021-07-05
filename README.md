@@ -1,10 +1,20 @@
-# React Masked Input
+# react-mask-field
 
-Компонент MaskedInput позволяет накладывать маску на поле ввода.
+> Компонент MaskedInput позволяет накладывать маску на поле ввода.
+
+[![NPM](https://img.shields.io/npm/v/react-mask-field.svg)](https://www.npmjs.com/package/react-mask-field) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+
+## Установка
+
+```bash
+npm i react-mask-field
+```
+
+## Использование
 
 Вот так просто можно реализовать любую маску:
 
-```javascript
+```jsx
 import { useState } from 'react';
 import { MaskedInput } from 'src/masked-input';
 
@@ -43,7 +53,7 @@ export default function Example() {
 
 Для корректной работы маски, рекомендуется помещать в качестве значения `value` либо значение из `event.target.value`, либо из дополнительного параметра `value` события `onChange`.
 
-## Интеграция пользовательскими компонентами
+## Интеграция c пользовательскими компонентами
 
 MaskedInput позволяет с лёгкостью интегрировать пользовательские компоненты, давая возможность использовать собственные стилизованные компоненты.
 
@@ -51,7 +61,7 @@ MaskedInput позволяет с лёгкостью интегрировать 
 
 Вот как это делается:
 
-```javascript
+```jsx
 import { useState, forwardRef } from 'react';
 import { MaskedInput } from 'src/masked-input';
 
@@ -89,7 +99,7 @@ export default function Example() {
 
 Вот как это делается:
 
-```javascript
+```jsx
 import { useState } from 'react';
 import TextField from '@material-ui/core/TextField';
 import { MaskedInput } from 'src/masked-input';
@@ -121,7 +131,7 @@ export default function Example() {
 
 Вот так:
 
-```typescript
+```tsx
 export default function Example() {
   const [state, setState] = useState({ maskedValue: '', value: '' });
 
@@ -140,3 +150,7 @@ export default function Example() {
 ```
 
 Это компромиссное решение, так как наличие второго параметра не соответствует ожидаемому типу элемента `input`.
+
+## License
+
+MIT © [](https://github.com/)

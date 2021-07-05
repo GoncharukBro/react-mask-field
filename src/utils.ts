@@ -53,16 +53,14 @@ function getCursorPosition(type: string, ast: AST, changedData: ChangedData) {
   // Находим первый символ пользовательского значения после диапазона изменяемых символов
   if (afterRange) {
     const changedSymbols = ast.filter(({ own }) => own === 'user');
-    const lastAddedSymbol = changedSymbols.find((item, index) => {
-      return beforeRange.length + (added?.length || 0) === index + 1;
-    });
+    const lastAddedSymbol = changedSymbols.find(
+      (item, index) => beforeRange.length + (added?.length || 0) === index + 1
+    );
 
     if (lastAddedSymbol) {
       // При нажатой кнопке "delete", оставляем курсор на месте
       if (type === 'deleteContentForward') {
-        const symbol = changedSymbols.find((item) => {
-          return lastAddedSymbol.index < item.index;
-        });
+        const symbol = changedSymbols.find((item) => lastAddedSymbol.index < item.index);
 
         if (symbol) {
           return symbol.index;
@@ -108,7 +106,9 @@ export function setCursorPosition(
   // Устанавливает позицию курсора.
   // Нулевая задержка "requestAnimationFrame" нужна, чтобы смена позиции сработала после ввода значения
   requestAnimationFrame(() => {
-    position !== undefined && input.setSelectionRange(position, position);
+    if (position !== undefined) {
+      input.setSelectionRange(position, position);
+    }
   });
 }
 
@@ -127,9 +127,7 @@ export function getMaskedData(
   showMask: boolean | undefined
 ): MaskedData {
   // Маскируем значение
-  let maskedValue = value.split('').reduce((prev, item) => {
-    return prev.replace(char, item);
-  }, mask);
+  let maskedValue = value.split('').reduce((prev, item) => prev.replace(char, item), mask);
 
   const ast = generateAST(maskedValue, mask);
 

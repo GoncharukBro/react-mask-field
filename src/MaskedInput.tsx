@@ -6,7 +6,7 @@ interface MaskedInputState {
   maskedValue: string;
 }
 
-interface MaskedInputProps
+export interface MaskedInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> {
   component?: React.ComponentClass<unknown> | React.FunctionComponent<unknown>;
   mask: string;
@@ -60,9 +60,7 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
       const isChangedValue = !!mask
         .slice(0, value.length)
         .split('')
-        .find((item, index) => {
-          return item !== char && item !== value[index];
-        });
+        .find((item, index) => item !== char && item !== value[index]);
 
       let changedValue = value;
 
@@ -121,9 +119,9 @@ function MaskedInput(props: MaskedInputProps, ref: React.ForwardedRef<unknown>) 
 
     // Учитывает только символы указанные в `set`
     const regExp = set && new RegExp(set);
-    const hasUnallowedChar = changedData.current.value.split('').find((item) => {
-      return regExp && !regExp.test(item);
-    });
+    const hasUnallowedChar = changedData.current.value
+      .split('')
+      .find((item) => regExp && !regExp.test(item));
     if (hasUnallowedChar) {
       return;
     }

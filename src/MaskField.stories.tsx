@@ -2,7 +2,7 @@ import { useState, forwardRef } from 'react';
 import TextField from '@material-ui/core/TextField';
 import { InputBaseComponentProps } from '@material-ui/core/InputBase';
 import { ComponentStory, Meta } from '@storybook/react';
-import MaskedInputComponent, { MaskedInputProps } from '../dist';
+import MaskedInputComponent, { MaskedInputProps } from './MaskField';
 
 export default {
   title: 'Example',

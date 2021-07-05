@@ -27,7 +27,7 @@
     "dist"
   ],
   "scripts": {
-    "test": "jest --watch",
+    "test": "jest --watchAll",
     "build": "rollup --config rollup.config.ts --configPlugin typescript",
     "eslint": "npx eslint \"src/**/*.{ts,tsx}\"",
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\"",

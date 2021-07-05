@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import MaskedInput from './MaskedInput';
+import MaskedInput from './MaskField';
 
 const maskedInput = <MaskedInput mask="+7 (___) ___-__-__" char="_" />;
 

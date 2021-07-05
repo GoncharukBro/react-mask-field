@@ -1,2 +1,2 @@
-export { default } from './MaskedInput';
-export type { MaskedInputProps } from './MaskedInput';
+export { default } from './MaskField';
+export type { MaskedInputProps } from './MaskField';

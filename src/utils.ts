@@ -90,7 +90,7 @@ function getCursorPosition(type: string, ast: AST, changedData: ChangedData) {
  */
 export function setCursorPosition(
   input: HTMLInputElement,
-  type: any,
+  type: string,
   changedData: ChangedData,
   maskedData: MaskedData,
   char: string

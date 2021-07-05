@@ -31,7 +31,7 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
     ...other
   } = props;
   const inputRef = useRef<HTMLInputElement>(null);
-  const type = useRef<any>(null);
+  const type = useRef<string>('');
   const changedData = useRef<ChangedData>({
     value: '',
     added: '',
@@ -89,7 +89,7 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
     const { value: inputValue, selectionStart: selectionStartAfterChange } = event.target;
 
     // Кэшируем тип ввода
-    type.current = (event.nativeEvent as any).inputType;
+    type.current = (event.nativeEvent as any)?.inputType || '';
 
     const prevAST = generateAST(state.maskedValue, mask);
 
@@ -150,14 +150,16 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
     event.target.value = maskedValue;
     if (event.nativeEvent.target) {
       // eslint-disable-next-line no-param-reassign
-      (event.nativeEvent.target as any).value = maskedValue;
+      (event.nativeEvent.target as HTMLInputElement).value = maskedValue;
     }
 
     onChange?.(event, changedData.current.value);
   };
 
-  const handleSelect = (event: React.SyntheticEvent<HTMLInputElement, Event>) => {
-    const { selectionStart, selectionEnd } = event.target as any;
+  const handleSelect = (
+    event: React.BaseSyntheticEvent<Event, EventTarget & HTMLInputElement, HTMLInputElement>
+  ) => {
+    const { selectionStart, selectionEnd } = event.target;
 
     // Кэшируем диапозон изменяемых значений
     selectionStartBeforeChange.current = selectionStart;

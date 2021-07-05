@@ -32,12 +32,20 @@ export function generateAST(value: string, mask: string): AST {
  * 1. действие в начале строки;
  * 2. действие в середине строки;
  * 3. действие в конце строки.
- * @param changedData данные введенные пользователем
- * @param ast анализ сформированного значения с маской
- * @returns позиция курсора или `undefined` если по заданным параметрам ничего не нашлось
+ * @param type тип ввода
+ * @param changedData объект содержащий информацию о пользовательском значении
+ * @param maskedData объект с данными маскированного значения
+ * @param char символ для замены
+ * @returns позиция курсора
  */
-function getCursorPosition(type: string, ast: AST, changedData: ChangedData) {
+function getCursorPosition(
+  type: string,
+  changedData: ChangedData,
+  maskedData: MaskedData,
+  char: string
+) {
   const { beforeRange, added, afterRange } = changedData;
+  const { ast, maskedValue } = maskedData;
 
   // Действие в начале строки
   // Находим первый символ пользовательского значения
@@ -78,6 +86,11 @@ function getCursorPosition(type: string, ast: AST, changedData: ChangedData) {
   if (lastSymbol) {
     return lastSymbol.index + 1;
   }
+
+  // Если предыдущие условия не выполнены возвращаем первый символ для замены
+  // или перемещаем курсор в конец строки
+  const firstChar = maskedValue.search(char);
+  return firstChar !== undefined ? firstChar : maskedValue.length;
 }
 
 /**
@@ -96,12 +109,7 @@ export function setCursorPosition(
   char: string
 ) {
   // Вычисляем позицию курсора
-  let position = getCursorPosition(type, maskedData.ast, changedData);
-
-  if (position === undefined) {
-    const firstChar = maskedData.maskedValue.search(char);
-    position = firstChar !== undefined ? firstChar : maskedData.maskedValue.length;
-  }
+  const position = getCursorPosition(type, changedData, maskedData, char);
 
   // Устанавливает позицию курсора.
   // Нулевая задержка "requestAnimationFrame" нужна, чтобы смена позиции сработала после ввода значения

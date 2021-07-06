@@ -7,7 +7,7 @@ import { Range, AST, ChangedData, MaskedData } from './types';
  */
 function getLastChangedSymbol(ast: AST) {
   const reversedAST = [...ast].reverse();
-  return reversedAST.find(({ own }) => own === 'user');
+  return reversedAST.find(({ own }) => own === 'change');
 }
 
 /**
@@ -21,7 +21,7 @@ function getLastChangedSymbol(ast: AST) {
  */
 export function generateAST(value: string, mask: string): AST {
   return value.split('').map((symbol, index) => {
-    const own = symbol === mask[index] ? ('mask' as const) : ('user' as const);
+    const own = symbol === mask[index] ? ('mask' as const) : ('change' as const);
     return { symbol, index, own };
   });
 }
@@ -50,7 +50,7 @@ function getCursorPosition(
   // Действие в начале строки
   // Находим первый символ пользовательского значения
   if (!beforeRange && afterRange) {
-    const firstSymbol = ast.find(({ own }) => own === 'user');
+    const firstSymbol = ast.find(({ own }) => own === 'change');
 
     if (firstSymbol) {
       return firstSymbol.index + (type?.includes('delete') ? 0 : 1);
@@ -60,7 +60,7 @@ function getCursorPosition(
   // Действие в середине строки
   // Находим первый символ пользовательского значения после диапазона изменяемых символов
   if (afterRange) {
-    const changedSymbols = ast.filter(({ own }) => own === 'user');
+    const changedSymbols = ast.filter(({ own }) => own === 'change');
     const lastAddedSymbol = changedSymbols.find(
       (item, index) => beforeRange.length + (added?.length || 0) === index + 1
     );
@@ -166,7 +166,7 @@ export function getChangedData(ast: AST, range: Range, added?: string): ChangedD
   let afterRange = '';
 
   ast.forEach(({ symbol, own }, index) => {
-    if (own === 'user') {
+    if (own === 'change') {
       // Если символ находится перед диапозоном изменяемых символов
       if (index < range[0]) {
         beforeRange += symbol;

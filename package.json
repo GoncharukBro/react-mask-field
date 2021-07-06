@@ -5,12 +5,12 @@
   "description": "React input component accepting custom mask",
   "keywords": [
     "react",
-    "component",
     "input",
     "field",
     "mask",
     "masked",
-    "formatting"
+    "formatting",
+    "pattern"
   ],
   "repository": {
     "type": "git",

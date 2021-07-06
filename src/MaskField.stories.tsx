@@ -23,7 +23,7 @@ export default {
   },
 } as Meta<MaskFieldProps>;
 
-export const MaskField: ComponentStory<typeof MaskFieldComponent> = (args) => {
+export const MaskFieldModifyValue: ComponentStory<typeof MaskFieldComponent> = (args) => {
   const [data, setData] = useState({ maskedValue: '', value: '' });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
@@ -53,7 +53,42 @@ export const MaskField: ComponentStory<typeof MaskFieldComponent> = (args) => {
   );
 };
 
-MaskField.args = {
+MaskFieldModifyValue.args = {
+  char: '_',
+  showMask: false,
+};
+
+export const MaskFieldModifyMaskedValue: ComponentStory<typeof MaskFieldComponent> = (args) => {
+  const [data, setData] = useState({ maskedValue: '', value: '' });
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
+    let maskedValue = event.target.value;
+    if (maskedValue.slice(0, 2) === '+8') {
+      maskedValue = `+7${maskedValue.slice(2)}`;
+    }
+    if (maskedValue.slice(0, 2) === '+9') {
+      maskedValue = `+7 (9${maskedValue.slice(2)}`;
+    }
+    setData({ maskedValue, value });
+  };
+
+  const mask = data.maskedValue.slice(0, 2) === '+7' ? '+_ (___) ___-__-__' : '+_ __________';
+
+  return (
+    <>
+      <MaskFieldComponent
+        {...args}
+        mask={mask}
+        set={/\d/}
+        value={data.maskedValue}
+        onChange={handleChange}
+      />
+      <pre>{JSON.stringify(data, null, 2)}</pre>
+    </>
+  );
+};
+
+MaskFieldModifyMaskedValue.args = {
   char: '_',
   showMask: false,
 };
@@ -93,7 +128,9 @@ CustomComponent.args = {
 };
 
 function TextFieldMask({ inputRef, ...other }: InputBaseComponentProps) {
-  return <MaskField {...other} ref={inputRef} mask="+7 (___) ___-__-__" char="_" set={/\d/} />;
+  return (
+    <MaskFieldComponent {...other} ref={inputRef} mask="+7 (___) ___-__-__" char="_" set={/\d/} />
+  );
 }
 
 export const MaterialUIComponent: ComponentStory<typeof MaskFieldComponent> = () => {

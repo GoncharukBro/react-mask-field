@@ -24,7 +24,7 @@ export default {
 } as Meta<MaskFieldProps>;
 
 export const MaskFieldModifyValue: ComponentStory<typeof MaskFieldComponent> = (args) => {
-  const [data, setData] = useState({ maskedValue: '', value: '' });
+  const [data, setData] = useState({ maskedValue: '', value: '79144088469' });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
     let newValue = value;
@@ -62,14 +62,7 @@ export const MaskFieldModifyMaskedValue: ComponentStory<typeof MaskFieldComponen
   const [data, setData] = useState({ maskedValue: '', value: '' });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
-    let maskedValue = event.target.value;
-    if (maskedValue.slice(0, 2) === '+8') {
-      maskedValue = `+7${maskedValue.slice(2)}`;
-    }
-    if (maskedValue.slice(0, 2) === '+9') {
-      maskedValue = `+7 (9${maskedValue.slice(2)}`;
-    }
-    setData({ maskedValue, value });
+    setData({ maskedValue: event.target.value, value });
   };
 
   const mask = data.maskedValue.slice(0, 2) === '+7' ? '+_ (___) ___-__-__' : '+_ __________';

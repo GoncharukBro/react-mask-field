@@ -50,7 +50,7 @@ function getCursorPosition(
   // Действие в начале строки
   // Находим первый символ пользовательского значения
   if (!beforeRange && afterRange) {
-    const firstSymbol = ast.find(({ own }) => own === 'change');
+    const firstSymbol = ast?.find(({ own }) => own === 'change');
 
     if (firstSymbol) {
       return firstSymbol.index + (type?.includes('delete') ? 0 : 1);
@@ -60,15 +60,15 @@ function getCursorPosition(
   // Действие в середине строки
   // Находим первый символ пользовательского значения после диапазона изменяемых символов
   if (afterRange) {
-    const changedSymbols = ast.filter(({ own }) => own === 'change');
-    const lastAddedSymbol = changedSymbols.find(
+    const changedSymbols = ast?.filter(({ own }) => own === 'change');
+    const lastAddedSymbol = changedSymbols?.find(
       (item, index) => beforeRange.length + (added?.length || 0) === index + 1
     );
 
     if (lastAddedSymbol) {
       // При нажатой кнопке "delete", оставляем курсор на месте
       if (type === 'deleteContentForward') {
-        const symbol = changedSymbols.find((item) => lastAddedSymbol.index < item.index);
+        const symbol = changedSymbols?.find((item) => lastAddedSymbol.index < item.index);
 
         if (symbol) {
           return symbol.index;
@@ -81,7 +81,7 @@ function getCursorPosition(
 
   // Действие в конце строки
   // Находим последний символ пользовательского значения
-  const lastSymbol = getLastChangedSymbol(ast);
+  const lastSymbol = ast && getLastChangedSymbol(ast);
 
   if (lastSymbol) {
     return lastSymbol.index + 1;
@@ -149,7 +149,7 @@ export function getMaskedData(
     }
   }
 
-  return { maskedValue, ast };
+  return { mask, maskedValue, ast };
 }
 
 /**

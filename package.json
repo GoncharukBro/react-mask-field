@@ -33,7 +33,6 @@
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\"",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook",
-    "prepublishOnly": "npm run test && npm run build"
   },
   "peerDependencies": {
     "react": ">=16.8",

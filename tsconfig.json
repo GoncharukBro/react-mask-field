@@ -2,7 +2,7 @@
   "compilerOptions": {
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": "src",
+    "baseUrl": ".",
     "declaration": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -14,10 +14,6 @@
     "noEmit": true,
     "noFallthroughCasesInSwitch": true,
     "outDir": "dist",
-    "paths": {
-      "components": ["src/components/*"],
-      "hooks": ["src/hooks/*"]
-    },
     "removeComments": true,
     "resolveJsonModule": true,
     "rootDir": "src",

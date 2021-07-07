@@ -1,20 +1,20 @@
 # react-mask-field
 
-Компонент MaskField позволяет накладывать маску на поле ввода.
+The MaskField component allows you to apply a mask to the input field.
 
 [![NPM](https://img.shields.io/npm/v/react-mask-field.svg)](https://www.npmjs.com/package/react-mask-field)
 
-## Установка
+## Installation
 
 ```bash
 npm i react-mask-field
 ```
 
-## Использование
+## Using
 
-Пакет экспортирует по умолчанию компонент MaskField, который представляет собой стандартный элемент `input`, с логикой обработки ввода.
+The package exports by default the MaskField component, which is a standard `input` element with input processing logic.
 
-Вот так просто можно реализовать любую маску:
+This is how you can easily implement any mask:
 
 ```jsx
 import MaskField from 'react-mask-field';
@@ -24,7 +24,7 @@ export default function Example() {
 }
 ```
 
-Компонент также поддерживает котролируемый ввод:
+The component also supports controlled input:
 
 ```jsx
 import { useState } from 'react';
@@ -49,27 +49,27 @@ export default function Example() {
 }
 ```
 
-Обратите внимание, что обработчик событий `handleChange` принимает два параметра `event` и `value` вместо одного. Всё дело в том, что иногда вместо только лишь маскированного значения удобно иметь еще и значение, введенное пользователем, без учета символов маски. Вам необязательно использовать второй параметр `value`, он существует только лишь для удобства.
+Note that the `handleChange` event handler takes two` event` and `value` parameters instead of one. The thing is that sometimes, instead of just a masked value, it is convenient to have the value entered by the user, without taking into account the mask characters. You do not need to use the second parameter `value`, it only exists for convenience.
 
-> Для корректной работы маски, рекомендуется помещать в качестве значения `value`, передаваемое компоненту MaskField, либо значение из `event.target.value`, либо из дополнительного параметра `value`, как показано на примере выше.
+> For the mask to work correctly, it is recommended to put the value passed to the MaskField component either the value from event.target.value, or from the additional parameter value, as shown in the example above.
 
-Одной из ключевых особенностей компонента MaskField является то, что он опирается только на вводимые пользователем символы, за счет чего вы можете смело включать абсолютно любые символы в маску, не опасаясь за "неожиданное поведение" компонента.
+One of the key features of the MaskField component is that it relies only on user-entered characters, so you can safely include absolutely any characters in the mask without fear of the “unexpected behavior” of the component.
 
-### Уникальные свойства
+### Unique properties
 
-| Свойство  |    Тип    | Значение по умолчанию | Описание                                                                                                                                                                                                                                                                              |
-| --------- | :-------: | :-------------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| component | Component |       undefined       | Служит для возможности использования пользователских компонентов, например если вы хотите использовать собственный стилизованный компонент с возможностью маскировать значение (см. раздел "Интеграция c пользовательскими компонентами").                                            |
-| mask \*   |  string   |                       | Маска в формате строки, использует `char` как символ для замены.                                                                                                                                                                                                                      |
-| char \*   |  string   |                       | Символ для замены используемый в маске (не учитывается при вводе).                                                                                                                                                                                                                    |
-| set       |  RegExp   |       undefined       | Указывает какие символы разрешены для ввода. Например если вы хотите разрешить ввод только числовых значений, вы можете установить для `set` значение `/[0-9]/` или `/\d/`, как показано на примерах выше. Если вы не установите свойство `set`, тогда будут разрешены любые символы. |
-| showMask  |  boolean  |         false         | Управляет отображением маски. При `showMask === true` будет отображена полная маска, например `+7 (912) 3__-__-__` вместо `+7 (912). 3`                                                                                                                                               |
+| Name      |   Type    | Default value | Описание Description                                                                                                                                                                                                                                            |
+| --------- | :-------: | :-----------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| component | Component |   undefined   | Serves for the possibility of using custom components, for example, if you want to use your own styled component with the ability to mask the value (see the section "Integration with custom components").                                                     |
+| mask \*   |  string   |               | The mask is in string format, uses `char` as the replacement character.                                                                                                                                                                                         |
+| char \*   |  string   |               | The replacement character used in the mask (not taken into account when entering).                                                                                                                                                                              |
+| set       |  RegExp   |   undefined   | Indicates which characters are allowed to be entered. For example, if you only want to allow numeric input, you can set `set` to `/[0-9]/` or `/\d/`, as shown in the examples above. If you don't set the `set` property, then any characters will be allowed. |
+| showMask  |  boolean  |     false     | Controls the display of the mask. If `showMask === true` will display the full mask, for example `+7 (912) 3 __-__-__` instead of `+7 (912) 3`.                                                                                                                 |
 
-> Вы также можете передавать все свойства доступные элементу `input`.
+> You can also pass all the properties available to the `input` element.
 
-## Более сложное использование
+## More complex use
 
-MaskField позволяет адаптировать маску по условию. Рассмотрим возможную ситуацию, где нам необходимо изменять маску в зависимости от кода города телефона:
+MaskField allows you to conditionally adapt the mask. Consider a possible situation where we need to change the mask depending on the phone city code:
 
 ```jsx
 import { useState } from 'react';
@@ -88,7 +88,7 @@ export default function Example() {
 }
 ```
 
-Также вы можете модифицировать само значение. Проще всего это делать со значением в дополнительном параметре `value` события `onChange`:
+You can also modify the value itself. The easiest way to do this is with the value in the additional `value` parameter of the` onChange` event:
 
 ```jsx
 const handleChange = (event, value) => {
@@ -106,60 +106,58 @@ const handleChange = (event, value) => {
 };
 ```
 
-> Если вы модифицируете маскированное значение, убедитесь, что значение, передаваемое свойству `value` компонента MaskField соответствует формату передаваемой маски, иначе значение может отображаться некорректно.
+## Integration with custom components
 
-## Интеграция c пользовательскими компонентами
+MaskField makes it easy to integrate custom components, allowing you to use your own styled components.
 
-MaskField позволяет с лёгкостью интегрировать пользовательские компоненты, давая возможность использовать собственные стилизованные компоненты.
+To do this, you need to pass the custom component to the `forwardRef` method provided by React. `forwardRef` allows you to automatically pass the` ref` value to the child element ([more about forwardRef](https://ru.reactjs.org/docs/forwarding-refs.html)).
 
-Для этого необходимо передать пользовательский компонент в метод `forwardRef`, предоставляемый React. `forwardRef` позволяет автоматически передавать значение `ref` дочернему элементу ([подробнее про forwardRef](https://ru.reactjs.org/docs/forwarding-refs.html)).
-
-Вот как это делается:
+Here's how to do it:
 
 ```jsx
 import { useState, forwardRef } from 'react';
 import MaskField from 'react-mask-field';
 
-// Пользовательский компонент
+// Custom component
 const CustomComponent = forwardRef((props, ref) => {
   return <input ref={ref} {...props} />;
 });
 
-// Компонент с MaskField
+// Component with MaskField
 export default function Example() {
   return <MaskField component={CustomComponent} mask="+7 (___) ___-__-__" char="_" set={/\d/} />;
 }
 ```
 
-## Интеграция с компонентами Material UI
+## Integration with Material UI components
 
-Если вы используете Material UI, вам необходимо создать компонент, возвращающий MaskField и передать его как свойство `inputComponent` компонента Material UI.
+If you are using Material UI, you need to create a component that returns a MaskField and pass it as the `inputComponent` property of the Material UI component.
 
-В этом случае компонент Material UI будет передавать вашему компоненту все свойства доступные элементу `input`, а также дополнительное свойство `inputRef`, которое вам необходимо будет передать в качестве значения для свойства `ref` компонента MaskField.
+In this case, the Material UI component will pass to your component all the properties available to the `input` element, as well as an additional` inputRef` property, which you will need to pass as a value for the `ref` property of the MaskField component.
 
-Вот как это делается:
+Here's how to do it:
 
 ```jsx
 import { useState } from 'react';
 import TextField from '@material-ui/core/TextField';
 import MaskField from 'react-mask-field';
 
-// Компонент с MaskField
+// Component with MaskField
 function TextFieldMask({ inputRef, ...other }) {
   return <MaskField {...other} ref={inputRef} mask="+7 (___) ___-__-__" char="_" set={/\d/} />;
 }
 
-// Компонент с Material UI
+// Component with Material UI
 export default function Example() {
   return <TextField InputProps={{ inputComponent: TextFieldMask }} />;
 }
 ```
 
-## Использование с TypeScript
+## Usage with TypeScript
 
-Если вы используете Material UI совместно с TypeScript и хотите получить значение из второго необязательного параметра события `onChange`, вам необходимо передать обработчик события с типом `any`.
+If you are using Material UI with TypeScript and want to get the value from the second optional parameter of the `onChange` event, you need to pass an event handler of type` any`.
 
-Вот так:
+Like this:
 
 ```tsx
 export default function Example() {
@@ -179,9 +177,9 @@ export default function Example() {
 }
 ```
 
-> Это компромиссное решение, так как наличие второго параметра не соответствует ожидаемому типу компонента Material UI.
+> This is a trade-off, as having the second parameter does not match the expected Material UI component type.
 
-Если вы используете TypeScript непосредственно с самим компонентом MaskField, указание `as any` уже не потребуется, так как сам MaskField ожидает второй необязательный параметр:
+If you use TypeScript directly with the MaskField component itself, the `as any` specification is no longer required, since the MaskField itself expects a second optional parameter:
 
 ```tsx
 export default function Example() {

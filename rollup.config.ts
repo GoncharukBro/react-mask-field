@@ -20,13 +20,10 @@ export default {
     peerDepsExternal(),
     resolve(),
     commonjs(),
-    typescript({
-      tsconfig: './tsconfig.json',
-    }),
+    typescript(),
     babel({
       babelHelpers: 'bundled',
     }),
     terser(),
   ],
-  external: ['tslib'],
 };

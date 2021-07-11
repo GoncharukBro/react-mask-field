@@ -22,7 +22,6 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
     char,
     set,
     showMask,
-    placeholder,
     value,
     onChange,
     onSelect,
@@ -173,7 +172,6 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
     ...other,
     ref: inputRef,
     value: maskedData.maskedValue,
-    placeholder: placeholder || mask,
     onChange: handleChange,
     onSelect: handleSelect,
   };

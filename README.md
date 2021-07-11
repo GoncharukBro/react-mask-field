@@ -49,7 +49,7 @@ export default function Example() {
 }
 ```
 
-Note that the `handleChange` event handler takes two` event` and `value` parameters instead of one. The thing is that sometimes, instead of just a masked value, it is convenient to have the value entered by the user, without taking into account the mask characters. You do not need to use the second parameter `value`, it only exists for convenience.
+Note that the `handleChange` event handler takes two `event` and `value` parameters instead of one. The thing is that sometimes, instead of just a masked value, it is convenient to have the value entered by the user, without taking into account the mask characters. You do not need to use the second parameter `value`, it only exists for convenience.
 
 > For the mask to work correctly, it is recommended to put the value passed to the MaskField component either the value from event.target.value, or from the additional parameter value, as shown in the example above.
 
@@ -88,7 +88,7 @@ export default function Example() {
 }
 ```
 
-You can also modify the value itself. The easiest way to do this is with the value in the additional `value` parameter of the` onChange` event:
+You can also modify the value itself. The easiest way to do this is with the value in the additional `value` parameter of the `onChange` event:
 
 ```jsx
 const handleChange = (event, value) => {
@@ -110,7 +110,7 @@ const handleChange = (event, value) => {
 
 MaskField makes it easy to integrate custom components, allowing you to use your own styled components.
 
-To do this, you need to pass the custom component to the `forwardRef` method provided by React. `forwardRef` allows you to automatically pass the` ref` value to the child element ([more about forwardRef](https://ru.reactjs.org/docs/forwarding-refs.html)).
+To do this, you need to pass the custom component to the `forwardRef` method provided by React. `forwardRef` allows you to automatically pass the `ref` value to the child element ([more about forwardRef](https://ru.reactjs.org/docs/forwarding-refs.html)).
 
 Here's how to do it:
 
@@ -133,7 +133,7 @@ export default function Example() {
 
 If you are using Material UI, you need to create a component that returns a MaskField and pass it as the `inputComponent` property of the Material UI component.
 
-In this case, the Material UI component will pass to your component all the properties available to the `input` element, as well as an additional` inputRef` property, which you will need to pass as a value for the `ref` property of the MaskField component.
+In this case, the Material UI component will pass to your component all the properties available to the `input` element, as well as an additional `inputRef` property, which you will need to pass as a value for the `ref` property of the MaskField component.
 
 Here's how to do it:
 
@@ -155,7 +155,7 @@ export default function Example() {
 
 ## Usage with TypeScript
 
-If you are using Material UI with TypeScript and want to get the value from the second optional parameter of the `onChange` event, you need to pass an event handler of type` any`.
+If you are using Material UI with TypeScript and want to get the value from the second optional parameter of the `onChange` event, you need to pass an event handler of type `any`.
 
 Like this:
 

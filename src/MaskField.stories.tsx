@@ -1,6 +1,4 @@
 import { useState, forwardRef } from 'react';
-import TextField from '@material-ui/core/TextField';
-import { InputBaseComponentProps } from '@material-ui/core/InputBase';
 import { ComponentStory, Meta } from '@storybook/react';
 import MaskFieldComponent, { MaskFieldProps } from './MaskField';
 
@@ -43,6 +41,8 @@ export const MaskFieldModifyValue: ComponentStory<typeof MaskFieldComponent> = (
     <>
       <MaskFieldComponent
         {...args}
+        name="phone"
+        type="tel"
         mask={mask}
         set={/\d/}
         value={data.value}
@@ -86,6 +86,10 @@ MaskFieldModifyMaskedValue.args = {
   showMask: false,
 };
 
+/**
+ * Integration with Custom components
+ */
+
 const ForwardInput = forwardRef(
   (
     props: React.InputHTMLAttributes<HTMLInputElement>,
@@ -118,29 +122,4 @@ CustomComponent.args = {
   mask: '+7 (___) ___-__-__',
   char: '_',
   showMask: false,
-};
-
-function TextFieldMask({ inputRef, ...other }: InputBaseComponentProps) {
-  return (
-    <MaskFieldComponent {...other} ref={inputRef} mask="+7 (___) ___-__-__" char="_" set={/\d/} />
-  );
-}
-
-export const MaterialUIComponent: ComponentStory<typeof MaskFieldComponent> = () => {
-  const [data, setData] = useState({ maskedValue: '', value: '' });
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
-    setData({ maskedValue: event.target.value, value });
-  };
-
-  return (
-    <>
-      <TextField
-        InputProps={{ inputComponent: TextFieldMask }}
-        value={data.value}
-        onChange={handleChange as any}
-      />
-      <pre>{JSON.stringify(data, null, 2)}</pre>
-    </>
-  );
 };

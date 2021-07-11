@@ -10,6 +10,18 @@ The MaskField component allows you to apply a mask to the input field.
 npm i react-mask-field
 ```
 
+## Unique properties
+
+| Name      |   Type    | Default value | Описание Description                                                                                                                                                                                                                                            |
+| --------- | :-------: | :-----------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| component | Component |   undefined   | Serves for the possibility of using custom components, for example, if you want to use your own styled component with the ability to mask the value (see the section "Integration with custom components").                                                     |
+| mask \*   |  string   |               | The mask is in string format, uses `char` as the replacement character.                                                                                                                                                                                         |
+| char \*   |  string   |               | The replacement character used in the mask (not taken into account when entering).                                                                                                                                                                              |
+| set       |  RegExp   |   undefined   | Indicates which characters are allowed to be entered. For example, if you only want to allow numeric input, you can set `set` to `/[0-9]/` or `/\d/`, as shown in the examples above. If you don't set the `set` property, then any characters will be allowed. |
+| showMask  |  boolean  |     false     | Controls the display of the mask. If `showMask === true` will display the full mask, for example `+7 (912) 3 __-__-__` instead of `+7 (912) 3`.                                                                                                                 |
+
+> You can also pass all the properties available to the `input` element.
+
 ## Using
 
 The package exports by default the MaskField component, which is a standard `input` element with input processing logic.
@@ -54,18 +66,6 @@ Note that the `handleChange` event handler takes two `event` and `value` paramet
 > For the mask to work correctly, it is recommended to put the value passed to the MaskField component either the value from event.target.value, or from the additional parameter value, as shown in the example above.
 
 One of the key features of the MaskField component is that it relies only on user-entered characters, so you can safely include absolutely any characters in the mask without fear of the “unexpected behavior” of the component.
-
-### Unique properties
-
-| Name      |   Type    | Default value | Описание Description                                                                                                                                                                                                                                            |
-| --------- | :-------: | :-----------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| component | Component |   undefined   | Serves for the possibility of using custom components, for example, if you want to use your own styled component with the ability to mask the value (see the section "Integration with custom components").                                                     |
-| mask \*   |  string   |               | The mask is in string format, uses `char` as the replacement character.                                                                                                                                                                                         |
-| char \*   |  string   |               | The replacement character used in the mask (not taken into account when entering).                                                                                                                                                                              |
-| set       |  RegExp   |   undefined   | Indicates which characters are allowed to be entered. For example, if you only want to allow numeric input, you can set `set` to `/[0-9]/` or `/\d/`, as shown in the examples above. If you don't set the `set` property, then any characters will be allowed. |
-| showMask  |  boolean  |     false     | Controls the display of the mask. If `showMask === true` will display the full mask, for example `+7 (912) 3 __-__-__` instead of `+7 (912) 3`.                                                                                                                 |
-
-> You can also pass all the properties available to the `input` element.
 
 ## More complex use
 

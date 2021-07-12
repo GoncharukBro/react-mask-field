@@ -79,7 +79,7 @@ export default function Example() {
   const [state, setState] = useState({ maskedValue: '', value: '' });
 
   const handleChange = (event, value) => {
-    setData({ maskedValue: event.target.value, value });
+    setState({ maskedValue: event.target.value, value });
   };
 
   const mask = data.value[0] === '7' ? '+_ (___) ___-__-__' : '+_ __________';
@@ -102,9 +102,11 @@ const handleChange = (event, value) => {
     newValue = `7${newValue}`;
   }
 
-  setData({ maskedValue: event.target.value, value: newValue });
+  setState({ maskedValue: event.target.value, value: newValue });
 };
 ```
+
+> Note that changing a value outside the control of the MaskField component may cause an incorrect display or incorrect value transmission. This point will definitely be taken into account in the next release, but for now, approach this decision with great caution.
 
 ## Integration with custom components
 

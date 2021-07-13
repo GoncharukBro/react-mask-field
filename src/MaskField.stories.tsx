@@ -1,6 +1,7 @@
 import { useState, forwardRef } from 'react';
 import { ComponentStory, Meta } from '@storybook/react';
-import MaskFieldComponent, { MaskFieldProps } from './MaskField';
+import MaskFieldComponent from '../dist';
+import { MaskFieldProps } from './MaskField';
 
 export default {
   title: 'Example',

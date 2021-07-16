@@ -29,6 +29,7 @@ The package exports by default the MaskField component, which is a standard `inp
 This is how you can easily implement any mask:
 
 ```jsx
+import React from 'react';
 import MaskField from 'react-mask-field';
 
 export default function Example() {
@@ -39,11 +40,11 @@ export default function Example() {
 The component also supports controlled input:
 
 ```jsx
-import { useState } from 'react';
+import React from 'react';
 import MaskField from 'react-mask-field';
 
 export default function Example() {
-  const [state, setState] = useState({ maskedValue: '', value: '' });
+  const [state, setState] = React.useState({ maskedValue: '', value: '' });
 
   const handleChange = (event, value) => {
     setState({ maskedValue: event.target.value, value });
@@ -72,11 +73,11 @@ One of the key features of the MaskField component is that it relies only on use
 MaskField allows you to conditionally adapt the mask. Consider a possible situation where we need to change the mask depending on the phone city code:
 
 ```jsx
-import { useState } from 'react';
+import React from 'react';
 import MaskField from 'react-mask-field';
 
 export default function Example() {
-  const [state, setState] = useState({ maskedValue: '', value: '' });
+  const [state, setState] = React.useState({ maskedValue: '', value: '' });
 
   const handleChange = (event, value) => {
     setState({ maskedValue: event.target.value, value });
@@ -117,11 +118,11 @@ To do this, you need to pass the custom component to the `forwardRef` method pro
 Here's how to do it:
 
 ```jsx
-import { useState, forwardRef } from 'react';
+import React from 'react';
 import MaskField from 'react-mask-field';
 
 // Custom component
-const CustomComponent = forwardRef((props, ref) => {
+const CustomComponent = React.forwardRef((props, ref) => {
   return <input ref={ref} {...props} />;
 });
 
@@ -140,18 +141,18 @@ In this case, the Material UI component will pass to your component all the prop
 Here's how to do it:
 
 ```jsx
-import { useState } from 'react';
+import React from 'react';
 import TextField from '@material-ui/core/TextField';
 import MaskField from 'react-mask-field';
 
 // Component with MaskField
-function TextFieldMask({ inputRef, ...other }) {
+function CustomMaskField({ inputRef, ...other }) {
   return <MaskField {...other} ref={inputRef} mask="+7 (___) ___-__-__" char="_" set={/\d/} />;
 }
 
 // Component with Material UI
 export default function Example() {
-  return <TextField InputProps={{ inputComponent: TextFieldMask }} />;
+  return <TextField InputProps={{ inputComponent: CustomMaskField }} />;
 }
 ```
 
@@ -163,7 +164,7 @@ Like this:
 
 ```tsx
 export default function Example() {
-  const [state, setState] = useState({ maskedValue: '', value: '' });
+  const [state, setState] = React.useState({ maskedValue: '', value: '' });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
     setState({ maskedValue: event.target.value, value });
@@ -171,7 +172,7 @@ export default function Example() {
 
   return (
     <TextField
-      InputProps={{ inputComponent: TextFieldMask }}
+      InputProps={{ inputComponent: CustomMaskField }}
       value={state.value}
       onChange={handleChange as any}
     />
@@ -185,7 +186,7 @@ If you use TypeScript directly with the MaskField component itself, the `as any`
 
 ```tsx
 export default function Example() {
-  const [state, setState] = useState({ maskedValue: '', value: '' });
+  const [state, setState] = React.useState({ maskedValue: '', value: '' });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
     setState({ maskedValue: event.target.value, value });

@@ -14,7 +14,8 @@ export interface ChangedData {
 }
 
 export interface MaskedData {
+  value: string;
   mask: string;
-  maskedValue: string;
+  char: string;
   ast: AST | null;
 }

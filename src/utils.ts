@@ -35,17 +35,11 @@ export function generateAST(value: string, mask: string): AST {
  * @param type тип ввода
  * @param changedData объект содержащий информацию о пользовательском значении
  * @param maskedData объект с данными маскированного значения
- * @param char символ для замены
  * @returns позиция курсора
  */
-function getCursorPosition(
-  type: string,
-  changedData: ChangedData,
-  maskedData: MaskedData,
-  char: string
-) {
-  const { beforeRange, added, afterRange } = changedData;
-  const { ast, maskedValue } = maskedData;
+function getCursorPosition(type: string, changedData: ChangedData, maskedData: MaskedData) {
+  const { added, beforeRange, afterRange } = changedData;
+  const { value, char, ast } = maskedData;
 
   // Действие в начале строки
   // Находим первый символ пользовательского значения
@@ -89,8 +83,8 @@ function getCursorPosition(
 
   // Если предыдущие условия не выполнены возвращаем первый символ для замены
   // или перемещаем курсор в конец строки
-  const firstChar = maskedValue.search(char);
-  return firstChar !== undefined ? firstChar : maskedValue.length;
+  const firstChar = value.search(char);
+  return firstChar !== undefined ? firstChar : value.length;
 }
 
 /**
@@ -99,17 +93,15 @@ function getCursorPosition(
  * @param type тип ввода
  * @param changedData объект содержащий информацию о пользовательском значении
  * @param maskedData объект с данными маскированного значения
- * @param char символ для замены
  */
 export function setCursorPosition(
   input: HTMLInputElement,
   type: string,
   changedData: ChangedData,
-  maskedData: MaskedData,
-  char: string
+  maskedData: MaskedData
 ) {
   // Вычисляем позицию курсора
-  const position = getCursorPosition(type, changedData, maskedData, char);
+  const position = getCursorPosition(type, changedData, maskedData);
 
   // Устанавливает позицию курсора.
   // Нулевая задержка "requestAnimationFrame" нужна, чтобы смена позиции сработала после ввода значения
@@ -149,7 +141,7 @@ export function getMaskedData(
     }
   }
 
-  return { mask, maskedValue, ast };
+  return { value: maskedValue, mask, char, ast };
 }
 
 /**

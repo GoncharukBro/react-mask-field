@@ -1,7 +1,6 @@
 import { useState, forwardRef } from 'react';
 import { ComponentStory, Meta } from '@storybook/react';
-import MaskFieldComponent from '../dist';
-import { MaskFieldProps } from './MaskField';
+import MaskFieldComponent, { MaskFieldProps } from './MaskField';
 
 export default {
   title: 'Example',
@@ -22,7 +21,52 @@ export default {
   },
 } as Meta<MaskFieldProps>;
 
-export const MaskFieldModifyValue: ComponentStory<typeof MaskFieldComponent> = (args) => {
+export const UncontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (args) => (
+  <>
+    <MaskFieldComponent
+      {...args}
+      // name="phone"
+      type="tel"
+      set={/\d/}
+    />
+  </>
+);
+
+UncontrolledMaskField.args = {
+  mask: '+_ (___) ___-__-__',
+  char: '_',
+  showMask: false,
+};
+
+export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (args) => {
+  const [data, setData] = useState({ maskedValue: '', value: '' });
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
+    setData({ maskedValue: event.target.value, value });
+  };
+
+  return (
+    <>
+      <MaskFieldComponent
+        {...args}
+        // name="phone"
+        type="tel"
+        set={/\d/}
+        value={data.value}
+        onChange={handleChange}
+      />
+      <pre>{JSON.stringify(data, null, 2)}</pre>
+    </>
+  );
+};
+
+СontrolledMaskField.args = {
+  mask: '+_ (___) ___-__-__',
+  char: '_',
+  showMask: false,
+};
+
+export const СontrolledMaskFieldModifyValue: ComponentStory<typeof MaskFieldComponent> = (args) => {
   const [data, setData] = useState({ maskedValue: '', value: '79144088469' });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
@@ -42,7 +86,7 @@ export const MaskFieldModifyValue: ComponentStory<typeof MaskFieldComponent> = (
     <>
       <MaskFieldComponent
         {...args}
-        name="phone"
+        // name="phone"
         type="tel"
         mask={mask}
         set={/\d/}
@@ -54,12 +98,59 @@ export const MaskFieldModifyValue: ComponentStory<typeof MaskFieldComponent> = (
   );
 };
 
-MaskFieldModifyValue.args = {
+СontrolledMaskFieldModifyValue.args = {
   char: '_',
   showMask: false,
 };
 
-export const MaskFieldModifyMaskedValue: ComponentStory<typeof MaskFieldComponent> = (args) => {
+export const СontrolledMaskFieldModifyValueWithModify: ComponentStory<typeof MaskFieldComponent> = (
+  args
+) => {
+  const [data, setData] = useState({ maskedValue: '', value: '79144088469' });
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
+    setData({ maskedValue: event.target.value, value });
+  };
+
+  const rusPhoneMask = '+_ (___) ___-__-__';
+  const otherPhoneMask = '+_ __________';
+
+  // const modify = (value: string, mask: string, char: string) => {
+  //   let newValue = value;
+  //   if (value[0] === '8') {
+  //     newValue = `7${value.slice(1)}`;
+  //   }
+  //   if (value[0] === '9') {
+  //     newValue = `7${value}`;
+  //   }
+  //   const newMask = newValue[0] === '7' ? rusPhoneMask : otherPhoneMask;
+  //   return { value: newValue, mask: newMask };
+  // };
+
+  return (
+    <>
+      <MaskFieldComponent
+        {...args}
+        type="tel"
+        mask={rusPhoneMask}
+        set={/\d/}
+        // modify={modify}
+        value={data.value}
+        onChange={handleChange}
+      />
+      <pre>{JSON.stringify(data, null, 2)}</pre>
+    </>
+  );
+};
+
+СontrolledMaskFieldModifyValueWithModify.args = {
+  char: '_',
+  showMask: false,
+};
+
+export const СontrolledMaskFieldModifyMaskedValue: ComponentStory<typeof MaskFieldComponent> = (
+  args
+) => {
   const [data, setData] = useState({ maskedValue: '', value: '' });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
@@ -82,7 +173,7 @@ export const MaskFieldModifyMaskedValue: ComponentStory<typeof MaskFieldComponen
   );
 };
 
-MaskFieldModifyMaskedValue.args = {
+СontrolledMaskFieldModifyMaskedValue.args = {
   char: '_',
   showMask: false,
 };

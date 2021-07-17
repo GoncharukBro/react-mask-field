@@ -1,6 +1,6 @@
 import { useState, forwardRef } from 'react';
 import { ComponentStory, Meta } from '@storybook/react';
-import MaskFieldComponent, { MaskFieldProps } from './MaskField';
+import MaskFieldComponent, { MaskFieldProps, ModifyData } from '.';
 
 export default {
   title: 'Example',
@@ -76,10 +76,10 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
     setData({ maskedValue: event.target.value, value });
   };
 
-  const rusPhoneMask = '+_ (___) ___-__-__';
+  const ruPhoneMask = '+_ (___) ___-__-__';
   const otherPhoneMask = '+_ __________';
 
-  const modify = (value: string) => {
+  const modify = ({ value }: ModifyData) => {
     let newValue = value;
     if (value[0] === '8') {
       newValue = `7${value.slice(1)}`;
@@ -87,7 +87,7 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
     if (value[0] === '9') {
       newValue = `7${value}`;
     }
-    const newMask = newValue[0] === '7' ? rusPhoneMask : otherPhoneMask;
+    const newMask = newValue[0] === '7' ? ruPhoneMask : otherPhoneMask;
     return { value: newValue, mask: newMask };
   };
 
@@ -95,7 +95,7 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
     <>
       <MaskFieldComponent
         {...args}
-        mask={rusPhoneMask}
+        mask={ruPhoneMask}
         set={/\d/}
         modify={modify}
         value={data.maskedValue}

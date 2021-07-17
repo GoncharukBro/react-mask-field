@@ -2,10 +2,9 @@ import { useState, useEffect, useRef, forwardRef } from 'react';
 import { getChangedData, getMaskedData, getCursorPosition, setCursorPosition } from './utils';
 import { Range, ChangedData, MaskedData } from './types';
 
-type ModifyReturnType = Partial<
-  Pick<MaskFieldProps, 'value' | 'mask' | 'char' | 'set' | 'showMask'>
->;
 type SelectionBeforeChange = Record<'start' | 'end', number | null>;
+
+export type ModifyData = Pick<MaskFieldProps, 'value' | 'mask' | 'char' | 'set' | 'showMask'>;
 
 export interface MaskFieldProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> {
@@ -14,7 +13,7 @@ export interface MaskFieldProps
   char: string;
   set?: RegExp;
   showMask?: boolean;
-  modify?: (value: string) => ModifyReturnType | undefined;
+  modify?: (modifyData: ModifyData) => Partial<ModifyData> | undefined;
   value?: string;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>, value: string) => void;
 }
@@ -97,7 +96,7 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
 
     if (changedData.current) {
       // Модифицируем свойства компонента, если задан `modify`
-      const modifyData = modify?.(changedData.current.value);
+      const modifyData = modify?.({ value: changedData.current.value, mask, char, set, showMask });
 
       if (modifyData?.value !== undefined) {
         changedData.current.value = modifyData.value;

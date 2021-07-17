@@ -266,7 +266,7 @@ const modify = (modifyData: ModifyData) => {
 };
 ```
 
-If for some reason you need to use the MaskField component property type, you can also import it as a named import.
+If for some reason you need to use the MaskField component property type, you can also import it as a named import:
 
 ```tsx
 import MaskField, { MaskFieldProps, ModifyData } from 'react-mask-field';

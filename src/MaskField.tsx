@@ -1,13 +1,11 @@
 import { useState, useEffect, useRef, forwardRef } from 'react';
-import { generateAST, getChangedData, getMaskedData, setCursorPosition } from './utils';
+import { getChangedData, getMaskedData, getCursorPosition, setCursorPosition } from './utils';
 import { Range, ChangedData, MaskedData } from './types';
 
-const initialMaskedData = (mask: string, char: string): MaskedData => ({
-  value: '',
-  mask,
-  char,
-  ast: null,
-});
+type ModifyReturnType = Partial<
+  Pick<MaskFieldProps, 'value' | 'mask' | 'char' | 'set' | 'showMask'>
+>;
+type SelectionBeforeChange = Record<'start' | 'end', number | null>;
 
 export interface MaskFieldProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> {
@@ -16,32 +14,30 @@ export interface MaskFieldProps
   char: string;
   set?: RegExp;
   showMask?: boolean;
+  modify?: (value: string) => ModifyReturnType | undefined;
   value?: string;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>, value: string) => void;
 }
 
 function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
   const {
-    // Свойства MaskField
     component: Component,
-    mask,
-    char,
-    set,
-    showMask,
-    // Свойства input-элемента
+    modify,
+    defaultValue,
     value,
     onChange,
     onSelect,
-    ...other
+    ...otherProps
   } = props;
+  // eslint-disable-next-line prefer-const
+  let { mask, char, set, showMask, ...other } = otherProps;
+
   const inputRef = useRef<HTMLInputElement>(null);
   const type = useRef<string>('');
-  const selectionBeforeChange = useRef<Record<'start' | 'end', number | null>>({
-    start: null,
-    end: null,
-  });
+  const selectionBeforeChange = useRef<SelectionBeforeChange>({ start: null, end: null });
   const changedData = useRef<ChangedData | null>(null);
-  const maskedData = useRef<MaskedData>(initialMaskedData(mask, char));
+  const maskedData = useRef<MaskedData | null>(null);
+
   const [maskedValue, setMaskedValue] = useState<string>('');
 
   // Добавляем ссылку на элемент для родительских компонентов
@@ -55,76 +51,75 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
     }
   }, [ref]);
 
-  // Контролируем значение
+  // Инициализируем данные значения
   useEffect(() => {
-    if (value !== undefined) {
-      // Проверяем является ли значение маскированным
-      const isMaskedValue = !value.split('').find((item, index) => {
-        const maskedSymbol = maskedData.current.mask[index];
-        return maskedSymbol !== char && item !== maskedSymbol;
-      });
+    const initialValue = value || defaultValue?.toString() || '';
 
-      let changedValue = value;
+    // Выбираем из маскированного значения все пользовательские символы
+    const changedValue = mask.split('').reduce((prev, item, index) => {
+      const hasItem = item === char && initialValue[index] && initialValue[index] !== char;
+      return hasItem ? prev + initialValue[index] : prev;
+    }, '');
 
-      // Если значение маскированное выбираем из него все пользовательские символы
-      if (isMaskedValue) {
-        changedValue = maskedData.current.mask.split('').reduce((prev, item, index) => {
-          const hasItem = item === char && value[index] && value[index] !== char;
-          return hasItem ? prev + value[index] : prev;
-        }, '');
-      }
+    // Формируем данные маскированного значения
+    maskedData.current = getMaskedData(changedValue, mask, char, showMask);
 
-      let newMaskedData = initialMaskedData(mask, char);
-
-      if (inputRef.current && changedValue) {
-        newMaskedData = getMaskedData(changedValue, mask, char, showMask);
-
-        if (changedData.current) {
-          setCursorPosition(inputRef.current, type.current, changedData.current, newMaskedData);
-        }
-      }
-
-      maskedData.current = newMaskedData;
-      setMaskedValue(newMaskedData.value);
-    }
+    setMaskedValue(initialValue);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, mask, char, showMask]);
+  }, []);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value: inputValue, selectionStart } = event.target;
-
     // Кэшируем тип ввода
     type.current = (event.nativeEvent as any)?.inputType || '';
 
-    const prevAST = generateAST(maskedData.current.value, mask);
-
-    if (type.current?.includes('delete') && selectionStart !== null) {
+    if (type.current?.includes('delete') && selectionStart !== null && maskedData.current?.ast) {
       // Подсчитываем количество удаленных символов
       const countDeletedSymbols = maskedData.current.value.length - inputValue.length;
       // Определяем диапозон изменяемых символов
       const range: Range = [selectionStart, selectionStart + countDeletedSymbols];
       // Получаем информацию о пользовательском значении
-      changedData.current = getChangedData(prevAST, range);
+      changedData.current = getChangedData(maskedData.current.ast, range);
     } else if (
       (type.current?.includes('insert') || inputValue) &&
       selectionStart !== null &&
       selectionBeforeChange.current.start !== null &&
-      selectionBeforeChange.current.end !== null
+      selectionBeforeChange.current.end !== null &&
+      maskedData.current?.ast
     ) {
       // Определяем диапозон изменяемых символов
       const range: Range = [selectionBeforeChange.current.start, selectionBeforeChange.current.end];
       // Находим добавленные символы
       const addedSymbols = inputValue.slice(range[0], selectionStart);
       // Получаем информацию о пользовательском значении
-      changedData.current = getChangedData(prevAST, range, addedSymbols);
+      changedData.current = getChangedData(maskedData.current.ast, range, addedSymbols);
     }
 
     if (changedData.current) {
+      // Модифицируем свойства компонента, если задан `modify`
+      const modifyData = modify?.(changedData.current.value);
+
+      if (modifyData?.value !== undefined) {
+        changedData.current.value = modifyData.value;
+      }
+      if (modifyData?.mask !== undefined) {
+        mask = modifyData.mask;
+      }
+      if (modifyData?.char !== undefined) {
+        char = modifyData.char;
+      }
+      if (modifyData?.set !== undefined) {
+        set = modifyData.set;
+      }
+      if (modifyData?.showMask !== undefined) {
+        showMask = modifyData.showMask;
+      }
+
       // Учитывает только символы указанные в `set`
       const regExp = set && new RegExp(set);
-      const hasUnallowedChar = changedData.current.value
-        .split('')
-        .find((item) => regExp && !regExp.test(item));
+      const hasUnallowedChar = changedData.current.value.split('').find((item) => {
+        return regExp && !regExp.test(item);
+      });
       if (hasUnallowedChar) {
         return;
       }
@@ -133,27 +128,28 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
       changedData.current.value = changedData.current.value.replace(char, '');
 
       // Подсчитываем количество символов для замены и обрезаем лишнее из пользовательского значения
-      const countChangedChars = mask.split('').filter((item) => item === char).length;
-      changedData.current.value = changedData.current.value.slice(0, countChangedChars);
+      const chars = mask.split('').filter((item) => item === char);
+      changedData.current.value = changedData.current.value.slice(0, chars.length);
 
       // Формируем данные маскированного значения
-      let newMaskedData = initialMaskedData(mask, char);
+      maskedData.current = getMaskedData(changedData.current.value, mask, char, showMask);
 
-      if (inputRef.current && changedData.current.value) {
-        newMaskedData = getMaskedData(changedData.current.value, mask, char, showMask);
-        setCursorPosition(inputRef.current, type.current, changedData.current, newMaskedData);
+      // Устанавливаем позицию курсора курсор
+      if (inputRef.current) {
+        const position = getCursorPosition(type.current, changedData.current, maskedData.current);
+        setCursorPosition(inputRef.current, position);
       }
 
+      // Не меняем локальное состояние при контролируемом компоненте
       if (value === undefined) {
-        maskedData.current = newMaskedData;
-        setMaskedValue(newMaskedData.value);
+        setMaskedValue(maskedData.current.value);
       }
 
       // eslint-disable-next-line no-param-reassign
-      event.target.value = newMaskedData.value;
+      event.target.value = maskedData.current.value;
       if (event.nativeEvent.target) {
         // eslint-disable-next-line no-param-reassign
-        (event.nativeEvent.target as HTMLInputElement).value = newMaskedData.value;
+        (event.nativeEvent.target as HTMLInputElement).value = maskedData.current.value;
       }
 
       onChange?.(event, changedData.current.value);
@@ -175,7 +171,7 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
   const inputProps = {
     ...other,
     ref: inputRef,
-    value: maskedValue,
+    value: value !== undefined ? value : maskedValue,
     onChange: handleChange,
     onSelect: handleSelect,
   };

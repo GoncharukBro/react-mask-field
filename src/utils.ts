@@ -11,22 +11,6 @@ function getLastChangedSymbol(ast: AST) {
 }
 
 /**
- * Генерирует дерево синтаксического анализа (AST).
- * AST представляет собой массив объектов, где каждый объект содержит в себе
- * всю необходимую информацию о каждом символе строки.
- * AST используется для точечного манипулирования символом или группой символов.
- * @param value значение с маской
- * @param mask маска
- * @returns сгенерированное AST
- */
-export function generateAST(value: string, mask: string): AST {
-  return value.split('').map((symbol, index) => {
-    const own = symbol === mask[index] ? ('mask' as const) : ('change' as const);
-    return { symbol, index, own };
-  });
-}
-
-/**
  * Получает позицию курсора для последующей установки.
  * Позиция курсора определяется по порядку возможных вариантов действий:
  * 1. действие в начале строки;
@@ -37,7 +21,7 @@ export function generateAST(value: string, mask: string): AST {
  * @param maskedData объект с данными маскированного значения
  * @returns позиция курсора
  */
-function getCursorPosition(type: string, changedData: ChangedData, maskedData: MaskedData) {
+export function getCursorPosition(type: string, changedData: ChangedData, maskedData: MaskedData) {
   const { added, beforeRange, afterRange } = changedData;
   const { value, char, ast } = maskedData;
 
@@ -90,25 +74,13 @@ function getCursorPosition(type: string, changedData: ChangedData, maskedData: M
 /**
  * Применяем позиционирование курсора
  * @param input html-элемент ввода
- * @param type тип ввода
- * @param changedData объект содержащий информацию о пользовательском значении
- * @param maskedData объект с данными маскированного значения
+ * @param position позиция на которую нужно установить курсор
  */
-export function setCursorPosition(
-  input: HTMLInputElement,
-  type: string,
-  changedData: ChangedData,
-  maskedData: MaskedData
-) {
-  // Вычисляем позицию курсора
-  const position = getCursorPosition(type, changedData, maskedData);
-
-  // Устанавливает позицию курсора.
+export function setCursorPosition(input: HTMLInputElement, position: number) {
   // Нулевая задержка "requestAnimationFrame" нужна, чтобы смена позиции сработала после ввода значения
+  // и предотвратилось мерцание при установке позиции
   requestAnimationFrame(() => {
-    if (position !== undefined) {
-      input.setSelectionRange(position, position);
-    }
+    input.setSelectionRange(position, position);
   });
 }
 
@@ -129,16 +101,19 @@ export function getMaskedData(
   // Маскируем значение
   let maskedValue = value.split('').reduce((prev, item) => prev.replace(char, item), mask);
 
-  const ast = generateAST(maskedValue, mask);
+  // Генерируем дерево синтаксического анализа (AST).
+  // AST представляет собой массив объектов, где каждый объект содержит в себе
+  // всю необходимую информацию о каждом символе строки.
+  // AST используется для точечного манипулирования символом или группой символов.
+  const ast = maskedValue.split('').map((symbol, index) => {
+    const own = symbol === mask[index] ? ('mask' as const) : ('change' as const);
+    return { symbol, index, own };
+  });
 
-  // Если `showMask === false` окончанием значения
-  // будет последний пользовательский символ
+  // Если `showMask === false` окончанием значения будет последний пользовательский символ
   if (!showMask) {
     const lastChangedSymbol = getLastChangedSymbol(ast);
-
-    if (lastChangedSymbol) {
-      maskedValue = maskedValue.slice(0, lastChangedSymbol.index + 1);
-    }
+    maskedValue = maskedValue.slice(0, lastChangedSymbol ? lastChangedSymbol.index + 1 : 0);
   }
 
   return { value: maskedValue, mask, char, ast };

@@ -131,6 +131,8 @@ export default function Example() {
 }
 ```
 
+> Note that the `value` property in the `modifyData` parameter stores the value entered by the user, not the masked value, since the value is modified before the mask is applied.
+
 Or correct the value entered by the user:
 
 ```jsx

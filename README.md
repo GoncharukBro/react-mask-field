@@ -156,7 +156,9 @@ const modify = (modifyData) => {
 };
 ```
 
-> Note that changing a value outside the control of the MaskField component may cause an incorrect display or incorrect value transmission.
+When modifying values, it is important to note that values passed directly to the MaskField component are always used as default values. If the `modify` function returns `undefined`, the default values will be used for processing, this is also applicable pointwise for a specific property, returning it as `undefined`.
+
+> Always use the `modify` function to modify a value, this will ensure that the data is in sync with your state and that the field value is displayed correctly. Changing the value outside the control of the MaskField component may result in incorrect display of the value or the transmission of incorrect data to external services.
 
 ## Integration with custom components
 

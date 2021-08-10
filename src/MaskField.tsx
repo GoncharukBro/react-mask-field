@@ -90,13 +90,14 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
     ) {
       // Находим добавленные символы
       let addedSymbols = inputValue.slice(selectionBeforeChange.current.start, selectionStart);
-      // Не учитываем символы равные "char"
-      addedSymbols = addedSymbols.replace(char, '');
+      // Не учитываем символы равные `char`
+      if (addedSymbols.includes(char)) {
+        addedSymbols = addedSymbols.replace(char, '');
+      }
       // Учитывает только символы указанные в `set`
       if (set) {
-        const regExp = new RegExp(set);
         addedSymbols = addedSymbols.split('').reduce((prev, item) => {
-          return regExp.test(item) ? prev + item : prev;
+          return set.test(item) ? prev + item : prev;
         }, '');
       }
 

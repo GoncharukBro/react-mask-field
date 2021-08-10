@@ -4,7 +4,7 @@ import { Range, ChangedData, MaskedData } from './types';
 
 type SelectionBeforeChange = Record<'start' | 'end', number | null>;
 
-export type ModifyData = Pick<MaskFieldProps, 'value' | 'mask' | 'char' | 'set' | 'showMask'>;
+export type ModifyData = Pick<MaskFieldProps, 'value' | 'mask' | 'char'>;
 
 export interface MaskFieldProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> {
@@ -21,6 +21,8 @@ export interface MaskFieldProps
 function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
   const {
     component: Component,
+    set,
+    showMask,
     modify,
     defaultValue,
     value,
@@ -29,7 +31,7 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
     ...otherProps
   } = props;
   // eslint-disable-next-line prefer-const
-  let { mask, char, set, showMask, ...other } = otherProps;
+  let { mask, char, ...other } = otherProps;
 
   const inputRef = useRef<HTMLInputElement>(null);
   const type = useRef<string>('');
@@ -86,17 +88,27 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
       selectionBeforeChange.current.end !== null &&
       maskedData.current?.ast
     ) {
+      // Находим добавленные символы
+      let addedSymbols = inputValue.slice(selectionBeforeChange.current.start, selectionStart);
+      // Не учитываем символы равные "char"
+      addedSymbols = addedSymbols.replace(char, '');
+      // Учитывает только символы указанные в `set`
+      if (set) {
+        const regExp = new RegExp(set);
+        addedSymbols = addedSymbols.split('').reduce((prev, item) => {
+          return regExp.test(item) ? prev + item : prev;
+        }, '');
+      }
+
       // Определяем диапозон изменяемых символов
       const range: Range = [selectionBeforeChange.current.start, selectionBeforeChange.current.end];
-      // Находим добавленные символы
-      const addedSymbols = inputValue.slice(range[0], selectionStart);
       // Получаем информацию о пользовательском значении
       changedData.current = getChangedData(maskedData.current.ast, range, addedSymbols);
     }
 
     if (changedData.current) {
       // Модифицируем свойства компонента, если задан `modify`
-      const modifyData = modify?.({ value: changedData.current.value, mask, char, set, showMask });
+      const modifyData = modify?.({ value: changedData.current.value, mask, char });
 
       if (modifyData?.value !== undefined) {
         changedData.current.value = modifyData.value;
@@ -107,24 +119,6 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
       if (modifyData?.char !== undefined) {
         char = modifyData.char;
       }
-      if (modifyData?.set !== undefined) {
-        set = modifyData.set;
-      }
-      if (modifyData?.showMask !== undefined) {
-        showMask = modifyData.showMask;
-      }
-
-      // Учитывает только символы указанные в `set`
-      const regExp = set && new RegExp(set);
-      const hasUnallowedChar = changedData.current.value.split('').find((item) => {
-        return regExp && !regExp.test(item);
-      });
-      if (hasUnallowedChar) {
-        return;
-      }
-
-      // Не учитываем символы равные "char"
-      changedData.current.value = changedData.current.value.replace(char, '');
 
       // Подсчитываем количество символов для замены и обрезаем лишнее из пользовательского значения
       const chars = mask.split('').filter((item) => item === char);

@@ -28,7 +28,7 @@ export default {
  */
 export const UncontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (args) => (
   <>
-    <MaskFieldComponent {...args} set={/\d/} defaultValue="+7 (912) 345-67-89" />
+    <MaskFieldComponent {...args} name="phone" set={/\d/} defaultValue="+7 (912) 345-67-89" />
   </>
 );
 
@@ -52,7 +52,13 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
 
   return (
     <>
-      <MaskFieldComponent {...args} set={/\d/} value={data.maskedValue} onChange={handleChange} />
+      <MaskFieldComponent
+        {...args}
+        name="phone"
+        set={/\d/}
+        value={data.maskedValue}
+        onChange={handleChange}
+      />
       <pre>{JSON.stringify(data, null, 2)}</pre>
     </>
   );
@@ -95,6 +101,7 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
     <>
       <MaskFieldComponent
         {...args}
+        name="phone"
         mask={ruPhoneMask}
         set={/\d/}
         modify={modify}
@@ -136,6 +143,7 @@ export const MaskFieldWithCustomComponent: ComponentStory<typeof MaskFieldCompon
     <>
       <MaskFieldComponent
         {...args}
+        name="phone"
         component={CustomComponent}
         set={/\d/}
         value={data.maskedValue}

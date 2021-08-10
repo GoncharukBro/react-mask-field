@@ -19,7 +19,7 @@ npm i react-mask-field
 | char \*   |  string   | The replacement character used in the mask (not taken into account when entering).                                                                                                                                                                        |
 | set       |  RegExp   | Indicates which characters are allowed to be entered. For example, if you only want to allow numeric input, you can set `set` to `/[0-9]/` or `/\d/`, as shown in the examples. If you don't set the `set` property, then any characters will be allowed. |
 | showMask  |  boolean  | Controls the display of the mask. If `showMask === true` will display the full mask, for example `+7 (912) 3 __-__-__` instead of `+7 (912) 3`.                                                                                                           |
-| modify    | Function  | The modifier function allows you to change the properties of the component: `value` (value entered by the user), `mask`, `char`, `set`, `showMask`. Useful when you need to conditionally adjust the displayed value to improve UX.                       |
+| modify    | Function  | The modifier function allows you to change the properties of the component: `value` (value entered by the user), `mask`, `char`. Useful when you need to conditionally adjust the displayed value to improve UX.                                          |
 
 > You can also pass all the properties available to the `input` element.
 
@@ -103,7 +103,7 @@ Note that `"7"` is present in the masked value, but not in the custom value. Thi
 
 ## Value modification
 
-You can pass a `modify` function, which allows you to conditionally change the value and other properties of a component. `modify` accepts an object containing data for easy modification, including `value` (the value entered by the user), `mask`, `char`, `set` and `showMask`. All of these properties can be changed. The `modify` function expects to return an object similar to the object in the parameters (`modifyData`, see example below) or `undefined`. Changes will be applied only to those properties that were returned, so you can change any property as needed or not change any property by passing `undefined`. The values ​​returned by the `modify` function take precedence over the values ​​in the properties of the MaskField component.
+You can pass a `modify` function, which allows you to conditionally change the value and other properties of a component. `modify` accepts an object containing data for easy modification, including `value` (the value entered by the user), `mask` and `char`. All of these properties can be changed. The `modify` function expects to return an object similar to the object in the parameters (`modifyData`, see example below) or `undefined`. Changes will be applied only to those properties that were returned, so you can change any property as needed or not change any property by passing `undefined`. The values ​​returned by the `modify` function take precedence over the values ​​in the properties of the MaskField component.
 
 Consider a possible situation where we need to change the mask depending on the phone city code:
 
@@ -127,7 +127,16 @@ export default function Example() {
     return { mask: newMask };
   };
 
-  return <MaskField mask={ruPhoneMask} char="_" set={/\d/} value={value} onChange={handleChange} />;
+  return (
+    <MaskField
+      mask={ruPhoneMask}
+      char="_"
+      set={/\d/}
+      modify={modify}
+      value={value}
+      onChange={handleChange}
+    />
+  );
 }
 ```
 

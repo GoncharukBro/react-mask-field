@@ -12,14 +12,14 @@ npm i react-mask-field
 
 ## Unique properties
 
-| Name      |   Type    | Описание Description                                                                                                                                                                                                                                      |
-| --------- | :-------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| component | Component | Serves for the possibility of using custom components, for example, if you want to use your own styled component with the ability to mask the value (see the section "Integration with custom components").                                               |
-| mask \*   |  string   | The mask is in string format, uses `char` as the replacement character.                                                                                                                                                                                   |
-| char \*   |  string   | The replacement character used in the mask (not taken into account when entering).                                                                                                                                                                        |
-| set       |  RegExp   | Indicates which characters are allowed to be entered. For example, if you only want to allow numeric input, you can set `set` to `/[0-9]/` or `/\d/`, as shown in the examples. If you don't set the `set` property, then any characters will be allowed. |
-| showMask  |  boolean  | Controls the display of the mask. If `showMask === true` will display the full mask, for example `+7 (912) 3 __-__-__` instead of `+7 (912) 3`.                                                                                                           |
-| modify    | Function  | The modifier function allows you to change the properties of the component: `value` (value entered by the user), `mask`, `char`. Useful when you need to conditionally adjust the displayed value to improve UX.                                          |
+| Name      |   Type    | Description                                                                                                                                                                                                                                          |
+| --------- | :-------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| component | Component | Serves for the possibility of using custom components, for example, if you want to use your own styled component with the ability to mask the value (see the section "Integration with custom components").                                          |
+| mask \*   |  string   | The mask is in string format, uses `char` as the replacement character.                                                                                                                                                                              |
+| char \*   |  string   | The replacement character used in the mask (not taken into account when entering).                                                                                                                                                                   |
+| set       |  RegExp   | Indicates which characters are allowed to enter. For example, if you only want to allow numeric input, you can set `set` to `/[0-9]/` or `/\d/`, as shown in the examples. If you don't set the `set` property, then any characters will be allowed. |
+| showMask  |  boolean  | Controls the display of the mask. If `showMask === true` will display the full mask, for example `+7 (912) 3 __-__-__` instead of `+7 (912) 3`.                                                                                                      |
+| modify    | Function  | The modifier function allows you to change the properties of the component: `value` (value entered by the user), `mask`, `char`. It is useful when you need to conditionally adjust the displayed value to improve UX.                               |
 
 > You can also pass all the properties available to the `input` element.
 
@@ -63,7 +63,7 @@ export default function Example() {
 }
 ```
 
-One of the key features of the MaskField component is that it relies only on user-entered characters, so you can safely include absolutely any characters in the mask without fear of the “unexpected behavior” of the component.
+One of the key features of the MaskField component is that it relies only on user-entered characters, so you can safely include absolutely any characters in the mask are not afraid of the “unexpected behavior” of the component.
 
 ## Custom value
 
@@ -97,15 +97,15 @@ export default function Example() {
 }
 ```
 
-Note that `"7"` is present in the masked value, but not in the custom value. This is the correct behavior, as the `"7"` refers to mask characters. Thus, you always have a masked meaning on hand and a meaning without taking into account the mask symbols.
+Pay attention that `"7"` is present in the masked value, but is not in the custom value. This is the correct behavior, as the `"7"` refers to mask characters. Thus, you always have a masked meaning on hand and a meaning without taking into account the mask symbols.
 
-> Make sure you pass the `value` property of the MaskField component a masked value, not a character-insensitive value, otherwise it will render incorrectly.
+> Make sure that you pass the `value` property of the MaskField component a masked value, not a character-insensitive value, otherwise it will render incorrectly.
 
 ## Value modification
 
-You can pass a `modify` function, which allows you to conditionally change the value and other properties of a component. `modify` accepts an object containing data for easy modification, including `value` (the value entered by the user), `mask` and `char`. All of these properties can be changed. The `modify` function expects to return an object similar to the object in the parameters (`modifyData`, see example below) or `undefined`. Changes will be applied only to those properties that were returned, so you can change any property as needed or not change any property by passing `undefined`. The values ​​returned by the `modify` function take precedence over the values ​​in the properties of the MaskField component.
+You can pass a `modify` function, which allows you to change the value conditionally and other properties of a component. `modify` accepts an object containing data for easy modification, including `value` (the value entered by the user), `mask` and `char`. All of these properties can be changed. The `modify` function expects to return an object similar to the object in the parameters (`modifyData`, see example below) or `undefined`. Changes will be applied only to those properties that were returned, so you can change any property as you need or do not change any property by passing `undefined`. The values ​​returned by the `modify` function take precedence over the values ​​in the properties of the MaskField component.
 
-Consider a possible situation where we need to change the mask depending on the phone city code:
+Let's take a look possible situation where we need to change the mask depending on the phone city code:
 
 ```jsx
 import React from 'react';
@@ -140,7 +140,7 @@ export default function Example() {
 }
 ```
 
-> Note that the `value` property in the `modifyData` parameter stores the value entered by the user, not the masked value, since the value is modified before the mask is applied.
+> Pay attention that the `value` property in the `modifyData` parameter stores the value entered by the user, not the masked value, since the value is has modified before the mask had applied.
 
 Or correct the value entered by the user:
 
@@ -165,15 +165,15 @@ const modify = (modifyData) => {
 };
 ```
 
-When modifying values, it is important to note that values passed directly to the MaskField component are always used as default values. If the `modify` function returns `undefined`, the default values will be used for processing, this is also applicable pointwise for a specific property, returning it as `undefined`.
+When values modify, it is important to notice that values passed directly to the MaskField component are always used as default values. If the `modify` function returns `undefined`, the default values will be used for processing, this is also applicable pointwise for a specific property, returning it as `undefined`.
 
-> Always use the `modify` function to modify a value, this will ensure that the data is in sync with your state and that the field value is displayed correctly. Changing the value outside the control of the MaskField component may result in incorrect display of the value or the transmission of incorrect data to external services.
+> Always use the `modify` function to modify a value, it will ensure that the data is in sync with your state and that the field value is displayed correctly. Changing the value outside the control of the MaskField component may result in incorrect display of the value or the transmission of incorrect data to external services.
 
 ## Integration with custom components
 
 MaskField makes it easy to integrate custom components, allowing you to use your own styled components.
 
-To do this, you need to pass the custom component to the `forwardRef` method provided by React. `forwardRef` allows you to automatically pass the `ref` value to the child element ([more about forwardRef](https://ru.reactjs.org/docs/forwarding-refs.html)).
+For doing this, you need to pass the custom component to the `forwardRef` method provided by React. `forwardRef` allows you to pass automatically the `ref` value to the child element ([more about forwardRef](https://ru.reactjs.org/docs/forwarding-refs.html)).
 
 Here's how to do it:
 
@@ -194,7 +194,7 @@ export default function Example() {
 
 ## Integration with Material UI components
 
-If you are using Material UI, you need to create a component that returns a MaskField and pass it as the `inputComponent` property of the Material UI component.
+If you use Material UI, you need to create a component that returns a MaskField and pass it as the `inputComponent` property of the Material UI component.
 
 In this case, the Material UI component will pass to your component all the properties available to the `input` element, as well as an additional `inputRef` property, which you will need to pass as a value for the `ref` property of the MaskField component.
 
@@ -218,7 +218,7 @@ export default function Example() {
 
 ## Usage with TypeScript
 
-If you are using Material UI with TypeScript and want to get the value from the second optional parameter of the `onChange` event, you need to pass an event handler of type `any`.
+If you use Material UI with TypeScript and want to get the value from the second optional parameter of the `onChange` event, you need to pass an event handler of type `any`.
 
 Like this:
 
@@ -240,9 +240,10 @@ export default function Example() {
 }
 ```
 
-This is a trade-off, as having the second parameter does not match the expected Material UI component type. If you are using Material UI with TypeScript, and do not want to get the value from the second optional parameter of the `onChange` event, you do not need to cast to the `any` type.
+This is a compromize because having the second parameter does not match the expected Material UI component type. If you use Material UI with TypeScript, and do not want to get the value from the second optional parameter of the `onChange` event, you do not need to cast to the `any` type.
 
-If you use TypeScript directly with the MaskField component itself, the `as any` specification is no longer required, since the MaskField itself expects a second optional parameter:
+If you use TypeScript directly with the MaskField component itself, the `as any` specification is no longer required, since the MaskField itself
+has expected a second optional parameter:
 
 ```tsx
 export default function Example() {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, forwardRef } from 'react';
-import { getChangedData, getMaskedData, getCursorPosition, setCursorPosition } from './utils';
+import { getChangedData, getMaskedData, setCursorPosition } from './utils';
 import { Range, ChangedData, MaskedData } from './types';
 
 const specialSymbols = ['[', ']', '\\', '/', '^', '$', '.', '|', '?', '*', '+', '(', ')', '{', '}'];
@@ -94,22 +94,17 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
       // Находим добавленные символы
       let addedSymbols = inputValue.slice(selectionBeforeChange.current.start, selectionStart);
 
-      // Не учитываем символы равные ключам паттерна
-      const patternKeys = Object.keys(pattern);
+      // Заменяемые символы доступные текущему вводу
+      let replaceableChars = mask
+        .slice(selectionBeforeChange.current.start)
+        .split('')
+        .reduce((prev, item) => (patternKeys.includes(item) ? prev + item : prev), '');
 
-      const convertedPatternKeys = patternKeys.map((key) => {
-        return specialSymbols.includes(key) ? `(\\${key})` : `(${key})`;
-      });
-      const regExp = new RegExp(convertedPatternKeys.join('|'), 'g');
-      addedSymbols = addedSymbols.replace(regExp, '');
-
-      // Оставляем символы указанные в паттерне
-      let replaceableChars = maskedData.current.ast.reduce((prev, item) => {
-        return patternKeys.includes(item.symbol) ? prev + item.symbol : prev;
-      }, '');
-
+      // Фильтруем значение для соответствия значениям паттерна
       addedSymbols = addedSymbols.split('').reduce((prev, item) => {
-        if (pattern[replaceableChars[0]]?.test(item)) {
+        // Не учитываем символ равный ключам паттерна,
+        // а также символ не соответствующий текущему значению паттерна
+        if (!patternKeys.includes(item) && pattern[replaceableChars[0]]?.test(item)) {
           replaceableChars = replaceableChars.slice(1);
           return prev + item;
         }
@@ -144,8 +139,7 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
 
       // Устанавливаем позицию курсора курсор
       if (inputRef.current) {
-        const position = getCursorPosition(type.current, changedData.current, maskedData.current);
-        setCursorPosition(inputRef.current, position);
+        setCursorPosition(inputRef.current, type.current, changedData.current, maskedData.current);
       }
 
       // Не меняем локальное состояние при контролируемом компоненте

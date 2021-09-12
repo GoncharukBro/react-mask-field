@@ -50,9 +50,9 @@ export const UncontrolledMaskFieldDate: ComponentStory<typeof MaskFieldComponent
   <>
     <MaskFieldComponent
       {...args}
-      mask="dd-mm-yyyy"
-      pattern={{ d: /\d/, m: /\d/, y: /\d/ }}
-      placeholder="dd-mm-yyyy"
+      mask="dd-mm-yyDy"
+      pattern={{ d: /\d/, m: /\d/, y: /\d/, D: /\D/ }}
+      placeholder="dd-mm-yyDy"
       showMask
     />
   </>

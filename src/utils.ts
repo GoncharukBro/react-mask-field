@@ -23,7 +23,7 @@ function getLastChangedSymbol(ast: AST) {
  * @param maskedData объект с данными маскированного значения
  * @returns позиция курсора
  */
-export function getCursorPosition(type: string, changedData: ChangedData, maskedData: MaskedData) {
+function getCursorPosition(type: string, changedData: ChangedData, maskedData: MaskedData) {
   const { added, beforeRange, afterRange } = changedData;
   const { value, pattern, ast } = maskedData;
 
@@ -41,9 +41,9 @@ export function getCursorPosition(type: string, changedData: ChangedData, masked
   // Находим первый символ пользовательского значения после диапазона изменяемых символов
   if (afterRange) {
     const changedSymbols = ast?.filter(({ own }) => own === 'change');
-    const lastAddedSymbol = changedSymbols?.find(
-      (item, index) => beforeRange.length + (added?.length || 0) === index + 1
-    );
+    const lastAddedSymbol = changedSymbols?.find((item, index) => {
+      return beforeRange.length + (added?.length || 0) === index + 1;
+    });
 
     if (lastAddedSymbol) {
       // При нажатой кнопке "delete", оставляем курсор на месте
@@ -72,15 +72,25 @@ export function getCursorPosition(type: string, changedData: ChangedData, masked
   const firstReplaceableCharIndex = value.split('').findIndex((item) => {
     return Object.keys(pattern).includes(item);
   });
+
   return firstReplaceableCharIndex !== -1 ? firstReplaceableCharIndex : value.length;
 }
 
 /**
  * Применяем позиционирование курсора
  * @param input html-элемент ввода
- * @param position позиция на которую нужно установить курсор
+ * @param type тип ввода
+ * @param changedData объект содержащий информацию о пользовательском значении
+ * @param maskedData объект с данными маскированного значения
  */
-export function setCursorPosition(input: HTMLInputElement, position: number) {
+export function setCursorPosition(
+  input: HTMLInputElement,
+  type: string,
+  changedData: ChangedData,
+  maskedData: MaskedData
+) {
+  const position = getCursorPosition(type, changedData, maskedData);
+
   // Нулевая задержка "requestAnimationFrame" нужна, чтобы смена позиции сработала после ввода значения
   // и предотвратилось мерцание при установке позиции
   requestAnimationFrame(() => {

@@ -16,6 +16,6 @@ export interface ChangedData {
 export interface MaskedData {
   value: string;
   mask: string;
-  char: string;
+  pattern: { [key: string]: RegExp };
   ast: AST | null;
 }

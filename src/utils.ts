@@ -1,5 +1,7 @@
 import { Range, AST, ChangedData, MaskedData } from './types';
 
+const specialSymbols = ['[', ']', '\\', '/', '^', '$', '.', '|', '?', '*', '+', '(', ')', '{', '}'];
+
 /**
  * Находит последний символ введенный пользователем, не являющийся частью маски
  * @param ast анализ сформированного значения с маской
@@ -23,7 +25,7 @@ function getLastChangedSymbol(ast: AST) {
  */
 export function getCursorPosition(type: string, changedData: ChangedData, maskedData: MaskedData) {
   const { added, beforeRange, afterRange } = changedData;
-  const { value, char, ast } = maskedData;
+  const { value, pattern, ast } = maskedData;
 
   // Действие в начале строки
   // Находим первый символ пользовательского значения
@@ -67,8 +69,10 @@ export function getCursorPosition(type: string, changedData: ChangedData, masked
 
   // Если предыдущие условия не выполнены возвращаем первый символ для замены
   // или перемещаем курсор в конец строки
-  const firstChar = value.search(char);
-  return firstChar !== undefined ? firstChar : value.length;
+  const firstReplaceableCharIndex = value.split('').findIndex((item) => {
+    return Object.keys(pattern).includes(item);
+  });
+  return firstReplaceableCharIndex !== -1 ? firstReplaceableCharIndex : value.length;
 }
 
 /**
@@ -86,26 +90,41 @@ export function setCursorPosition(input: HTMLInputElement, position: number) {
 
 /**
  *  Получаем данные маскированного значения
- * @param value пользовательское значение
+ * @param changedChars пользовательские символы
  * @param mask маска
- * @param char символ для замены
+ * @param pattern символы для замены
  * @param showMask атрибут определяющий, стоит ли показывать маску полностью
  * @returns объект с данными маскированного значение
  */
 export function getMaskedData(
-  value: string,
+  changedChars: string,
   mask: string,
-  char: string,
+  pattern: { [key: string]: RegExp },
   showMask: boolean | undefined
 ): MaskedData {
+  // Преобразовываем ключи для регулярного выражения
+  // TODO: Функционал для коючей паттерна состоящих из нескольких символов
+  // const convertedPatternKeys = Object.keys(pattern).map((key) => {
+  //   const convertedKeyChars = key.split('').map((char) => `\\${char}`);
+  //   return `(${convertedKeyChars.join('')})`;
+  // });
+
+  // Преобразовываем ключи для регулярного выражения
+  const convertedPatternKeys = Object.keys(pattern).map((key) => {
+    return specialSymbols.includes(key) ? `(\\${key})` : `(${key})`;
+  });
+  const regExp = new RegExp(convertedPatternKeys.join('|'));
+
   // Маскируем значение
-  let maskedValue = value.split('').reduce((prev, item) => prev.replace(char, item), mask);
+  let value = changedChars.split('').reduce((prev, item) => {
+    return prev.replace(regExp, (match) => (pattern[match].test(item) ? item : match));
+  }, mask);
 
   // Генерируем дерево синтаксического анализа (AST).
   // AST представляет собой массив объектов, где каждый объект содержит в себе
   // всю необходимую информацию о каждом символе строки.
   // AST используется для точечного манипулирования символом или группой символов.
-  const ast = maskedValue.split('').map((symbol, index) => {
+  const ast = value.split('').map((symbol, index) => {
     const own = symbol === mask[index] ? ('mask' as const) : ('change' as const);
     return { symbol, index, own };
   });
@@ -113,10 +132,10 @@ export function getMaskedData(
   // Если `showMask === false` окончанием значения будет последний пользовательский символ
   if (!showMask) {
     const lastChangedSymbol = getLastChangedSymbol(ast);
-    maskedValue = maskedValue.slice(0, lastChangedSymbol ? lastChangedSymbol.index + 1 : 0);
+    value = value.slice(0, lastChangedSymbol ? lastChangedSymbol.index + 1 : 0);
   }
 
-  return { value: maskedValue, mask, char, ast };
+  return { value, mask, pattern, ast };
 }
 
 /**

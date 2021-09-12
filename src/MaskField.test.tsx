@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import MaskField from './MaskField';
 
-const maskField = <MaskField mask="+7 (___) ___-__-__" char="_" />;
+const maskField = <MaskField mask="+7 (___) ___-__-__" pattern="_" />;
 
 function getInputElement() {
   return screen.getByRole('textbox') as HTMLInputElement;

@@ -2,6 +2,19 @@ import { useState, forwardRef } from 'react';
 import { ComponentStory, Meta } from '@storybook/react';
 import MaskFieldComponent, { MaskFieldProps, ModifyData } from '.';
 
+function Example() {
+  return (
+    <>
+      <MaskFieldComponent
+        name="phone"
+        mask="+_ (_0_) _0_-__-__"
+        pattern={{ _: /\d/, 0: /\D/ }}
+        defaultValue="+7 (9f2) 3f5-67-89"
+      />
+    </>
+  );
+}
+
 export default {
   title: 'Example',
   component: MaskFieldComponent,
@@ -26,17 +39,42 @@ export default {
  * Неконтролируемый компонент
  *
  */
-export const UncontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (args) => (
+export const UncontrolledMaskFieldAny: ComponentStory<typeof MaskFieldComponent> = (args) => (
   <>
-    <MaskFieldComponent {...args} name="phone" set={/\d/} defaultValue="+7 (912) 345-67-89" />
+    <MaskFieldComponent {...args} name="phone" mask="+_ (___) ___-__-__" pattern="_" showMask />
   </>
 );
 
-UncontrolledMaskField.args = {
-  mask: '+_ (___) ___-__-__',
-  char: '_',
-  showMask: false,
-};
+UncontrolledMaskFieldAny.args = {};
+
+export const UncontrolledMaskFieldPhone: ComponentStory<typeof MaskFieldComponent> = (args) => (
+  <>
+    <MaskFieldComponent
+      {...args}
+      name="phone"
+      mask="+_ (_0_) _0_-__-__"
+      pattern={{ _: /\d/, 0: /\D/ }}
+      showMask
+      defaultValue="+7 (9f2) 3f5-67-89"
+    />
+  </>
+);
+
+UncontrolledMaskFieldPhone.args = {};
+
+export const UncontrolledMaskFieldDate: ComponentStory<typeof MaskFieldComponent> = (args) => (
+  <>
+    <MaskFieldComponent
+      {...args}
+      mask="dd-mm-yyyy"
+      pattern={{ d: /\d/, m: /\d/, y: /\d/ }}
+      placeholder="dd-mm-yyyy"
+      showMask
+    />
+  </>
+);
+
+UncontrolledMaskFieldDate.args = {};
 
 /**
  *
@@ -55,7 +93,7 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
       <MaskFieldComponent
         {...args}
         name="phone"
-        set={/\d/}
+        pattern={{ _: /\d/ }}
         value={data.maskedValue}
         onChange={handleChange}
       />
@@ -66,7 +104,6 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
 
 СontrolledMaskField.args = {
   mask: '+_ (___) ___-__-__',
-  char: '_',
   showMask: false,
 };
 
@@ -103,7 +140,7 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
         {...args}
         name="phone"
         mask={ruPhoneMask}
-        set={/\d/}
+        pattern={{ _: /\d/ }}
         modify={modify}
         value={data.maskedValue}
         onChange={handleChange}
@@ -114,7 +151,6 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
 };
 
 СontrolledMaskFieldWithModify.args = {
-  char: '_',
   showMask: false,
 };
 
@@ -145,7 +181,7 @@ export const MaskFieldWithCustomComponent: ComponentStory<typeof MaskFieldCompon
         {...args}
         name="phone"
         component={CustomComponent}
-        set={/\d/}
+        pattern={{ _: /\d/ }}
         value={data.maskedValue}
         onChange={handleChange}
       />
@@ -156,6 +192,5 @@ export const MaskFieldWithCustomComponent: ComponentStory<typeof MaskFieldCompon
 
 MaskFieldWithCustomComponent.args = {
   mask: '+_ (___) ___-__-__',
-  char: '_',
   showMask: false,
 };

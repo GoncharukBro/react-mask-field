@@ -112,7 +112,7 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
       }, '');
 
       addedSymbols = addedSymbols.split('').reduce((prev, item) => {
-        if (pattern[replaceableChars[0]].test(item)) {
+        if (pattern[replaceableChars[0]]?.test(item)) {
           replaceableChars = replaceableChars.slice(1);
           return prev + item;
         }
@@ -141,10 +141,6 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
             ? { [modifyData.pattern]: /./ }
             : modifyData.pattern;
       }
-
-      // Подсчитываем количество символов для замены и обрезаем лишнее из пользовательского значения
-      const chars = mask.split('').filter((item) => Object.keys(pattern).includes(item));
-      changedData.current.value = changedData.current.value.slice(0, chars.length);
 
       // Формируем данные маскированного значения
       maskedData.current = getMaskedData(changedData.current.value, mask, pattern, showMask);

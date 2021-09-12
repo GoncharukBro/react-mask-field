@@ -2,19 +2,6 @@ import { useState, forwardRef } from 'react';
 import { ComponentStory, Meta } from '@storybook/react';
 import MaskFieldComponent, { MaskFieldProps, ModifyData } from '.';
 
-function Example() {
-  return (
-    <>
-      <MaskFieldComponent
-        name="phone"
-        mask="+_ (_0_) _0_-__-__"
-        pattern={{ _: /\d/, 0: /\D/ }}
-        defaultValue="+7 (9f2) 3f5-67-89"
-      />
-    </>
-  );
-}
-
 export default {
   title: 'Example',
   component: MaskFieldComponent,
@@ -22,11 +9,8 @@ export default {
     mask: {
       description: 'Маска ввода',
     },
-    char: {
+    pattern: {
       description: 'Символ для замены',
-    },
-    set: {
-      description: 'Разрешенные правила ввода',
     },
     showMask: {
       description: 'Атрибут определяющий будет ли отображена маска ввода',
@@ -52,10 +36,10 @@ export const UncontrolledMaskFieldPhone: ComponentStory<typeof MaskFieldComponen
     <MaskFieldComponent
       {...args}
       name="phone"
-      mask="+_ (_0_) _0_-__-__"
-      pattern={{ _: /\d/, 0: /\D/ }}
+      mask="+_ (___) ___-__-__"
+      pattern={{ _: /\d/ }}
       showMask
-      defaultValue="+7 (9f2) 3f5-67-89"
+      defaultValue="+7 (912) 345-67-89"
     />
   </>
 );

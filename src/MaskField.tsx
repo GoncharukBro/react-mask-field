@@ -42,7 +42,24 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
   const changedData = useRef<ChangedData | null>(null);
   const maskedData = useRef<MaskedData | null>(null);
 
-  const [maskedValue, setMaskedValue] = useState<string>('');
+  const [maskedValue, setMaskedValue] = useState<string>(() => {
+    const initialValue = value || defaultValue?.toString() || '';
+    const patternKeys = Object.keys(pattern);
+
+    // Запоминаем данные маскированного значения.
+    // Выбираем из маскированного значения все пользовательские символы
+    // методом определения ключей паттерна и наличием на их месте отличающегося символа.
+    const changedChars = mask.split('').reduce((prev, item, index) => {
+      const isPatternKey = patternKeys.includes(item);
+      const isChangedChar = initialValue[index] && !patternKeys.includes(initialValue[index]);
+      return isPatternKey && isChangedChar ? prev + initialValue[index] : prev;
+    }, '');
+
+    // Формируем данные маскированного значения
+    maskedData.current = getMaskedData(changedChars, mask, pattern, showMask);
+
+    return initialValue;
+  });
 
   // Добавляем ссылку на элемент для родительских компонентов
   useEffect(() => {
@@ -54,26 +71,6 @@ function MaskField(props: MaskFieldProps, ref: React.ForwardedRef<unknown>) {
       ref.current = inputRef.current;
     }
   }, [ref]);
-
-  // Инициализируем данные значения
-  useEffect(() => {
-    const initialValue = value || defaultValue?.toString() || '';
-    const patternKeys = Object.keys(pattern);
-
-    // Выбираем из маскированного значения все пользовательские символы
-    // методом определения ключей паттерна и наличием на их месте отличающегося символа
-    const changedChars = mask.split('').reduce((prev, item, index) => {
-      const isPatternKey = patternKeys.includes(item);
-      const isChangedChar = initialValue[index] && !patternKeys.includes(initialValue[index]);
-      return isPatternKey && isChangedChar ? prev + initialValue[index] : prev;
-    }, '');
-
-    // Формируем данные маскированного значения
-    maskedData.current = getMaskedData(changedChars, mask, pattern, showMask);
-
-    setMaskedValue(initialValue);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value: inputValue, selectionStart } = event.target;

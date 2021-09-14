@@ -8,7 +8,7 @@ export type AST = Array<{
 
 export interface ChangedData {
   value: string;
-  added: string | undefined;
+  added: string;
   beforeRange: string;
   afterRange: string;
 }

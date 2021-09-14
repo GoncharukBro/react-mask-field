@@ -1,4 +1,4 @@
-import { useState, forwardRef } from 'react';
+import { useState, useRef, forwardRef, useCallback } from 'react';
 import { ComponentStory, Meta } from '@storybook/react';
 import MaskFieldComponent, { MaskFieldProps, ModifyData } from '.';
 
@@ -23,11 +23,13 @@ export default {
  * Неконтролируемый компонент
  *
  */
-export const UncontrolledMaskFieldAny: ComponentStory<typeof MaskFieldComponent> = (args) => (
-  <>
-    <MaskFieldComponent {...args} name="phone" mask="+_ (___) ___-__-__" pattern="_" showMask />
-  </>
-);
+export const UncontrolledMaskFieldAny: ComponentStory<typeof MaskFieldComponent> = (args) => {
+  return (
+    <>
+      <MaskFieldComponent {...args} name="phone" mask="+_ (___) ___-__-__" pattern="_" showMask />
+    </>
+  );
+};
 
 UncontrolledMaskFieldAny.args = {};
 
@@ -39,7 +41,7 @@ export const UncontrolledMaskFieldPhone: ComponentStory<typeof MaskFieldComponen
       mask="+_ (___) ___-__-__"
       pattern={{ _: /\d/ }}
       showMask
-      defaultValue="+7 (912) 345-67-89"
+      defaultValue="+7 (a12) 345-67-89"
     />
   </>
 );
@@ -50,9 +52,9 @@ export const UncontrolledMaskFieldDate: ComponentStory<typeof MaskFieldComponent
   <>
     <MaskFieldComponent
       {...args}
-      mask="dd-mm-yyDy"
-      pattern={{ d: /\d/, m: /\d/, y: /\d/, D: /\D/ }}
-      placeholder="dd-mm-yyDy"
+      mask="dd-Dm-yyDy"
+      pattern={{ d: new RegExp('\\d'), m: /\d/, y: /\d/, D: /\D/ }}
+      placeholder="dd-Dm-yyDy"
       showMask
     />
   </>

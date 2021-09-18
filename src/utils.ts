@@ -152,6 +152,29 @@ export function getMaskedData(
   return { value, mask, pattern, ast };
 }
 
+// Фильтруем символы для соответствия значениям паттерна
+function filterSymbols(
+  value: string,
+  pattern: MaskedData['pattern'],
+  patternKeys: string[],
+  replaceableSymbols: string
+) {
+  let symbols = replaceableSymbols;
+
+  return value.split('').reduce((prev, symbol) => {
+    // Не учитываем символ равный ключам паттерна,
+    // а также символ не соответствующий текущему значению паттерна
+    const isPatternKey = patternKeys.includes(symbol);
+    const isCorrectSymbol = pattern[symbols[0]]?.test(symbol);
+
+    if (!isPatternKey && isCorrectSymbol) {
+      symbols = symbols.slice(1);
+      return prev + symbol;
+    }
+    return prev;
+  }, '');
+}
+
 /**
  * Получает значение введенное пользователем. Для определения пользовательского значения,
  * функция выявляет значение до диапазона изменяемых символов и после него. Сам диапазон заменяется
@@ -163,52 +186,35 @@ export function getMaskedData(
  */
 export function getChangedData(maskedData: MaskedData, range: Range, added: string): ChangedData {
   let addedSymbols = added;
-
-  if (addedSymbols) {
-    const patternKeys = Object.keys(maskedData.pattern);
-
-    const firstReplaceableSymbolIndex = maskedData.value.split('').findIndex((symbol) => {
-      return patternKeys.includes(symbol);
-    });
-
-    // Определяем, было ли изменение после первого заменяемого символа
-    const isAfterFirstReplaceableSymbol =
-      firstReplaceableSymbolIndex !== -1 && range[0] > firstReplaceableSymbolIndex;
-
-    // Получаем только все заменяемые символы
-    let replaceableSymbols = maskedData.mask
-      .slice(isAfterFirstReplaceableSymbol ? firstReplaceableSymbolIndex : range[0])
-      .split('')
-      .reduce((prev, symbol) => {
-        return patternKeys.includes(symbol) ? prev + symbol : prev;
-      }, '');
-
-    // Фильтруем значение для соответствия значениям паттерна
-    addedSymbols = addedSymbols.split('').reduce((prev, symbol) => {
-      // Не учитываем символ равный ключам паттерна,
-      // а также символ не соответствующий текущему значению паттерна
-      if (
-        !patternKeys.includes(symbol) &&
-        maskedData.pattern[replaceableSymbols[0]]?.test(symbol)
-      ) {
-        replaceableSymbols = replaceableSymbols.slice(1);
-        return prev + symbol;
-      }
-      return prev;
-    }, '');
-  }
-
   let beforeRange = '';
   let afterRange = '';
 
+  // Определяем символы до и после диапозона изменяемых символов
   maskedData.ast.forEach(({ symbol, own }, index) => {
     if (own === 'change') {
-      // Если символ находится перед диапозоном изменяемых символов
       if (index < range[0]) beforeRange += symbol;
-      // Если символ находится после диапозона изменяемых символов
       if (index >= range[1]) afterRange += symbol;
     }
   });
+
+  const patternKeys = Object.keys(maskedData.pattern);
+
+  // Находим все заменяемые символы
+  let replaceableSymbols = maskedData.mask.split('').reduce((prev, symbol) => {
+    return patternKeys.includes(symbol) ? prev + symbol : prev;
+  }, '');
+
+  replaceableSymbols = replaceableSymbols.slice(beforeRange.length);
+
+  if (addedSymbols) {
+    addedSymbols = filterSymbols(addedSymbols, maskedData.pattern, patternKeys, replaceableSymbols);
+  }
+
+  replaceableSymbols = replaceableSymbols.slice(addedSymbols.length);
+
+  if (afterRange) {
+    afterRange = filterSymbols(afterRange, maskedData.pattern, patternKeys, replaceableSymbols);
+  }
 
   const value = beforeRange + addedSymbols + afterRange;
 

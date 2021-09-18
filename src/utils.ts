@@ -103,8 +103,8 @@ export function setCursorPosition(input: HTMLInputElement, position: number) {
 }
 
 /**
- *  Получаем данные маскированного значения
- * @param changedSymbols пользовательские символы
+ * Получаем данные маскированного значения
+ * @param changedSymbols пользовательские символы (без учета символов маски)
  * @param mask маска
  * @param pattern символы для замены
  * @param showMask атрибут определяющий, стоит ли показывать маску полностью
@@ -219,4 +219,32 @@ export function getChangedData(maskedData: MaskedData, range: Range, added: stri
   const value = beforeRange + addedSymbols + afterRange;
 
   return { value, beforeRange, added: addedSymbols, afterRange };
+}
+
+/**
+ * Инициализирует данные масикрованного значения
+ * @param value пользовательские символы (без учета символов маски)
+ * @param mask маска
+ * @param pattern символы для замены
+ * @param showMask атрибут определяющий, стоит ли показывать маску полностью
+ * @returns объект с данными маскированного значение
+ */
+export function initialMaskedData(
+  value: string,
+  mask: string,
+  pattern: { [key: string]: RegExp },
+  showMask: boolean
+) {
+  const patternKeys = Object.keys(pattern);
+
+  // Запоминаем данные маскированного значения.
+  // Выбираем из маскированного значения все пользовательские символы
+  // методом определения ключей паттерна и наличием на их месте отличающегося символа
+  const changedSymbols = mask.split('').reduce((prev, item, index) => {
+    const isPatternKey = patternKeys.includes(item);
+    const isChangedSymbol = value[index] && !patternKeys.includes(value[index]);
+    return isPatternKey && isChangedSymbol ? prev + value[index] : prev;
+  }, '');
+
+  return getMaskedData(changedSymbols, mask, pattern, showMask);
 }

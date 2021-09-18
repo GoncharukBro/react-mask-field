@@ -1,5 +1,11 @@
 import { useState, useMemo, useCallback, useRef, forwardRef } from 'react';
-import { getChangedData, getMaskedData, getCursorPosition, setCursorPosition } from './utils';
+import {
+  initialMaskedData,
+  getChangedData,
+  getMaskedData,
+  getCursorPosition,
+  setCursorPosition,
+} from './utils';
 import { Range, ChangedData, MaskedData } from './types';
 
 const specialSymbols = ['[', ']', '\\', '/', '^', '$', '.', '|', '?', '*', '+', '(', ')', '{', '}'];
@@ -25,7 +31,7 @@ const MaskFieldComponent = (
     component: Component,
     mask: maskProps,
     pattern: patternProps,
-    showMask,
+    showMask = false,
     modify,
     defaultValue,
     value,
@@ -39,18 +45,20 @@ const MaskFieldComponent = (
     return typeof patternProps === 'string' ? { [patternProps]: /./ } : patternProps;
   }, [patternProps]);
 
+  const [maskedValue, setMaskedValue] = useState<string>(value || defaultValue?.toString() || '');
+
   const inputRef = useRef<HTMLInputElement | null>(null);
   const selectionBeforeChange = useRef<Record<'start' | 'end', number | null>>({
     start: null,
     end: null,
   });
   const changedData = useRef<ChangedData | null>(null);
-  const maskedData = useRef<MaskedData | null>(null);
+  const maskedData = useRef<MaskedData>(initialMaskedData(maskedValue, mask, pattern, showMask));
 
   // Формируем регулярное выражение для паттерна
   const inputPattern = useMemo(() => {
-    const currentMask = maskedData.current?.mask || mask;
-    const currentPattern = maskedData.current?.pattern || pattern;
+    const currentMask = maskedData.current.mask || mask;
+    const currentPattern = maskedData.current.pattern || pattern;
     const patternKeys = Object.keys(currentPattern);
 
     return currentMask.split('').reduce((prev, item) => {
@@ -64,30 +72,11 @@ const MaskFieldComponent = (
     }, '');
   }, [mask, pattern]);
 
-  const [maskedValue, setMaskedValue] = useState<string>(() => {
-    const initialValue = value || defaultValue?.toString() || '';
-    const patternKeys = Object.keys(pattern);
-
-    // Запоминаем данные маскированного значения.
-    // Выбираем из маскированного значения все пользовательские символы
-    // методом определения ключей паттерна и наличием на их месте отличающегося символа
-    const changedSymbols = mask.split('').reduce((prev, item, index) => {
-      const isPatternKey = patternKeys.includes(item);
-      const isChangedSymbol = initialValue[index] && !patternKeys.includes(initialValue[index]);
-      return isPatternKey && isChangedSymbol ? prev + initialValue[index] : prev;
-    }, '');
-
-    // Формируем данные маскированного значения
-    maskedData.current = getMaskedData(changedSymbols, mask, pattern, showMask);
-
-    return initialValue;
-  });
-
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value: inputValue, selectionStart } = event.target;
     const inputType: string = (event.nativeEvent as any)?.inputType || '';
 
-    if (inputType.includes('delete') && selectionStart !== null && maskedData.current) {
+    if (inputType.includes('delete') && selectionStart !== null) {
       // Подсчитываем количество удаленных символов
       const countDeletedSymbols = maskedData.current.value.length - inputValue.length;
       // Определяем диапозон изменяемых символов
@@ -98,8 +87,7 @@ const MaskFieldComponent = (
       (inputType.includes('insert') || inputValue) &&
       selectionStart !== null &&
       selectionBeforeChange.current.start !== null &&
-      selectionBeforeChange.current.end !== null &&
-      maskedData.current
+      selectionBeforeChange.current.end !== null
     ) {
       // Находим добавленные символы
       const addedSymbols = inputValue.slice(selectionBeforeChange.current.start, selectionStart);
@@ -163,7 +151,6 @@ const MaskFieldComponent = (
     event: React.BaseSyntheticEvent<Event, EventTarget & HTMLInputElement, HTMLInputElement>
   ) => {
     const { selectionStart, selectionEnd } = event.target;
-    // Кэшируем диапозон изменяемых значений
     selectionBeforeChange.current = { start: selectionStart, end: selectionEnd };
 
     onSelect?.(event);

@@ -22,4 +22,5 @@ export interface MaskData {
   mask: string;
   pattern: Pattern;
   ast: AST;
+  inputPattern: string;
 }

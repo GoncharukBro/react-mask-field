@@ -107,6 +107,22 @@ export function setCursorPosition(input: HTMLInputElement, position: number) {
   });
 }
 
+// Формируем регулярное выражение для паттерна в `input`
+function generateInputPattern(mask: string, pattern: Pattern) {
+  const special = ['[', ']', '\\', '/', '^', '$', '.', '|', '?', '*', '+', '(', ')', '{', '}'];
+  const patternKeys = Object.keys(pattern);
+
+  return mask.split('').reduce((prev, item) => {
+    const symbol = patternKeys.includes(item)
+      ? `${pattern[item].toString().slice(1, -1)}`
+      : special.includes(item)
+      ? `\\${item}`
+      : item;
+
+    return prev + symbol;
+  }, '');
+}
+
 /**
  * Получаем данные маскированного значения
  * @param changedSymbols пользовательские символы (без учета символов маски)
@@ -154,7 +170,9 @@ export function getMaskData(
     value = value.slice(0, lastChangedSymbol ? lastChangedSymbol.index + 1 : 0);
   }
 
-  return { value, mask, pattern, ast };
+  const inputPattern = generateInputPattern(mask, pattern);
+
+  return { value, mask, pattern, ast, inputPattern };
 }
 
 // Фильтруем символы для соответствия значениям паттерна

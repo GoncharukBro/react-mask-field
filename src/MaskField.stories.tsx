@@ -1,6 +1,6 @@
 import { useState, useRef, forwardRef, useCallback } from 'react';
 import { ComponentStory, Meta } from '@storybook/react';
-import MaskFieldComponent, { MaskFieldProps, ModifyData } from '.';
+import MaskFieldComponent, { MaskFieldProps, ModifiedData } from '.';
 
 export default {
   title: 'Example',
@@ -68,18 +68,19 @@ UncontrolledMaskFieldDate.args = {};
  *
  */
 export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (args) => {
-  const [data, setData] = useState({ maskedValue: '+7 (912) 345-67-89', value: '' });
+  const [data, setData] = useState({ maskedValue: '', value: '', pattern: '' });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
-    setData({ maskedValue: event.target.value, value });
+    setData({ maskedValue: event.target.value, value, pattern: event.target.pattern });
   };
 
   return (
     <>
       <MaskFieldComponent
         {...args}
-        name="phone"
-        pattern={{ _: /\d/ }}
+        mask="+_ (___) ___-__-__"
+        pattern={{ _: /./ }}
+        // showMask
         value={data.maskedValue}
         onChange={handleChange}
       />
@@ -88,10 +89,7 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
   );
 };
 
-СontrolledMaskField.args = {
-  mask: '+_ (___) ___-__-__',
-  showMask: false,
-};
+СontrolledMaskField.args = {};
 
 /**
  *
@@ -108,7 +106,7 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
   const ruPhoneMask = '+_ (___) ___-__-__';
   const otherPhoneMask = '+_ __________';
 
-  const modify = ({ value }: ModifyData) => {
+  const modify = ({ value }: ModifiedData) => {
     let newValue = value;
     if (value[0] === '8') {
       newValue = `7${value.slice(1)}`;
@@ -124,10 +122,10 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
     <>
       <MaskFieldComponent
         {...args}
-        name="phone"
         mask={ruPhoneMask}
         pattern={{ _: /\d/ }}
         modify={modify}
+        showMask
         value={data.maskedValue}
         onChange={handleChange}
       />

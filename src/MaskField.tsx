@@ -1,10 +1,10 @@
-import { useState, useCallback, useRef, forwardRef } from 'react';
+import { useState, useMemo, useCallback, useRef, forwardRef } from 'react';
 import { getChangedData, getMaskedData, getCursorPosition, setCursorPosition } from './utils';
 import { Range, ChangedData, MaskedData } from './types';
 
 const specialSymbols = ['[', ']', '\\', '/', '^', '$', '.', '|', '?', '*', '+', '(', ')', '{', '}'];
 
-export type ModifyData = Pick<MaskFieldProps, 'value' | 'mask' | 'pattern'>;
+export type ModifiedData = Pick<MaskFieldProps, 'value' | 'mask' | 'pattern'>;
 
 export interface MaskFieldProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'pattern' | 'onChange'> {
@@ -12,7 +12,7 @@ export interface MaskFieldProps
   mask: string;
   pattern: string | { [key: string]: RegExp };
   showMask?: boolean;
-  modify?: (modifyData: ModifyData) => Partial<ModifyData> | undefined;
+  modify?: (modifiedData: ModifiedData) => Partial<ModifiedData> | undefined;
   value?: string;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>, value: string) => void;
 }
@@ -35,8 +35,9 @@ const MaskFieldComponent = (
   } = props;
 
   let mask = maskProps;
-  let pattern = typeof patternProps === 'string' ? { [patternProps]: /./ } : patternProps;
-  const patternKeys = Object.keys(pattern);
+  let pattern = useMemo(() => {
+    return typeof patternProps === 'string' ? { [patternProps]: /./ } : patternProps;
+  }, [patternProps]);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const selectionBeforeChange = useRef<Record<'start' | 'end', number | null>>({
@@ -46,8 +47,26 @@ const MaskFieldComponent = (
   const changedData = useRef<ChangedData | null>(null);
   const maskedData = useRef<MaskedData | null>(null);
 
+  // Формируем регулярное выражение для паттерна
+  const inputPattern = useMemo(() => {
+    const currentMask = maskedData.current?.mask || mask;
+    const currentPattern = maskedData.current?.pattern || pattern;
+    const patternKeys = Object.keys(currentPattern);
+
+    return currentMask.split('').reduce((prev, item) => {
+      const symbol = patternKeys.includes(item)
+        ? `(?!${item})${currentPattern[item].toString().slice(1, -1)}`
+        : specialSymbols.includes(item)
+        ? `\\${item}`
+        : item;
+
+      return prev + symbol;
+    }, '');
+  }, [mask, pattern]);
+
   const [maskedValue, setMaskedValue] = useState<string>(() => {
     const initialValue = value || defaultValue?.toString() || '';
+    const patternKeys = Object.keys(pattern);
 
     // Запоминаем данные маскированного значения.
     // Выбираем из маскированного значения все пользовательские символы
@@ -64,76 +83,33 @@ const MaskFieldComponent = (
     return initialValue;
   });
 
-  const setRef = useCallback(
-    (ref: HTMLInputElement | null) => {
-      inputRef.current = ref;
-      // Добавляем ссылку на элемент для родительских компонентов
-      if (typeof forwardedRef === 'function') forwardedRef(ref);
-      // eslint-disable-next-line no-param-reassign
-      if (typeof forwardedRef === 'object' && forwardedRef !== null) forwardedRef.current = ref;
-    },
-    [forwardedRef]
-  );
-
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value: inputValue, selectionStart } = event.target;
     const inputType: string = (event.nativeEvent as any)?.inputType || '';
 
-    if (inputType.includes('delete') && selectionStart !== null && maskedData.current?.ast) {
+    if (inputType.includes('delete') && selectionStart !== null && maskedData.current) {
       // Подсчитываем количество удаленных символов
       const countDeletedSymbols = maskedData.current.value.length - inputValue.length;
       // Определяем диапозон изменяемых символов
       const range: Range = [selectionStart, selectionStart + countDeletedSymbols];
       // Получаем информацию о пользовательском значении
-      changedData.current = getChangedData(maskedData.current.ast, range, '');
+      changedData.current = getChangedData(maskedData.current, range, '');
     } else if (
       (inputType.includes('insert') || inputValue) &&
       selectionStart !== null &&
       selectionBeforeChange.current.start !== null &&
       selectionBeforeChange.current.end !== null &&
-      maskedData.current?.ast
+      maskedData.current
     ) {
       // Находим добавленные символы
-      let addedSymbols = inputValue.slice(selectionBeforeChange.current.start, selectionStart);
-
-      // Получаем заменяемые символы доступные текущему вводу
-      const firstReplaceableSymbolIndex = maskedData.current.value.split('').findIndex((symbol) => {
-        return patternKeys.includes(symbol);
-      });
-
-      const isAfterFirstReplaceableSymbol =
-        firstReplaceableSymbolIndex !== -1 &&
-        selectionBeforeChange.current.start > firstReplaceableSymbolIndex;
-
-      let replaceableSymbols = mask.slice(
-        isAfterFirstReplaceableSymbol
-          ? firstReplaceableSymbolIndex
-          : selectionBeforeChange.current.start
-      );
-
-      replaceableSymbols = replaceableSymbols.split('').reduce((prev, symbol) => {
-        return patternKeys.includes(symbol) ? prev + symbol : prev;
-      }, '');
-
-      // Фильтруем значение для соответствия значениям паттерна
-      addedSymbols = addedSymbols.split('').reduce((prev, symbol) => {
-        // Не учитываем символ равный ключам паттерна,
-        // а также символ не соответствующий текущему значению паттерна
-        if (!patternKeys.includes(symbol) && pattern[replaceableSymbols[0]]?.test(symbol)) {
-          replaceableSymbols = replaceableSymbols.slice(1);
-          return prev + symbol;
-        }
-        return prev;
-      }, '');
-
+      const addedSymbols = inputValue.slice(selectionBeforeChange.current.start, selectionStart);
       // Определяем диапозон изменяемых символов
       const range: Range = [selectionBeforeChange.current.start, selectionBeforeChange.current.end];
       // Получаем информацию о пользовательском значении
-      changedData.current = getChangedData(maskedData.current.ast, range, addedSymbols);
+      changedData.current = getChangedData(maskedData.current, range, addedSymbols);
 
-      // Если нет добавленных символов, устанавливаем позицию курсора
-      // на первый заменяемый символ и завершаем выпонение функции
-      if (!addedSymbols && inputRef.current) {
+      // Если нет добавленных символов, устанавливаем позицию курсора и завершаем выпонение функции
+      if (!changedData.current.added && inputRef.current) {
         const position = getCursorPosition(inputType, changedData.current, maskedData.current);
         setCursorPosition(inputRef.current, position);
         return;
@@ -142,19 +118,19 @@ const MaskFieldComponent = (
 
     if (changedData.current) {
       // Модифицируем свойства компонента, если задан `modify`
-      const modifyData = modify?.({ value: changedData.current.value, mask, pattern });
+      if (modify) {
+        const modifiedData = modify({ value: changedData.current.value, mask, pattern });
 
-      if (modifyData?.value !== undefined) {
-        changedData.current.value = modifyData.value;
-      }
-      if (modifyData?.mask !== undefined) {
-        mask = modifyData.mask;
-      }
-      if (modifyData?.pattern !== undefined) {
-        pattern =
-          typeof modifyData.pattern === 'string'
-            ? { [modifyData.pattern]: /./ }
-            : modifyData.pattern;
+        if (modifiedData?.value !== undefined) {
+          changedData.current.value = modifiedData.value;
+        }
+        if (modifiedData?.mask !== undefined) {
+          mask = modifiedData.mask;
+        }
+        if (modifiedData?.pattern !== undefined) {
+          if (typeof modifiedData.pattern === 'string') pattern = { [modifiedData.pattern]: /./ };
+          else pattern = modifiedData.pattern;
+        }
       }
 
       // Формируем данные маскированного значения
@@ -168,7 +144,7 @@ const MaskFieldComponent = (
 
       // Не меняем локальное состояние при контролируемом компоненте
       if (value === undefined) {
-        setMaskedValue(maskedData.current.value === mask ? '' : maskedData.current.value);
+        setMaskedValue(maskedData.current.value);
       }
 
       // eslint-disable-next-line no-param-reassign
@@ -193,15 +169,21 @@ const MaskFieldComponent = (
     onSelect?.(event);
   };
 
-  const patternForInput = mask.split('').reduce((prev, item) => {
-    const symbol = specialSymbols.includes(item) ? `\\${item}` : item;
-    return prev + (patternKeys.includes(item) ? pattern[item].toString().slice(1, -1) : symbol);
-  }, '');
+  const setRef = useCallback(
+    (ref: HTMLInputElement | null) => {
+      inputRef.current = ref;
+      // Добавляем ссылку на элемент для родительских компонентов
+      if (typeof forwardedRef === 'function') forwardedRef(ref);
+      // eslint-disable-next-line no-param-reassign
+      if (typeof forwardedRef === 'object' && forwardedRef !== null) forwardedRef.current = ref;
+    },
+    [forwardedRef]
+  );
 
   const inputProps = {
     ref: setRef,
     value: value !== undefined ? value : maskedValue,
-    pattern: patternForInput,
+    pattern: inputPattern,
     onChange: handleChange,
     onSelect: handleSelect,
     ...other,

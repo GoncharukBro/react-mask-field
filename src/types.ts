@@ -17,5 +17,5 @@ export interface MaskedData {
   value: string;
   mask: string;
   pattern: { [key: string]: RegExp };
-  ast: AST | null;
+  ast: AST;
 }

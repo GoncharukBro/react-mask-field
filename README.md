@@ -103,7 +103,7 @@ Pay attention that `"7"` is present in the masked value, but is not in the custo
 
 ## Value modification
 
-You can pass a `modify` function, which allows you to change the value conditionally and other properties of a component. `modify` accepts an object containing data for easy modification, including `value` (the value entered by the user), `mask` and `char`. All of these properties can be changed. The `modify` function expects to return an object similar to the object in the parameters (`modifyData`, see example below) or `undefined`. Changes will be applied only to those properties that were returned, so you can change any property as you need or do not change any property by passing `undefined`. The values ​​returned by the `modify` function take precedence over the values ​​in the properties of the MaskField component.
+You can pass a `modify` function, which allows you to change the value conditionally and other properties of a component. `modify` accepts an object containing data for easy modification, including `value` (the value entered by the user), `mask` and `char`. All of these properties can be changed. The `modify` function expects to return an object similar to the object in the parameters (`modifiedData`, see example below) or `undefined`. Changes will be applied only to those properties that were returned, so you can change any property as you need or do not change any property by passing `undefined`. The values ​​returned by the `modify` function take precedence over the values ​​in the properties of the MaskField component.
 
 Let's take a look possible situation where we need to change the mask depending on the phone city code:
 
@@ -121,8 +121,8 @@ export default function Example() {
   const ruPhoneMask = '+_ (___) ___-__-__';
   const otherPhoneMask = '+_ __________';
 
-  const modify = (modifyData) => {
-    const newMask = modifyData.value[0] === '7' ? ruPhoneMask : otherPhoneMask;
+  const modify = (modifiedData) => {
+    const newMask = modifiedData.value[0] === '7' ? ruPhoneMask : otherPhoneMask;
 
     return { mask: newMask };
   };
@@ -140,7 +140,7 @@ export default function Example() {
 }
 ```
 
-> Pay attention that the `value` property in the `modifyData` parameter stores the value entered by the user, not the masked value, since the value is has modified before the mask had applied.
+> Pay attention that the `value` property in the `modifiedData` parameter stores the value entered by the user, not the masked value, since the value is has modified before the mask had applied.
 
 Or correct the value entered by the user:
 
@@ -148,15 +148,15 @@ Or correct the value entered by the user:
 const ruPhoneMask = '+_ (___) ___-__-__';
 const otherPhoneMask = '+_ __________';
 
-const modify = (modifyData) => {
-  let newValue = modifyData.value;
+const modify = (modifiedData) => {
+  let newValue = modifiedData.value;
 
-  if (modifyData.value[0] === '8') {
-    newValue = `7${modifyData.value.slice(1)}`;
+  if (modifiedData.value[0] === '8') {
+    newValue = `7${modifiedData.value.slice(1)}`;
   }
 
-  if (modifyData.value[0] === '9') {
-    newValue = `7${modifyData.value}`;
+  if (modifiedData.value[0] === '9') {
+    newValue = `7${modifiedData.value}`;
   }
 
   const newMask = newValue[0] === '7' ? ruPhoneMask : otherPhoneMask;
@@ -265,15 +265,15 @@ export default function Example() {
 }
 ```
 
-To type the parameter of a `modify` function, you can import the `ModifyData` type as a named import.
+To type the parameter of a `modify` function, you can import the `ModifiedData` type as a named import.
 
 For example:
 
 ```tsx
 import React from 'react';
-import MaskField, { ModifyData } from 'react-mask-field';
+import MaskField, { ModifiedData } from 'react-mask-field';
 
-const modify = (modifyData: ModifyData) => {
+const modify = (modifiedData: ModifiedData) => {
   // ...
 };
 ```
@@ -281,7 +281,7 @@ const modify = (modifyData: ModifyData) => {
 If for some reason you need to use the MaskField component property type, you can also import it as a named import:
 
 ```tsx
-import MaskField, { MaskFieldProps, ModifyData } from 'react-mask-field';
+import MaskField, { MaskFieldProps, ModifiedData } from 'react-mask-field';
 ```
 
 ## License

@@ -1,4 +1,4 @@
-import { Range, AST, ChangedData, MaskedData } from './types';
+import { Pattern, Range, AST, ChangeData, MaskData } from './types';
 
 // Находим первый символ в пользовательском значении
 function getFirstChangedSymbol(ast: AST) {
@@ -12,9 +12,9 @@ function getLastChangedSymbol(ast: AST) {
 }
 
 // Находим последний добавленный пользователем символ
-function getLastAddedSymbol(ast: AST, changedData: ChangedData) {
+function getLastAddedSymbol(ast: AST, changeData: ChangeData) {
   const changedSymbols = ast.filter(({ own }) => own === 'change');
-  const length = changedData.beforeRange.length + changedData.added.length;
+  const length = changeData.beforeRange.length + changeData.added.length;
   return changedSymbols.find((item, index) => length === index + 1);
 }
 
@@ -33,27 +33,32 @@ function getFirstReplaceableSymbolIndex(value: string[], patternKeys: string[]) 
 }
 
 /**
+ * Приводит значение шаблона к объекту если шаблон является строкой
+ * @param pattern шаблон ввода из `props`
+ * @returns шаблон ввода в виде объекта
+ */
+export function getPattern(pattern: string | Pattern) {
+  return typeof pattern === 'string' ? { [pattern]: /./ } : pattern;
+}
+
+/**
  * Получает позицию курсора для последующей установки.
  * Позиция курсора определяется по порядку возможных вариантов действий:
  * 1. действие в начале строки;
  * 2. действие в середине строки;
  * 3. действие в конце строки.
  * @param inputType тип ввода
- * @param changedData объект содержащий информацию о пользовательском значении
- * @param maskedData объект с данными маскированного значения
+ * @param changeData объект содержащий информацию о пользовательском значении
+ * @param maskData объект с данными маскированного значения
  * @returns позиция курсора
  */
-export function getCursorPosition(
-  inputType: string,
-  changedData: ChangedData,
-  maskedData: MaskedData
-) {
-  const { beforeRange, afterRange } = changedData;
-  const { value, pattern, ast } = maskedData;
+export function getCursorPosition(inputType: string, changeData: ChangeData, maskData: MaskData) {
+  const { beforeRange, afterRange } = changeData;
+  const { value, pattern, ast } = maskData;
 
   // 1. Действие в начале строки
   if (!beforeRange && afterRange) {
-    const lastAddedSymbol = getLastAddedSymbol(ast, changedData);
+    const lastAddedSymbol = getLastAddedSymbol(ast, changeData);
     if (lastAddedSymbol) return lastAddedSymbol.index + 1;
 
     const firstChangedSymbol = getFirstChangedSymbol(ast);
@@ -62,7 +67,7 @@ export function getCursorPosition(
 
   // 2. Действие в середине строки
   if (beforeRange && afterRange) {
-    const lastAddedSymbol = getLastAddedSymbol(ast, changedData);
+    const lastAddedSymbol = getLastAddedSymbol(ast, changeData);
 
     if (lastAddedSymbol) {
       // При событии "delete" (не "backspace"), возвращаем индекс первого, после добавленного, символа
@@ -106,16 +111,16 @@ export function setCursorPosition(input: HTMLInputElement, position: number) {
  * Получаем данные маскированного значения
  * @param changedSymbols пользовательские символы (без учета символов маски)
  * @param mask маска
- * @param pattern символы для замены
+ * @param pattern шаблон ввода
  * @param showMask атрибут определяющий, стоит ли показывать маску полностью
  * @returns объект с данными маскированного значение
  */
-export function getMaskedData(
+export function getMaskData(
   changedSymbols: string,
   mask: string,
-  pattern: { [key: string]: RegExp },
-  showMask: boolean | undefined
-): MaskedData {
+  pattern: Pattern,
+  showMask: boolean
+): MaskData {
   const maskSymbols = mask.split('');
   const patternKeys = Object.keys(pattern);
 
@@ -155,7 +160,7 @@ export function getMaskedData(
 // Фильтруем символы для соответствия значениям паттерна
 function filterSymbols(
   value: string,
-  pattern: MaskedData['pattern'],
+  pattern: Pattern,
   patternKeys: string[],
   replaceableSymbols: string
 ) {
@@ -179,41 +184,41 @@ function filterSymbols(
  * Получает значение введенное пользователем. Для определения пользовательского значения,
  * функция выявляет значение до диапазона изменяемых символов и после него. Сам диапазон заменяется
  * символами пользовательского ввода (при событии `insert`) или пустой строкой (при событии `delete`).
- * @param maskedData объект с данными маскированного значения
+ * @param maskData объект с данными маскированного значения
  * @param range диапозон изменяемых символов
  * @param added добавленные символы в строку (при событии `insert`)
  * @returns объект содержащий информацию о пользовательском значении
  */
-export function getChangedData(maskedData: MaskedData, range: Range, added: string): ChangedData {
+export function getChangeData(maskData: MaskData, range: Range, added: string): ChangeData {
   let addedSymbols = added;
   let beforeRange = '';
   let afterRange = '';
 
   // Определяем символы до и после диапозона изменяемых символов
-  maskedData.ast.forEach(({ symbol, own }, index) => {
+  maskData.ast.forEach(({ symbol, own }, index) => {
     if (own === 'change') {
       if (index < range[0]) beforeRange += symbol;
       if (index >= range[1]) afterRange += symbol;
     }
   });
 
-  const patternKeys = Object.keys(maskedData.pattern);
+  const patternKeys = Object.keys(maskData.pattern);
 
   // Находим все заменяемые символы
-  let replaceableSymbols = maskedData.mask.split('').reduce((prev, symbol) => {
+  let replaceableSymbols = maskData.mask.split('').reduce((prev, symbol) => {
     return patternKeys.includes(symbol) ? prev + symbol : prev;
   }, '');
 
   replaceableSymbols = replaceableSymbols.slice(beforeRange.length);
 
   if (addedSymbols) {
-    addedSymbols = filterSymbols(addedSymbols, maskedData.pattern, patternKeys, replaceableSymbols);
+    addedSymbols = filterSymbols(addedSymbols, maskData.pattern, patternKeys, replaceableSymbols);
   }
 
   replaceableSymbols = replaceableSymbols.slice(addedSymbols.length);
 
   if (afterRange) {
-    afterRange = filterSymbols(afterRange, maskedData.pattern, patternKeys, replaceableSymbols);
+    afterRange = filterSymbols(afterRange, maskData.pattern, patternKeys, replaceableSymbols);
   }
 
   const value = beforeRange + addedSymbols + afterRange;
@@ -223,16 +228,16 @@ export function getChangedData(maskedData: MaskedData, range: Range, added: stri
 
 /**
  * Инициализирует данные масикрованного значения
- * @param value пользовательские символы (без учета символов маски)
+ * @param maskedValue маскированное значение
  * @param mask маска
- * @param pattern символы для замены
+ * @param pattern шаблон ввода
  * @param showMask атрибут определяющий, стоит ли показывать маску полностью
  * @returns объект с данными маскированного значение
  */
-export function initialMaskedData(
-  value: string,
+export function initialMaskData(
+  maskedValue: string,
   mask: string,
-  pattern: { [key: string]: RegExp },
+  pattern: Pattern,
   showMask: boolean
 ) {
   const patternKeys = Object.keys(pattern);
@@ -242,9 +247,9 @@ export function initialMaskedData(
   // методом определения ключей паттерна и наличием на их месте отличающегося символа
   const changedSymbols = mask.split('').reduce((prev, item, index) => {
     const isPatternKey = patternKeys.includes(item);
-    const isChangedSymbol = value[index] && !patternKeys.includes(value[index]);
-    return isPatternKey && isChangedSymbol ? prev + value[index] : prev;
+    const isChangedSymbol = maskedValue[index] && !patternKeys.includes(maskedValue[index]);
+    return isPatternKey && isChangedSymbol ? prev + maskedValue[index] : prev;
   }, '');
 
-  return getMaskedData(changedSymbols, mask, pattern, showMask);
+  return getMaskData(changedSymbols, mask, pattern, showMask);
 }

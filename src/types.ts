@@ -1,3 +1,7 @@
+export type Pattern = {
+  [key: string]: RegExp;
+};
+
 export type Range = [number, number];
 
 export type AST = Array<{
@@ -6,16 +10,16 @@ export type AST = Array<{
   own: 'mask' | 'change';
 }>;
 
-export interface ChangedData {
+export interface ChangeData {
   value: string;
   added: string;
   beforeRange: string;
   afterRange: string;
 }
 
-export interface MaskedData {
+export interface MaskData {
   value: string;
   mask: string;
-  pattern: { [key: string]: RegExp };
+  pattern: Pattern;
   ast: AST;
 }

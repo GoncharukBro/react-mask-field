@@ -16,9 +16,9 @@ export interface MaskFieldProps
   component?: React.ComponentClass | React.FunctionComponent;
   mask: string;
   pattern: string | Pattern;
+  validatePattern?: boolean;
   showMask?: boolean;
   modify?: (modifiedData: ModifiedData) => Partial<ModifiedData> | undefined;
-  noValidatePattern?: boolean;
   value?: string;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>, value: string) => void;
 }
@@ -31,9 +31,9 @@ const MaskFieldComponent = (
     component: Component,
     mask: maskProps,
     pattern: patternProps,
+    validatePattern = false,
     showMask = false,
     modify,
-    noValidatePattern = false,
     defaultValue,
     value,
     onChange,
@@ -104,7 +104,7 @@ const MaskFieldComponent = (
 
       // eslint-disable-next-line no-param-reassign
       event.target.value = maskData.current.value;
-      if (!noValidatePattern) {
+      if (validatePattern) {
         // eslint-disable-next-line no-param-reassign
         event.target.pattern = maskData.current.inputPattern;
       }
@@ -113,7 +113,7 @@ const MaskFieldComponent = (
         // eslint-disable-next-line no-param-reassign
         (event.nativeEvent.target as HTMLInputElement).value = maskData.current.value;
 
-        if (!noValidatePattern) {
+        if (validatePattern) {
           // eslint-disable-next-line no-param-reassign
           (event.nativeEvent.target as HTMLInputElement).pattern = maskData.current.inputPattern;
         }
@@ -171,7 +171,7 @@ const MaskFieldComponent = (
     value: value !== undefined ? value : maskedValue,
     onChange: handleChange,
     onSelect: handleSelect,
-    ...(!noValidatePattern ? { pattern: maskData.current.inputPattern } : {}),
+    ...(validatePattern ? { pattern: maskData.current.inputPattern } : {}),
     ...other,
   };
 

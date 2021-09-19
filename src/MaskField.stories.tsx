@@ -191,7 +191,7 @@ export const MaskFieldWithCustomComponent: ComponentStory<typeof MaskFieldCompon
           component={CustomComponent}
           mask="+_ (___) ___-__-__"
           pattern={{ _: /\d/ }}
-          noValidatePattern
+          validatePattern
           value={data.maskedValue}
           onChange={handleChange}
         />

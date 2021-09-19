@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef, forwardRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, forwardRef } from 'react';
 import {
   getPattern,
   getChangeData,
@@ -64,6 +64,36 @@ const MaskFieldComponent = (
   const changeData = useRef<ChangeData>(
     getChangeData(maskData.current, [0, maskData.current.ast.length], changedSymbols)
   );
+
+  useEffect(() => {
+    if (
+      maskedValue &&
+      (maskedValue.length > mask.length ||
+        !new RegExp(maskData.current.inputPattern).test(maskedValue))
+    ) {
+      const message = `Validation Error: The initialized value in the "${
+        value ? 'value' : 'defaultValue'
+      }" property does not match the mask value. Check the correctness of the initialized value in the specified property.
+
+"${maskedValue}" does not match "${mask}".
+`;
+      // eslint-disable-next-line no-console
+      console.error(message);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const invalidPatternKeys = Object.keys(pattern).filter((key) => key.length > 1);
+    if (invalidPatternKeys.length > 0) {
+      const message = `Validation Error: Object keys in the "pattern" property are longer than one character. Keys must be one character long. Check the correctness of the value in the specified property.
+
+Invalid keys: ${invalidPatternKeys.map((item) => `"${item}"`).join(', ')}.
+`;
+      // eslint-disable-next-line no-console
+      console.error(message);
+    }
+  }, [pattern]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value: inputValue, selectionStart } = event.target;

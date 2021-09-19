@@ -1,13 +1,12 @@
 import { useState, useMemo, useCallback, useRef, forwardRef } from 'react';
 import {
-  initialMaskData,
   getPattern,
   getChangeData,
   getMaskData,
   getCursorPosition,
   setCursorPosition,
 } from './utils';
-import { Pattern, Range, ChangeData, MaskData } from './types';
+import { Pattern, Selection, Range, ChangeData, MaskData } from './types';
 
 export type ModifiedData = Pick<MaskFieldProps, 'value' | 'mask' | 'pattern'>;
 
@@ -46,10 +45,25 @@ const MaskFieldComponent = (
 
   const [maskedValue, setMaskedValue] = useState(value || defaultValue?.toString() || '');
 
+  const changedSymbols = useMemo(() => {
+    const patternKeys = Object.keys(pattern);
+    // Запоминаем данные маскированного значения.
+    // Выбираем из маскированного значения все пользовательские символы
+    // методом определения ключей паттерна и наличием на их месте отличающегося символа
+    return mask.split('').reduce((prev, item, index) => {
+      const isPatternKey = patternKeys.includes(item);
+      const isChangedSymbol = maskedValue[index] && !patternKeys.includes(maskedValue[index]);
+      return isPatternKey && isChangedSymbol ? prev + maskedValue[index] : prev;
+    }, '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const selection = useRef<Record<'start' | 'end', number | null>>({ start: null, end: null });
-  const maskData = useRef<MaskData>(initialMaskData(maskedValue, mask, pattern, showMask));
-  const changeData = useRef<ChangeData | null>(null);
+  const selection = useRef<Selection>({ start: 0, end: 0 });
+  const maskData = useRef<MaskData>(getMaskData(changedSymbols, mask, pattern, showMask));
+  const changeData = useRef<ChangeData>(
+    getChangeData(maskData.current, [0, maskData.current.ast.length], changedSymbols)
+  );
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value: inputValue, selectionStart } = event.target;
@@ -62,12 +76,7 @@ const MaskFieldComponent = (
       const range: Range = [selectionStart, selectionStart + countDeletedSymbols];
       // Получаем информацию о пользовательском значении
       changeData.current = getChangeData(maskData.current, range, '');
-    } else if (
-      (inputType.includes('insert') || inputValue) &&
-      selectionStart !== null &&
-      selection.current.start !== null &&
-      selection.current.end !== null
-    ) {
+    } else if ((inputType.includes('insert') || inputValue) && selectionStart !== null) {
       // Находим добавленные символы
       const addedSymbols = inputValue.slice(selection.current.start, selectionStart);
       // Определяем диапозон изменяемых символов
@@ -83,74 +92,73 @@ const MaskFieldComponent = (
       }
     }
 
-    if (changeData.current) {
-      // Модифицируем свойства компонента, если задан `modify`
-      if (modify) {
-        const modifiedData = modify({ value: changeData.current.value, mask, pattern });
+    // Модифицируем свойства компонента, если задан `modify`
+    if (modify) {
+      const modifiedData = modify({ value: changeData.current.value, mask, pattern });
 
-        if (modifiedData?.value !== undefined) {
-          changeData.current.value = modifiedData.value;
-        }
-        if (modifiedData?.mask !== undefined) {
-          mask = modifiedData.mask;
-        }
-        if (modifiedData?.pattern !== undefined) {
-          pattern = getPattern(modifiedData.pattern);
-        }
+      if (modifiedData?.value !== undefined) {
+        changeData.current.value = modifiedData.value;
       }
+      if (modifiedData?.mask !== undefined) {
+        mask = modifiedData.mask;
+      }
+      if (modifiedData?.pattern !== undefined) {
+        pattern = getPattern(modifiedData.pattern);
+      }
+    }
 
-      // Формируем данные маскированного значения
-      maskData.current = getMaskData(changeData.current.value, mask, pattern, showMask);
+    // Формируем данные маскированного значения
+    maskData.current = getMaskData(changeData.current.value, mask, pattern, showMask);
 
+    // eslint-disable-next-line no-param-reassign
+    event.target.value = maskData.current.value;
+
+    if (validatePattern) {
       // eslint-disable-next-line no-param-reassign
-      event.target.value = maskData.current.value;
+      event.target.pattern = maskData.current.inputPattern;
+    }
+
+    if (event.nativeEvent.target) {
+      // eslint-disable-next-line no-param-reassign
+      (event.nativeEvent.target as HTMLInputElement).value = maskData.current.value;
+
       if (validatePattern) {
         // eslint-disable-next-line no-param-reassign
-        event.target.pattern = maskData.current.inputPattern;
+        (event.nativeEvent.target as HTMLInputElement).pattern = maskData.current.inputPattern;
       }
+    }
+
+    // Устанавливаем позицию курсора курсор
+    if (inputRef.current) {
+      const position = getCursorPosition(inputType, changeData.current, maskData.current);
+      setCursorPosition(inputRef.current, position);
+
+      // eslint-disable-next-line no-param-reassign
+      event.target.selectionStart = position;
+      // eslint-disable-next-line no-param-reassign
+      event.target.selectionEnd = position;
 
       if (event.nativeEvent.target) {
         // eslint-disable-next-line no-param-reassign
-        (event.nativeEvent.target as HTMLInputElement).value = maskData.current.value;
-
-        if (validatePattern) {
-          // eslint-disable-next-line no-param-reassign
-          (event.nativeEvent.target as HTMLInputElement).pattern = maskData.current.inputPattern;
-        }
-      }
-
-      // Устанавливаем позицию курсора курсор
-      if (inputRef.current) {
-        const position = getCursorPosition(inputType, changeData.current, maskData.current);
-        setCursorPosition(inputRef.current, position);
-
+        (event.nativeEvent.target as HTMLInputElement).selectionStart = position;
         // eslint-disable-next-line no-param-reassign
-        event.target.selectionStart = position;
-        // eslint-disable-next-line no-param-reassign
-        event.target.selectionEnd = position;
-
-        if (event.nativeEvent.target) {
-          // eslint-disable-next-line no-param-reassign
-          (event.nativeEvent.target as HTMLInputElement).selectionStart = position;
-          // eslint-disable-next-line no-param-reassign
-          (event.nativeEvent.target as HTMLInputElement).selectionEnd = position;
-        }
+        (event.nativeEvent.target as HTMLInputElement).selectionEnd = position;
       }
-
-      // Не меняем локальное состояние при контролируемом компоненте
-      if (value === undefined) {
-        setMaskedValue(maskData.current.value);
-      }
-
-      onChange?.(event, changeData.current.value);
     }
+
+    // Не меняем локальное состояние при контролируемом компоненте
+    if (value === undefined) {
+      setMaskedValue(maskData.current.value);
+    }
+
+    onChange?.(event, changeData.current.value);
   };
 
   const handleSelect = (
     event: React.BaseSyntheticEvent<Event, EventTarget & HTMLInputElement, HTMLInputElement>
   ) => {
     const { selectionStart, selectionEnd } = event.target;
-    selection.current = { start: selectionStart, end: selectionEnd };
+    selection.current = { start: selectionStart || 0, end: selectionEnd || 0 };
 
     onSelect?.(event);
   };

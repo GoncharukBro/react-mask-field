@@ -2,6 +2,11 @@ export type Pattern = {
   [key: string]: RegExp;
 };
 
+export type Selection = {
+  start: number;
+  end: number;
+};
+
 export type Range = [number, number];
 
 export type AST = Array<{

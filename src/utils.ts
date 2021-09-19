@@ -243,31 +243,3 @@ export function getChangeData(maskData: MaskData, range: Range, added: string): 
 
   return { value, beforeRange, added: addedSymbols, afterRange };
 }
-
-/**
- * Инициализирует данные масикрованного значения
- * @param maskedValue маскированное значение
- * @param mask маска
- * @param pattern шаблон ввода
- * @param showMask атрибут определяющий, стоит ли показывать маску полностью
- * @returns объект с данными маскированного значение
- */
-export function initialMaskData(
-  maskedValue: string,
-  mask: string,
-  pattern: Pattern,
-  showMask: boolean
-) {
-  const patternKeys = Object.keys(pattern);
-
-  // Запоминаем данные маскированного значения.
-  // Выбираем из маскированного значения все пользовательские символы
-  // методом определения ключей паттерна и наличием на их месте отличающегося символа
-  const changedSymbols = mask.split('').reduce((prev, item, index) => {
-    const isPatternKey = patternKeys.includes(item);
-    const isChangedSymbol = maskedValue[index] && !patternKeys.includes(maskedValue[index]);
-    return isPatternKey && isChangedSymbol ? prev + maskedValue[index] : prev;
-  }, '');
-
-  return getMaskData(changedSymbols, mask, pattern, showMask);
-}

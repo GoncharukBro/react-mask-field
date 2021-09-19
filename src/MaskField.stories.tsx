@@ -1,4 +1,4 @@
-import { useState, useRef, forwardRef, useCallback } from 'react';
+import { useState, forwardRef } from 'react';
 import { ComponentStory, Meta } from '@storybook/react';
 import MaskFieldComponent, { MaskFieldProps, ModifiedData } from '.';
 

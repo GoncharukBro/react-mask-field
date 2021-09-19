@@ -65,8 +65,8 @@ export const UncontrolledMaskFieldDate: ComponentStory<typeof MaskFieldComponent
       {...args}
       mask="dd-Dm-yyDy"
       pattern={{ d: new RegExp('\\d'), m: /\d/, y: /\d/, D: /\D/ }}
-      placeholder="dd-Dm-yyDy"
       showMask
+      placeholder="dd-Dm-yyDy"
     />
   </Form>
 );
@@ -92,7 +92,7 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
           {...args}
           mask="+_ (___) ___-__-__"
           pattern={{ _: /./ }}
-          // showMask
+          showMask
           value={data.maskedValue}
           onChange={handleChange}
         />
@@ -148,8 +148,8 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
           {...args}
           mask={ruPhoneMask}
           pattern={{ _: /\d/ }}
-          modify={modify}
           showMask
+          modify={modify}
           value={data.maskedValue}
           onChange={handleChange}
         />
@@ -191,6 +191,7 @@ export const MaskFieldWithCustomComponent: ComponentStory<typeof MaskFieldCompon
           component={CustomComponent}
           mask="+_ (___) ___-__-__"
           pattern={{ _: /\d/ }}
+          noValidatePattern
           value={data.maskedValue}
           onChange={handleChange}
         />
@@ -219,6 +220,7 @@ export const MaskFieldTestProps: ComponentStory<typeof MaskFieldComponent> = (ar
           mask="+_ (___) ___-__-__"
           pattern="_"
           showMask={state.showMask}
+          defaultValue="+7 (912) 345"
         />
       </Form>
       <div>
@@ -228,6 +230,9 @@ export const MaskFieldTestProps: ComponentStory<typeof MaskFieldComponent> = (ar
         >
           {state.showMask ? 'Выключить отображение маски' : 'Включить отображение маски'}
         </button>
+      </div>
+      <div>
+        <pre>{JSON.stringify(state, null, 2)}</pre>
       </div>
     </>
   );

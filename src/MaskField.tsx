@@ -18,6 +18,7 @@ export interface MaskFieldProps
   pattern: string | Pattern;
   showMask?: boolean;
   modify?: (modifiedData: ModifiedData) => Partial<ModifiedData> | undefined;
+  noValidatePattern?: boolean;
   value?: string;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>, value: string) => void;
 }
@@ -32,6 +33,7 @@ const MaskFieldComponent = (
     pattern: patternProps,
     showMask = false,
     modify,
+    noValidatePattern = false,
     defaultValue,
     value,
     onChange,
@@ -102,14 +104,19 @@ const MaskFieldComponent = (
 
       // eslint-disable-next-line no-param-reassign
       event.target.value = maskData.current.value;
-      // eslint-disable-next-line no-param-reassign
-      event.target.pattern = maskData.current.inputPattern;
+      if (!noValidatePattern) {
+        // eslint-disable-next-line no-param-reassign
+        event.target.pattern = maskData.current.inputPattern;
+      }
 
       if (event.nativeEvent.target) {
         // eslint-disable-next-line no-param-reassign
         (event.nativeEvent.target as HTMLInputElement).value = maskData.current.value;
-        // eslint-disable-next-line no-param-reassign
-        (event.nativeEvent.target as HTMLInputElement).pattern = maskData.current.inputPattern;
+
+        if (!noValidatePattern) {
+          // eslint-disable-next-line no-param-reassign
+          (event.nativeEvent.target as HTMLInputElement).pattern = maskData.current.inputPattern;
+        }
       }
 
       // Устанавливаем позицию курсора курсор
@@ -162,9 +169,9 @@ const MaskFieldComponent = (
   const inputProps = {
     ref: setRef,
     value: value !== undefined ? value : maskedValue,
-    pattern: maskData.current.inputPattern,
     onChange: handleChange,
     onSelect: handleSelect,
+    ...(!noValidatePattern ? { pattern: maskData.current.inputPattern } : {}),
     ...other,
   };
 

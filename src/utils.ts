@@ -1,4 +1,4 @@
-import { Pattern, Range, AST, ChangeData, MaskData } from './types';
+import type { Pattern, Range, AST, ChangeData, MaskData } from './types';
 
 // Находим первый символ в пользовательском значении
 function getFirstChangedSymbol(ast: AST) {

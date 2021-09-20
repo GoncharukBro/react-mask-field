@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo, useCallback, useRef, forwardRef } from 'react';
+import { useState, useMemo, useCallback, useRef, forwardRef } from 'react';
+import PropTypes from 'prop-types';
 import {
   getPattern,
   getChangeData,
@@ -6,9 +7,10 @@ import {
   getCursorPosition,
   setCursorPosition,
 } from './utils';
-import { Pattern, Selection, Range, ChangeData, MaskData } from './types';
+import { useError } from './errors';
+import type { Pattern, Selection, Range, ChangeData, MaskData } from './types';
 
-export type ModifiedData = Pick<MaskFieldProps, 'value' | 'mask' | 'pattern'>;
+export type ModifiedData = Pick<MaskFieldProps, 'value' | 'mask' | 'pattern' | 'showMask'>;
 
 export interface MaskFieldProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'pattern' | 'onChange'> {
@@ -30,8 +32,8 @@ const MaskFieldComponent = (
     component: Component,
     mask: maskProps,
     pattern: patternProps,
+    showMask: showMaskProps = false,
     validatePattern = false,
-    showMask = false,
     modify,
     defaultValue,
     value,
@@ -42,6 +44,7 @@ const MaskFieldComponent = (
 
   let mask = maskProps;
   let pattern = useMemo(() => getPattern(patternProps), [patternProps]);
+  let showMask = showMaskProps;
 
   const [maskedValue, setMaskedValue] = useState(value || defaultValue?.toString() || '');
 
@@ -65,35 +68,8 @@ const MaskFieldComponent = (
     getChangeData(maskData.current, [0, maskData.current.ast.length], changedSymbols)
   );
 
-  useEffect(() => {
-    if (
-      maskedValue &&
-      (maskedValue.length > mask.length ||
-        !new RegExp(maskData.current.inputPattern).test(maskedValue))
-    ) {
-      const message = `Validation Error: The initialized value in the "${
-        value ? 'value' : 'defaultValue'
-      }" property does not match the mask value. Check the correctness of the initialized value in the specified property.
-
-"${maskedValue}" does not match "${mask}".
-`;
-      // eslint-disable-next-line no-console
-      console.error(message);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    const invalidPatternKeys = Object.keys(pattern).filter((key) => key.length > 1);
-    if (invalidPatternKeys.length > 0) {
-      const message = `Validation Error: Object keys in the "pattern" property are longer than one character. Keys must be one character long. Check the correctness of the value in the specified property.
-
-Invalid keys: ${invalidPatternKeys.map((item) => `"${item}"`).join(', ')}.
-`;
-      // eslint-disable-next-line no-console
-      console.error(message);
-    }
-  }, [pattern]);
+  // Выводим в консоль ошибки
+  useError({ maskedValue, mask, pattern, inputPattern: maskData.current.inputPattern });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value: inputValue, selectionStart } = event.target;
@@ -124,7 +100,7 @@ Invalid keys: ${invalidPatternKeys.map((item) => `"${item}"`).join(', ')}.
 
     // Модифицируем свойства компонента, если задан `modify`
     if (modify) {
-      const modifiedData = modify({ value: changeData.current.value, mask, pattern });
+      const modifiedData = modify({ value: changeData.current.value, mask, pattern, showMask });
 
       if (modifiedData?.value !== undefined) {
         changeData.current.value = modifiedData.value;
@@ -134,6 +110,9 @@ Invalid keys: ${invalidPatternKeys.map((item) => `"${item}"`).join(', ')}.
       }
       if (modifiedData?.pattern !== undefined) {
         pattern = getPattern(modifiedData.pattern);
+      }
+      if (modifiedData?.showMask !== undefined) {
+        showMask = modifiedData.showMask;
       }
     }
 
@@ -216,8 +195,23 @@ Invalid keys: ${invalidPatternKeys.map((item) => `"${item}"`).join(', ')}.
   return Component ? <Component {...inputProps} /> : <input {...inputProps} />;
 };
 
-const MaskField = forwardRef(MaskFieldComponent) as (
-  props: MaskFieldProps & React.RefAttributes<HTMLInputElement>
-) => JSX.Element;
+const MaskField = forwardRef(MaskFieldComponent) as React.FunctionComponent<
+  MaskFieldProps & React.RefAttributes<HTMLInputElement>
+>;
+
+MaskField.propTypes = {
+  // eslint-disable-next-line react/forbid-prop-types
+  component: PropTypes.any,
+  mask: PropTypes.string.isRequired,
+  pattern: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.objectOf(PropTypes.instanceOf(RegExp).isRequired),
+  ]).isRequired,
+  validatePattern: PropTypes.bool,
+  showMask: PropTypes.bool,
+  modify: PropTypes.func,
+  value: PropTypes.string,
+  onChange: PropTypes.func,
+};
 
 export default MaskField;

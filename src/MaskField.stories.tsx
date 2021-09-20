@@ -1,6 +1,7 @@
 import { useState, forwardRef } from 'react';
-import { ComponentStory, Meta } from '@storybook/react';
-import MaskFieldComponent, { MaskFieldProps, ModifiedData } from '.';
+import type { ComponentStory, Meta } from '@storybook/react';
+import MaskFieldComponent from '.';
+import type { MaskFieldProps, ModifiedData } from '.';
 
 function Form({ children, ...other }: React.FormHTMLAttributes<HTMLFormElement>) {
   return (

@@ -25,6 +25,8 @@
     "import/extensions": 0,
     "import/no-extraneous-dependencies": [2, { "devDependencies": true }],
     "import/no-unresolved": 0,
+    "import/prefer-default-export": 0,
+    "max-classes-per-file": 0,
     "no-nested-ternary": 0,
     "no-undef": 0,
     "no-unused-vars": [1, { "args": "none" }],

@@ -17,7 +17,9 @@ export default function useInitialState({
   value,
   defaultValue,
 }: UseInitialStateProps) {
-  const [maskedValue, setMaskedValue] = useState(value || defaultValue?.toString() || '');
+  const [maskedValue, setMaskedValue] = useState(
+    value !== undefined ? value : defaultValue?.toString() || ''
+  );
 
   const changedSymbols = useMemo(() => {
     const patternKeys = Object.keys(pattern);

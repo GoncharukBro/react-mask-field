@@ -18,8 +18,8 @@ export interface MaskFieldProps
   component?: React.ComponentClass | React.FunctionComponent;
   mask: string;
   pattern: string | Pattern;
-  validatePattern?: boolean;
   showMask?: boolean;
+  validatePattern?: boolean;
   modify?: (modifiedData: ModifiedData) => Partial<ModifiedData> | undefined;
   value?: string;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>, value: string) => void;
@@ -33,6 +33,7 @@ const MaskFieldComponent = (
     showMask: showMaskProps = false,
     validatePattern = false,
     modify,
+    // Свойство `defaultValue` не должно быть передано дальше в `props`, так как компонент всегда использует свойство `value`
     defaultValue,
     value,
     onChange,
@@ -204,11 +205,9 @@ MaskField.propTypes = {
     PropTypes.string,
     PropTypes.objectOf(PropTypes.instanceOf(RegExp).isRequired),
   ]).isRequired,
-  validatePattern: PropTypes.bool,
   showMask: PropTypes.bool,
+  validatePattern: PropTypes.bool,
   modify: PropTypes.func,
-  value: PropTypes.string,
-  onChange: PropTypes.func,
 };
 
 export default MaskField;

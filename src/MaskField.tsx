@@ -51,7 +51,7 @@ const MaskFieldComponent = (
     useInitialState({ mask, pattern, showMask, value, defaultValue });
 
   // Выводим в консоль ошибки
-  useError({ maskedValue, mask, pattern, inputPattern: maskData.current.inputPattern });
+  useError({ maskedValue, mask, pattern });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const currentValue = event.target.value;

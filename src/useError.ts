@@ -19,16 +19,17 @@ interface UseErrorProps {
   maskedValue: string;
   mask: string;
   pattern: Pattern;
-  inputPattern: string;
 }
 
-export default function useError({ maskedValue, mask, pattern, inputPattern }: UseErrorProps) {
+export default function useError({ maskedValue, mask, pattern }: UseErrorProps) {
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') {
-      if (
-        maskedValue &&
-        (maskedValue.length > mask.length || !new RegExp(inputPattern).test(maskedValue))
-      ) {
+      const patternKeys = Object.keys(pattern);
+      const invalidSymbol = maskedValue.split('').find((symbol, index) => {
+        const isPatternKey = patternKeys.includes(mask[index]);
+        return isPatternKey ? !pattern[mask[index]].test(symbol) : symbol !== mask[index];
+      });
+      if (maskedValue && (maskedValue.length > mask.length || invalidSymbol)) {
         const message = `The initialized value in the \`value\` or \`defaultValue\` property does not match the value specified in the \`mask\` property. Check the correctness of the initialized value in the specified property.
 
 "${maskedValue}" does not match "${mask}".

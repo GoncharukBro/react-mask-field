@@ -22,9 +22,7 @@ interface UseErrorProps {
   inputPattern: string;
 }
 
-export function useError(props: UseErrorProps) {
-  const { maskedValue, mask, pattern, inputPattern } = props;
-
+export default function useError({ maskedValue, mask, pattern, inputPattern }: UseErrorProps) {
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') {
       if (

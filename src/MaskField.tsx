@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef, forwardRef, memo } from 'react';
+import { useState, useMemo, useCallback, useRef, forwardRef } from 'react';
 import PropTypes from 'prop-types';
 import {
   getPattern,
@@ -195,9 +195,7 @@ const MaskFieldComponent = (
   return Component ? <Component {...inputProps} /> : <input {...inputProps} />;
 };
 
-const MaskFieldWithRef = forwardRef(MaskFieldComponent);
-
-const MaskField = memo(MaskFieldWithRef) as React.FunctionComponent<
+const MaskField = forwardRef(MaskFieldComponent) as React.FunctionComponent<
   MaskFieldProps & React.RefAttributes<HTMLInputElement>
 >;
 

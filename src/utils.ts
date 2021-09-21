@@ -71,7 +71,7 @@ export function getCursorPosition(inputType: string, changeData: ChangeData, mas
 
     if (lastAddedSymbol) {
       // При событии "delete" (не "backspace"), возвращаем индекс первого, после добавленного, символа
-      if (inputType === 'deleteContentForward') {
+      if (inputType === 'deleteForward') {
         const firstAfterRangeSymbol = getFirstAfterRangeSymbol(ast, lastAddedSymbol);
         if (firstAfterRangeSymbol) return firstAfterRangeSymbol.index;
       }

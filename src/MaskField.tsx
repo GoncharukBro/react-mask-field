@@ -72,19 +72,35 @@ const MaskFieldComponent = (
   useError({ maskedValue, mask, pattern, inputPattern: maskData.current.inputPattern });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { value: inputValue, selectionStart } = event.target;
-    const inputType: string = (event.nativeEvent as any)?.inputType || '';
+    const currentValue = event.target.value;
+    const currentPosition = event.target.selectionStart || 0;
+    let currentInputType = '';
 
-    if (inputType.includes('delete') && selectionStart !== null) {
+    // Определяем тип ввода (свойство `inputType` в объекте `event` не поддерживается старыми браузерами)
+    if (currentPosition > selection.current.start) {
+      currentInputType = 'insert';
+    } else if (
+      currentPosition <= selection.current.start &&
+      currentPosition < selection.current.end
+    ) {
+      currentInputType = 'delete';
+    } else if (
+      currentPosition === selection.current.end &&
+      currentValue.length < maskData.current.value.length
+    ) {
+      currentInputType = 'deleteForward';
+    }
+
+    if (currentInputType === 'delete' || currentInputType === 'deleteForward') {
       // Подсчитываем количество удаленных символов
-      const countDeletedSymbols = maskData.current.value.length - inputValue.length;
+      const countDeletedSymbols = maskData.current.value.length - currentValue.length;
       // Определяем диапозон изменяемых символов
-      const range: Range = [selectionStart, selectionStart + countDeletedSymbols];
+      const range: Range = [currentPosition, currentPosition + countDeletedSymbols];
       // Получаем информацию о пользовательском значении
       changeData.current = getChangeData(maskData.current, range, '');
-    } else if ((inputType.includes('insert') || inputValue) && selectionStart !== null) {
+    } else if (currentInputType === 'insert' || currentValue) {
       // Находим добавленные символы
-      const addedSymbols = inputValue.slice(selection.current.start, selectionStart);
+      const addedSymbols = currentValue.slice(selection.current.start, currentPosition);
       // Определяем диапозон изменяемых символов
       const range: Range = [selection.current.start, selection.current.end];
       // Получаем информацию о пользовательском значении
@@ -92,7 +108,7 @@ const MaskFieldComponent = (
 
       // Если нет добавленных символов, устанавливаем позицию курсора и завершаем выпонение функции
       if (!changeData.current.added && inputRef.current) {
-        const position = getCursorPosition(inputType, changeData.current, maskData.current);
+        const position = getCursorPosition(currentInputType, changeData.current, maskData.current);
         setCursorPosition(inputRef.current, position);
         return;
       }
@@ -139,7 +155,7 @@ const MaskFieldComponent = (
 
     // Устанавливаем позицию курсора курсор
     if (inputRef.current) {
-      const position = getCursorPosition(inputType, changeData.current, maskData.current);
+      const position = getCursorPosition(currentInputType, changeData.current, maskData.current);
       setCursorPosition(inputRef.current, position);
 
       // eslint-disable-next-line no-param-reassign

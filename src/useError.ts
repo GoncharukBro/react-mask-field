@@ -15,13 +15,21 @@ class SyntaxError extends Error {
   }
 }
 
-interface UseErrorProps {
+interface UseErrorParams {
   maskedValue: string;
   mask: string;
   pattern: Pattern;
 }
 
-export default function useError({ maskedValue, mask, pattern }: UseErrorProps) {
+/**
+ * Выводит в консоль сообщения об ошибках.
+ * Сообщения выводятся один раз при монтировании компонента
+ * @param param
+ * @param param.maskedValue
+ * @param param.mask
+ * @param param.pattern
+ */
+export default function useError({ maskedValue, mask, pattern }: UseErrorParams) {
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') {
       const patternKeys = Object.keys(pattern);
@@ -38,7 +46,6 @@ export default function useError({ maskedValue, mask, pattern }: UseErrorProps) 
         console.error(new ValidationError(message));
       }
     }
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -54,5 +61,6 @@ Invalid keys: ${invalidPatternKeys.join(', ')}.
         console.error(new SyntaxError(message));
       }
     }
-  }, [pattern]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 }

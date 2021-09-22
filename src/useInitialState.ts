@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from 'react';
 import { getChangeData, getMaskData } from './utils';
 import type { Pattern, Selection, ChangeData, MaskData } from './types';
 
-interface UseInitialStateProps {
+interface UseInitialStateParams {
   mask: string;
   pattern: Pattern;
   showMask: boolean;
@@ -10,13 +10,23 @@ interface UseInitialStateProps {
   defaultValue: string | number | readonly string[] | undefined;
 }
 
+/**
+ * Инициализирует начальное состояние компонента
+ * @param param
+ * @param param.mask
+ * @param param.pattern
+ * @param param.showMask
+ * @param param.value
+ * @param param.defaultValue
+ * @returns начальное состояние компонента
+ */
 export default function useInitialState({
   mask,
   pattern,
   showMask,
   value,
   defaultValue,
-}: UseInitialStateProps) {
+}: UseInitialStateParams) {
   const [maskedValue, setMaskedValue] = useState(
     value !== undefined ? value : defaultValue?.toString() || ''
   );

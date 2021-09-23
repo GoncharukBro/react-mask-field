@@ -38,7 +38,7 @@ export default {
 export const UncontrolledMaskFieldAny: ComponentStory<typeof MaskFieldComponent> = (args) => {
   return (
     <Form>
-      <MaskFieldComponent {...args} name="phone" mask="+_ (___) ___-__-__" pattern="_" showMask />
+      <MaskFieldComponent {...args} mask="+_ (___) ___-__-__" pattern="_" showMask break />
     </Form>
   );
 };

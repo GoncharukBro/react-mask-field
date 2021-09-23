@@ -6,6 +6,7 @@ interface UseInitialStateParams {
   mask: string;
   pattern: Pattern;
   showMask: boolean;
+  breakSymbols: boolean;
   value: string | undefined;
   defaultValue: string | number | readonly string[] | undefined;
 }
@@ -16,6 +17,7 @@ interface UseInitialStateParams {
  * @param param.mask
  * @param param.pattern
  * @param param.showMask
+ * @param param.breakSymbols
  * @param param.value
  * @param param.defaultValue
  * @returns начальное состояние компонента
@@ -24,12 +26,13 @@ export default function useInitialState({
   mask,
   pattern,
   showMask,
+  breakSymbols,
   value,
   defaultValue,
 }: UseInitialStateParams) {
-  const [maskedValue, setMaskedValue] = useState(
-    value !== undefined ? value : defaultValue?.toString() || ''
-  );
+  const [maskedValue, setMaskedValue] = useState(() => {
+    return value !== undefined ? value : defaultValue?.toString() || '';
+  });
 
   const changedSymbols = useMemo(() => {
     const patternKeys = Object.keys(pattern);
@@ -46,7 +49,9 @@ export default function useInitialState({
 
   const inputElement = useRef<HTMLInputElement | null>(null);
   const selection = useRef<Selection>({ start: 0, end: 0 });
-  const maskData = useRef<MaskData>(getMaskData(changedSymbols, mask, pattern, showMask));
+  const maskData = useRef<MaskData>(
+    getMaskData(changedSymbols, mask, pattern, showMask, breakSymbols)
+  );
   const changeData = useRef<ChangeData>(
     getChangeData(maskData.current, [0, maskData.current.ast.length], changedSymbols)
   );

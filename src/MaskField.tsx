@@ -19,6 +19,7 @@ export interface MaskFieldProps
   mask: string;
   pattern: string | Pattern;
   showMask?: boolean;
+  break?: boolean;
   validatePattern?: boolean;
   modify?: (modifiedData: ModifiedData) => Partial<ModifiedData> | undefined;
   value?: string;
@@ -31,6 +32,7 @@ const MaskFieldComponent = (
     mask: maskProps,
     pattern: patternProps,
     showMask: showMaskProps = false,
+    break: breakSymbolsProps = false,
     validatePattern = false,
     modify,
     // Свойство `defaultValue` не должно быть передано дальше в `props`, так как компонент всегда использует свойство `value`
@@ -45,10 +47,11 @@ const MaskFieldComponent = (
   let mask = maskProps;
   let pattern = useMemo(() => getPattern(patternProps), [patternProps]);
   let showMask = showMaskProps;
+  const breakSymbols = breakSymbolsProps;
 
   // Инициализируем начальное состояние компонента
   const { inputElement, selection, maskData, changeData, maskedValue, setMaskedValue } =
-    useInitialState({ mask, pattern, showMask, value, defaultValue });
+    useInitialState({ mask, pattern, showMask, breakSymbols, value, defaultValue });
 
   // Выводим в консоль ошибки
   useError({ maskedValue, mask, pattern });
@@ -115,7 +118,7 @@ const MaskFieldComponent = (
     }
 
     // Формируем данные маскированного значения
-    maskData.current = getMaskData(changeData.current.value, mask, pattern, showMask);
+    maskData.current = getMaskData(changeData.current.value, mask, pattern, showMask, breakSymbols);
 
     // eslint-disable-next-line no-param-reassign
     event.target.value = maskData.current.value;
@@ -206,6 +209,7 @@ MaskField.propTypes = {
     PropTypes.objectOf(PropTypes.instanceOf(RegExp).isRequired),
   ]).isRequired,
   showMask: PropTypes.bool,
+  break: PropTypes.bool,
   validatePattern: PropTypes.bool,
   modify: PropTypes.func,
 };

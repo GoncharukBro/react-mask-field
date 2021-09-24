@@ -15,7 +15,7 @@ function getLastChangedSymbol(ast: AST) {
 function getLastAddedSymbol(ast: AST, changeData: ChangeData) {
   const changedSymbols = ast.filter(({ own }) => own === 'change');
   const length = changeData.beforeRange.length + changeData.added.length;
-  return changedSymbols.find((item, index) => length === index + 1);
+  return changedSymbols.find((symbol, index) => length === index + 1);
 }
 
 // Находим первый, после добавленного пользователем, символ
@@ -24,7 +24,7 @@ function getFirstAfterRangeSymbol(
   lastAddedSymbol: ReturnType<typeof getLastAddedSymbol>
 ) {
   const changedSymbols = ast.filter(({ own }) => own === 'change');
-  return lastAddedSymbol && changedSymbols.find((item) => lastAddedSymbol.index < item.index);
+  return lastAddedSymbol && changedSymbols.find((symbol) => lastAddedSymbol.index < symbol.index);
 }
 
 // Находим индекс заменяемого символа маски
@@ -55,8 +55,8 @@ export function getPattern(pattern: string | Pattern) {
  * @returns позиция курсора
  */
 export function getCursorPosition(inputType: string, changeData: ChangeData, maskData: MaskData) {
+  const { value, pattern, showMask, breakSymbols, ast } = maskData;
   const { beforeRange, afterRange } = changeData;
-  const { value, pattern, ast } = maskData;
 
   // 1. Действие в начале строки
   if (!beforeRange && afterRange) {
@@ -190,7 +190,7 @@ function filterSymbols(
   pattern: Pattern,
   patternKeys: string[],
   replaceableSymbols: string,
-  isBreak: boolean
+  isBreak?: boolean
 ) {
   let symbols = replaceableSymbols;
 
@@ -240,23 +240,17 @@ export function getChangeData(maskData: MaskData, range: Range, added: string): 
     return patternKeys.includes(symbol) ? prev + symbol : prev;
   }, '');
 
-  // Фильтруем добавленные символы на соответствие значениям паттерна
+  // Фильтруем добавленные символы на соответствие значениям паттерна.
+  // Поскольку нас интересуют только "полезные" символы, фильтуем без заменяемых символов
   replaceableSymbols = replaceableSymbols.slice(beforeRange.length);
 
   if (addedSymbols) {
-    addedSymbols = filterSymbols(
-      addedSymbols,
-      maskData.pattern,
-      patternKeys,
-      replaceableSymbols,
-      isBreak
-    );
+    addedSymbols = filterSymbols(addedSymbols, maskData.pattern, patternKeys, replaceableSymbols);
   }
 
-  // Изменяем `afterRange` обязательно перед фильтрацией
+  // Изменяем `afterRange` чтобы позиция символов не смещалась (обязательно перед фильтрацией).
   if (isBreak) {
-    // Количество символов для сохранения перед `afterRange` при `break === true`
-    // (чтобы позиция символов не смещалась)
+    // Находим заменяемые символы в диапозоне изменяемых символов
     const breakSymbols = maskData.mask.split('').reduce((prev, symbol, index) => {
       const isRange = index >= range[0] && index < range[1];
       const isPatternKey = patternKeys.includes(symbol);
@@ -264,7 +258,10 @@ export function getChangeData(maskData: MaskData, range: Range, added: string): 
       return isRange && isPatternKey ? prev + symbol : prev;
     }, '');
 
-    const countBreakSymbols = breakSymbols.length - added.length;
+    // Количество символов для сохранения перед `afterRange` при `break === true`.
+    // Возможны значения: меньше ноля - обрезаем значение с начала на количество символов,
+    // ноль - не меняем значение и больше ноля - добавляем к началу значения заменяемые символы
+    const countBreakSymbols = breakSymbols.length - addedSymbols.length;
 
     if (countBreakSymbols < 0) {
       afterRange = afterRange.slice(-countBreakSymbols);
@@ -286,10 +283,7 @@ export function getChangeData(maskData: MaskData, range: Range, added: string): 
     );
   }
 
-  return {
-    value: beforeRange + addedSymbols + afterRange,
-    beforeRange,
-    added: addedSymbols,
-    afterRange,
-  };
+  const value = beforeRange + addedSymbols + afterRange;
+
+  return { value, beforeRange, added: addedSymbols, afterRange };
 }

@@ -253,19 +253,7 @@ export function getChangeData(maskData: MaskData, range: Range, added: string): 
     );
   }
 
-  // Фильтруем символы (после добавленных) на соответствие значениям паттерна
-  replaceableSymbols = replaceableSymbols.slice(addedSymbols.length);
-
-  if (afterRange) {
-    afterRange = filterSymbols(
-      afterRange,
-      maskData.pattern,
-      patternKeys,
-      replaceableSymbols,
-      isBreak
-    );
-  }
-
+  // Изменяем `afterRange` обязательно перед фильтрацией
   if (isBreak) {
     // Количество символов для сохранения перед `afterRange` при `break === true`
     // (чтобы позиция символов не смещалась)
@@ -283,6 +271,19 @@ export function getChangeData(maskData: MaskData, range: Range, added: string): 
     } else if (countBreakSymbols > 0) {
       afterRange = breakSymbols.slice(-countBreakSymbols) + afterRange;
     }
+  }
+
+  // Фильтруем символы (после добавленных) на соответствие значениям паттерна
+  replaceableSymbols = replaceableSymbols.slice(addedSymbols.length);
+
+  if (afterRange) {
+    afterRange = filterSymbols(
+      afterRange,
+      maskData.pattern,
+      patternKeys,
+      replaceableSymbols,
+      isBreak
+    );
   }
 
   return {

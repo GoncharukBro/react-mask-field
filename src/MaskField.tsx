@@ -8,13 +8,14 @@ import {
   setCursorPosition,
 } from './utils';
 import useInitialState from './useInitialState';
+import useSelection from './useSelection';
 import useError from './useError';
 import type { Pattern, Range } from './types';
 
 export type ModifiedData = Pick<MaskFieldProps, 'value' | 'mask' | 'pattern' | 'showMask'>;
 
 export interface MaskFieldProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'pattern' | 'onChange'> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'pattern' | 'onChange'> {
   component?: React.ComponentClass | React.FunctionComponent;
   mask: string;
   pattern: string | Pattern;
@@ -22,6 +23,7 @@ export interface MaskFieldProps
   break?: boolean;
   validatePattern?: boolean;
   modify?: (modifiedData: ModifiedData) => Partial<ModifiedData> | undefined;
+  defaultValue?: string;
   value?: string;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>, value: string) => void;
 }
@@ -35,11 +37,11 @@ const MaskFieldComponent = (
     break: breakSymbolsProps = false,
     validatePattern = false,
     modify,
-    // Свойство `defaultValue` не должно быть передано дальше в `props`, так как компонент всегда использует свойство `value`
+    // Свойство `defaultValue` не должно быть передано дальше в `props`,
+    // так как компонент всегда использует свойство `value`
     defaultValue,
     value,
     onChange,
-    onSelect,
     ...other
   }: MaskFieldProps,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
@@ -52,6 +54,9 @@ const MaskFieldComponent = (
   // Инициализируем начальное состояние компонента
   const { inputElement, selection, maskData, changeData, maskedValue, setMaskedValue } =
     useInitialState({ mask, pattern, showMask, breakSymbols, value, defaultValue });
+
+  // Определяем в фоне позицию курсора
+  useSelection(inputElement.current, selection.current);
 
   // Выводим в консоль ошибки
   useError({ maskedValue, mask, pattern });
@@ -164,15 +169,6 @@ const MaskFieldComponent = (
     onChange?.(event, changeData.current.value);
   };
 
-  const handleSelect = (
-    event: React.BaseSyntheticEvent<Event, EventTarget & HTMLInputElement, HTMLInputElement>
-  ) => {
-    const { selectionStart, selectionEnd } = event.target;
-    selection.current = { start: selectionStart || 0, end: selectionEnd || 0 };
-
-    onSelect?.(event);
-  };
-
   const setRef = useCallback(
     (ref: HTMLInputElement | null) => {
       inputElement.current = ref;
@@ -188,7 +184,6 @@ const MaskFieldComponent = (
     ref: setRef,
     value: value !== undefined ? value : maskedValue,
     onChange: handleChange,
-    onSelect: handleSelect,
     ...(validatePattern ? { pattern: maskData.current.inputPattern } : {}),
     ...other,
   };

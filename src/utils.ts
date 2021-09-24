@@ -270,10 +270,10 @@ export function getChangeData(maskData: MaskData, range: Range, added: string): 
     // Количество символов для сохранения перед `afterRange` при `break === true`
     // (чтобы позиция символов не смещалась)
     const breakSymbols = maskData.mask.split('').reduce((prev, symbol, index) => {
-      if (index >= range[0] && index < range[1] && patternKeys.includes(symbol)) {
-        return prev + symbol;
-      }
-      return prev;
+      const isRange = index >= range[0] && index < range[1];
+      const isPatternKey = patternKeys.includes(symbol);
+
+      return isRange && isPatternKey ? prev + symbol : prev;
     }, '');
 
     const countBreakSymbols = breakSymbols.length - added.length;

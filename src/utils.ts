@@ -12,8 +12,10 @@ function getLastChangedSymbol(ast: AST) {
 }
 
 // Находим последний добавленный пользователем символ
-function getLastAddedSymbol(ast: AST, changeData: ChangeData) {
-  const changedSymbols = ast.filter(({ own }) => own === 'change');
+function getLastAddedSymbol(ast: AST, changeData: ChangeData, isBreak?: boolean) {
+  const changedSymbols = ast.filter(({ own }) => {
+    return isBreak ? own === 'change' || own === 'pattern' : own === 'change';
+  });
   const length = changeData.beforeRange.length + changeData.added.length;
   return changedSymbols.find((symbol, index) => length === index + 1);
 }
@@ -58,6 +60,19 @@ export function getCursorPosition(inputType: string, changeData: ChangeData, mas
   const { value, pattern, showMask, breakSymbols, ast } = maskData;
   const { beforeRange, afterRange } = changeData;
 
+  const isBreak = showMask && breakSymbols;
+
+  if (isBreak) {
+    if (!beforeRange) {
+      const patternKeys = Object.keys(pattern);
+      const replaceableSymbolIndex = getReplaceableSymbolIndex(value.split(''), patternKeys);
+      if (replaceableSymbolIndex !== -1) return replaceableSymbolIndex;
+    }
+
+    const lastAddedSymbol = getLastAddedSymbol(ast, changeData, isBreak);
+    if (lastAddedSymbol) return lastAddedSymbol.index + 1;
+  }
+
   // 1. Действие в начале строки
   if (!beforeRange && afterRange) {
     const lastAddedSymbol = getLastAddedSymbol(ast, changeData);
@@ -92,7 +107,6 @@ export function getCursorPosition(inputType: string, changeData: ChangeData, mas
   // Если индекс не найден, перемещаем курсор в конец строки
   const patternKeys = Object.keys(pattern);
   const replaceableSymbolIndex = getReplaceableSymbolIndex(value.split(''), patternKeys);
-
   return replaceableSymbolIndex !== -1 ? replaceableSymbolIndex : value.length;
 }
 

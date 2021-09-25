@@ -42,6 +42,9 @@ const MaskFieldComponent = (
     defaultValue,
     value,
     onChange,
+    onFocus,
+    onBlur,
+    onSelect,
     ...other
   }: MaskFieldProps,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
@@ -56,7 +59,10 @@ const MaskFieldComponent = (
     useInitialState({ mask, pattern, showMask, breakSymbols, value, defaultValue });
 
   // Определяем в фоне позицию курсора
-  useSelection(inputElement.current, selection.current);
+  const { startSelectionRequest, stopSelectionRequest } = useSelection(
+    inputElement.current,
+    selection.current
+  );
 
   // Выводим в консоль ошибки
   useError({ maskedValue, mask, pattern });
@@ -169,6 +175,22 @@ const MaskFieldComponent = (
     onChange?.(event, changeData.current.value);
   };
 
+  const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
+    startSelectionRequest();
+    onFocus?.(event);
+  };
+
+  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    stopSelectionRequest();
+    onBlur?.(event);
+  };
+
+  const handleSelect = (event: React.SyntheticEvent<HTMLInputElement, Event>) => {
+    selection.current.start = (event.target as any).selectionStart || 0;
+    selection.current.end = (event.target as any).selectionEnd || 0;
+    onSelect?.(event);
+  };
+
   const setRef = useCallback(
     (ref: HTMLInputElement | null) => {
       inputElement.current = ref;
@@ -184,6 +206,9 @@ const MaskFieldComponent = (
     ref: setRef,
     value: value !== undefined ? value : maskedValue,
     onChange: handleChange,
+    onFocus: handleFocus,
+    onBlur: handleBlur,
+    onSelect: handleSelect,
     ...(validatePattern ? { pattern: maskData.current.inputPattern } : {}),
     ...other,
   };

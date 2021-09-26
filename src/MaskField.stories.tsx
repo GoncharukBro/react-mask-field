@@ -217,7 +217,7 @@ MaskFieldWithCustomComponent.args = {};
  *
  */
 export const MaskFieldTestProps: ComponentStory<typeof MaskFieldComponent> = (args) => {
-  const [state, setState] = useState({ showMask: false });
+  const [state, setState] = useState({ showMask: true });
 
   return (
     <>
@@ -226,9 +226,10 @@ export const MaskFieldTestProps: ComponentStory<typeof MaskFieldComponent> = (ar
           {...args}
           name="phone"
           mask="+_ (___) ___-__-__"
-          pattern="_"
+          pattern={{ _: /\d/ }}
           showMask={state.showMask}
           defaultValue="+9 (___) ___-__"
+          onInputAction={(event) => {}}
         />
       </Form>
       <div>

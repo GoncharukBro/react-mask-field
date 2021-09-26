@@ -1,4 +1,4 @@
-import { useMemo, useCallback, forwardRef } from 'react';
+import { useState, useRef, useMemo, useCallback, forwardRef } from 'react';
 import PropTypes from 'prop-types';
 import {
   getPattern,
@@ -25,6 +25,7 @@ export interface MaskFieldProps
   modify?: (modifiedData: ModifiedData) => Partial<ModifiedData> | undefined;
   defaultValue?: string;
   value?: string;
+  onInputAction?: (event: CustomEvent<{ value: string; added: string }>) => void;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>, value: string) => void;
 }
 
@@ -41,6 +42,7 @@ const MaskFieldComponent = (
     // так как компонент всегда использует свойство `value`
     defaultValue,
     value,
+    onInputAction,
     onChange,
     onFocus,
     onBlur,
@@ -54,21 +56,58 @@ const MaskFieldComponent = (
   let showMask = showMaskProps;
   const breakSymbols = breakSymbolsProps;
 
+  const [maskedValue, setMaskedValue] = useState(() => {
+    return value === undefined ? defaultValue?.toString() || '' : value;
+  });
+
+  const inputElement = useRef<HTMLInputElement | null>(null);
+
   // Инициализируем начальное состояние компонента
-  const { inputElement, selection, maskData, changeData, maskedValue, setMaskedValue } =
-    useInitialState({ mask, pattern, showMask, breakSymbols, value, defaultValue });
+  const { maskData, changeData } = useInitialState({
+    mask,
+    pattern,
+    showMask,
+    breakSymbols,
+    maskedValue,
+  });
 
   // Определяем в фоне позицию курсора
-  const { startSelectionRequest, stopSelectionRequest } = useSelection(
-    inputElement.current,
-    selection.current
+  const { selection, startSelectionRequest, stopSelectionRequest } = useSelection(
+    inputElement.current
   );
 
   // Выводим в консоль ошибки
   useError({ maskedValue, mask, pattern });
 
+  const handleInputAction = () => {
+    if (inputElement.current === null || changeData.current === null) {
+      return;
+    }
+
+    const event = new CustomEvent('input-action', {
+      bubbles: true,
+      cancelable: false,
+      composed: true,
+      detail: {
+        value: changeData.current.value,
+        added: changeData.current.added,
+      },
+    });
+
+    inputElement.current.dispatchEvent(event);
+
+    onInputAction?.(event);
+  };
+
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (maskData.current === null || changeData.current === null) return;
+    if (inputElement.current === null) return;
+    if (maskData.current === null) return;
+    if (changeData.current === null) return;
+
+    // Если событие вызывается слишком часто, смена курсора может не поспеть за новым событием,
+    // поэтому сравниваем `requestID` кэшированный и текущий для избежания некорректного поведения маски
+    if (selection.current.cachedRequestID === selection.current.requestID) return;
+    selection.current.cachedRequestID = selection.current.requestID;
 
     const currentValue = event.target.value;
     const currentPosition = event.target.selectionStart || 0;
@@ -98,7 +137,7 @@ const MaskFieldComponent = (
       changeData.current = getChangeData(maskData.current, range, addedSymbols);
 
       // Если нет добавленных символов, устанавливаем позицию курсора и завершаем выпонение функции
-      if (!changeData.current.added && inputElement.current) {
+      if (!changeData.current.added) {
         const position = getCursorPosition(currentInputType, changeData.current, maskData.current);
         setCursorPosition(inputElement.current, position);
         return;
@@ -116,63 +155,26 @@ const MaskFieldComponent = (
     if (modify) {
       const modifiedData = modify({ value: changeData.current.value, mask, pattern, showMask });
 
-      if (modifiedData?.value !== undefined) {
-        changeData.current.value = modifiedData.value;
-      }
-      if (modifiedData?.mask !== undefined) {
-        mask = modifiedData.mask;
-      }
-      if (modifiedData?.pattern !== undefined) {
-        pattern = getPattern(modifiedData.pattern);
-      }
-      if (modifiedData?.showMask !== undefined) {
-        showMask = modifiedData.showMask;
-      }
+      if (modifiedData?.value !== undefined) changeData.current.value = modifiedData.value;
+      if (modifiedData?.mask !== undefined) mask = modifiedData.mask;
+      if (modifiedData?.pattern !== undefined) pattern = getPattern(modifiedData.pattern);
+      if (modifiedData?.showMask !== undefined) showMask = modifiedData.showMask;
     }
 
     // Формируем данные маскированного значения
     maskData.current = getMaskData(changeData.current.value, mask, pattern, showMask, breakSymbols);
 
-    // eslint-disable-next-line no-param-reassign
-    event.target.value = maskData.current.value;
-
-    if (validatePattern) {
-      // eslint-disable-next-line no-param-reassign
-      event.target.pattern = maskData.current.inputPattern;
-    }
-
-    if (event.nativeEvent.target) {
-      // eslint-disable-next-line no-param-reassign
-      (event.nativeEvent.target as HTMLInputElement).value = maskData.current.value;
-
-      if (validatePattern) {
-        // eslint-disable-next-line no-param-reassign
-        (event.nativeEvent.target as HTMLInputElement).pattern = maskData.current.inputPattern;
-      }
-    }
-
     // Устанавливаем позицию курсора курсор
-    if (inputElement.current) {
-      const position = getCursorPosition(currentInputType, changeData.current, maskData.current);
-      setCursorPosition(inputElement.current, position);
-
-      // eslint-disable-next-line no-param-reassign
-      event.target.selectionStart = position;
-      // eslint-disable-next-line no-param-reassign
-      event.target.selectionEnd = position;
-
-      if (event.nativeEvent.target) {
-        // eslint-disable-next-line no-param-reassign
-        (event.nativeEvent.target as HTMLInputElement).selectionStart = position;
-        // eslint-disable-next-line no-param-reassign
-        (event.nativeEvent.target as HTMLInputElement).selectionEnd = position;
-      }
-    }
+    const position = getCursorPosition(currentInputType, changeData.current, maskData.current);
+    setCursorPosition(inputElement.current, position);
 
     // Не меняем локальное состояние при контролируемом компоненте
-    if (value === undefined) {
-      setMaskedValue(maskData.current.value);
-    }
+    if (value === undefined) setMaskedValue(maskData.current.value);
+
+    inputElement.current.value = maskData.current.value;
+    inputElement.current.selectionStart = position;
+    inputElement.current.selectionEnd = position;
+    if (validatePattern) inputElement.current.pattern = maskData.current.inputPattern;
 
     onChange?.(event, changeData.current.value);
   };
@@ -185,12 +187,6 @@ const MaskFieldComponent = (
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
     stopSelectionRequest();
     onBlur?.(event);
-  };
-
-  const handleSelect = (event: React.SyntheticEvent<HTMLInputElement, Event>) => {
-    selection.current.start = (event.target as any).selectionStart || 0;
-    selection.current.end = (event.target as any).selectionEnd || 0;
-    onSelect?.(event);
   };
 
   const setRef = useCallback(
@@ -211,7 +207,6 @@ const MaskFieldComponent = (
     onChange: handleChange,
     onFocus: handleFocus,
     onBlur: handleBlur,
-    onSelect: handleSelect,
     ...other,
   };
 

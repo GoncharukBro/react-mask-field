@@ -1,14 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { getChangeData, getMaskData } from './utils';
-import type { Pattern, Selection, Range, ChangeData, MaskData } from './types';
+import type { Pattern, Range, ChangeData, MaskData } from './types';
 
 interface UseInitialStateParams {
   mask: string;
   pattern: Pattern;
   showMask: boolean;
   breakSymbols: boolean;
-  value: string | undefined;
-  defaultValue: string | number | readonly string[] | undefined;
+  maskedValue: string;
 }
 
 /**
@@ -18,8 +17,7 @@ interface UseInitialStateParams {
  * @param param.pattern
  * @param param.showMask
  * @param param.breakSymbols
- * @param param.value
- * @param param.defaultValue
+ * @param param.maskedValue
  * @returns начальное состояние компонента
  */
 export default function useInitialState({
@@ -27,15 +25,8 @@ export default function useInitialState({
   pattern,
   showMask,
   breakSymbols,
-  value,
-  defaultValue,
+  maskedValue,
 }: UseInitialStateParams) {
-  const [maskedValue, setMaskedValue] = useState(() => {
-    return value !== undefined ? value : defaultValue?.toString() || '';
-  });
-
-  const inputElement = useRef<HTMLInputElement | null>(null);
-  const selection = useRef<Selection>({ start: 0, end: 0 });
   const maskData = useRef<MaskData | null>(null);
   const changeData = useRef<ChangeData | null>(null);
 
@@ -59,5 +50,5 @@ export default function useInitialState({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { inputElement, selection, maskData, changeData, maskedValue, setMaskedValue };
+  return { maskData, changeData };
 }

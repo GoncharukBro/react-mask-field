@@ -3,6 +3,8 @@ export type Pattern = {
 };
 
 export type Selection = {
+  cachedRequestID: number;
+  requestID: number;
   start: number;
   end: number;
 };

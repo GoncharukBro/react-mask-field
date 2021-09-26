@@ -4,43 +4,45 @@ import type { Selection } from './types';
 /**
  * Запускаает процесс определения позиции курсора
  * @param inputElement
- * @param selection
  * @returns объект с функциями управления запросом на определение позиции курсора
  */
-export default function useSelection(inputElement: HTMLInputElement | null, selection: Selection) {
-  const [start, setStart] = useState(false);
-  const requestID = useRef(-1);
+export default function useSelection(inputElement: HTMLInputElement | null) {
+  const [run, setRun] = useState(false);
+  const selection = useRef<Selection>({ cachedRequestID: -1, requestID: -1, start: 0, end: 0 });
 
   useEffect(() => {
     const setSelection = () => {
-      // eslint-disable-next-line no-param-reassign
-      selection.start = inputElement?.selectionStart || 0;
-      // eslint-disable-next-line no-param-reassign
-      selection.end = inputElement?.selectionEnd || 0;
+      selection.current.start = inputElement?.selectionStart || 0;
+      selection.current.end = inputElement?.selectionEnd || 0;
 
-      requestID.current = requestAnimationFrame(setSelection);
+      selection.current.requestID = requestAnimationFrame(setSelection);
     };
 
-    if (start) {
-      requestID.current = requestAnimationFrame(setSelection);
+    if (run) {
+      selection.current.requestID = requestAnimationFrame(setSelection);
     } else {
-      cancelAnimationFrame(requestID.current);
+      cancelAnimationFrame(selection.current.requestID);
     }
 
     return () => {
-      if (!start) {
-        cancelAnimationFrame(requestID.current);
+      if (!run) {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        cancelAnimationFrame(selection.current.requestID);
       }
     };
-  }, [start, inputElement, selection]);
+  }, [run, inputElement, selection]);
 
   const startSelectionRequest = () => {
-    setStart(true);
+    setRun(true);
   };
 
   const stopSelectionRequest = () => {
-    setStart(false);
+    setRun(false);
   };
 
-  return { startSelectionRequest, stopSelectionRequest };
+  return {
+    selection,
+    startSelectionRequest,
+    stopSelectionRequest,
+  };
 }

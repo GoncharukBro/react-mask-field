@@ -1,6 +1,6 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getChangeData, getMaskData } from './utils';
-import type { Pattern, Selection, ChangeData, MaskData } from './types';
+import type { Pattern, Selection, Range, ChangeData, MaskData } from './types';
 
 interface UseInitialStateParams {
   mask: string;
@@ -34,27 +34,30 @@ export default function useInitialState({
     return value !== undefined ? value : defaultValue?.toString() || '';
   });
 
-  const changedSymbols = useMemo(() => {
+  const inputElement = useRef<HTMLInputElement | null>(null);
+  const selection = useRef<Selection>({ start: 0, end: 0 });
+  const maskData = useRef<MaskData | null>(null);
+  const changeData = useRef<ChangeData | null>(null);
+
+  useEffect(() => {
     const patternKeys = Object.keys(pattern);
     // Запоминаем данные маскированного значения.
     // Выбираем из маскированного значения все пользовательские символы
     // методом определения ключей паттерна и наличием на их месте отличающегося символа
-    return mask.split('').reduce((prev, item, index) => {
-      const isPatternKey = patternKeys.includes(item);
-      const isChangedSymbol = maskedValue[index] && !patternKeys.includes(maskedValue[index]);
-      return isPatternKey && isChangedSymbol ? prev + maskedValue[index] : prev;
+    const changedSymbols = mask.split('').reduce((prev, symbol, index) => {
+      if (patternKeys.includes(symbol)) {
+        const isChangedSymbol = maskedValue[index] && !patternKeys.includes(maskedValue[index]);
+        if (isChangedSymbol) return prev + maskedValue[index];
+      }
+      return prev;
     }, '');
+
+    maskData.current = getMaskData(changedSymbols, mask, pattern, showMask, breakSymbols);
+
+    const range: Range = [0, maskData.current.ast.length];
+    changeData.current = getChangeData(maskData.current, range, changedSymbols);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const inputElement = useRef<HTMLInputElement | null>(null);
-  const selection = useRef<Selection>({ start: 0, end: 0 });
-  const maskData = useRef<MaskData>(
-    getMaskData(changedSymbols, mask, pattern, showMask, breakSymbols)
-  );
-  const changeData = useRef<ChangeData>(
-    getChangeData(maskData.current, [0, maskData.current.ast.length], changedSymbols)
-  );
 
   return { inputElement, selection, maskData, changeData, maskedValue, setMaskedValue };
 }

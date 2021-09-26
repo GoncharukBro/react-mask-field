@@ -156,6 +156,7 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
           mask={ruPhoneMask}
           pattern={{ _: /\d/ }}
           showMask
+          validatePattern
           modify={modify}
           value={data.maskedValue}
           onChange={handleChange}

@@ -68,6 +68,8 @@ const MaskFieldComponent = (
   useError({ maskedValue, mask, pattern });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (maskData.current === null || changeData.current === null) return;
+
     const currentValue = event.target.value;
     const currentPosition = event.target.selectionStart || 0;
     let currentInputType = '';
@@ -205,11 +207,11 @@ const MaskFieldComponent = (
   const inputProps = {
     ref: setRef,
     value: value !== undefined ? value : maskedValue,
+    pattern: validatePattern ? maskData.current?.inputPattern : undefined,
     onChange: handleChange,
     onFocus: handleFocus,
     onBlur: handleBlur,
     onSelect: handleSelect,
-    ...(validatePattern ? { pattern: maskData.current.inputPattern } : {}),
     ...other,
   };
 

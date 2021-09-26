@@ -116,8 +116,6 @@ export function getCursorPosition(inputType: string, changeData: ChangeData, mas
  * @param position позиция на которую нужно установить курсор
  */
 export function setCursorPosition(input: HTMLInputElement, position: number) {
-  // Нулевая задержка "requestAnimationFrame" нужна, чтобы смена позиции сработала после ввода значения
-  // (предотвращает мерцание при установке позиции)
   requestAnimationFrame(() => {
     input.setSelectionRange(position, position);
   });
@@ -164,7 +162,7 @@ export function getMaskData(
     if (replaceableSymbolIndex !== -1) {
       maskSymbols[replaceableSymbolIndex] = symbol;
       // Позиция позволяет не учитывать заменяемые символы при `break === true`,
-      // в остальных случаях помогает более быстро нахождении индекс символа
+      // в остальных случаях помогает более быстро находить индекс символа
       position = replaceableSymbolIndex + 1;
     }
   });
@@ -185,7 +183,7 @@ export function getMaskData(
 
   // Если пользователь не ввел ниодного символа,
   // присваиваем пустую строку для соответсвия поведения `input`
-  let value = changedSymbols ? maskSymbols.join('') : '';
+  let value = getFirstChangedSymbol(ast) ? maskSymbols.join('') : '';
 
   // Если `showMask === false`, обрезаем значение по последний пользовательский символ
   if (value && !showMask) {

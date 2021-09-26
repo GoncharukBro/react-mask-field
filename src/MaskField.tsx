@@ -46,7 +46,6 @@ const MaskFieldComponent = (
     onChange,
     onFocus,
     onBlur,
-    onSelect,
     ...other
   }: MaskFieldProps,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
@@ -80,9 +79,9 @@ const MaskFieldComponent = (
   useError({ maskedValue, mask, pattern });
 
   const handleInputAction = () => {
-    if (inputElement.current === null || changeData.current === null) {
-      return;
-    }
+    if (inputElement.current === null) return;
+    if (maskData.current === null) return;
+    if (changeData.current === null) return;
 
     const event = new CustomEvent('input-action', {
       bubbles: true,

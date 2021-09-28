@@ -127,8 +127,10 @@ function generateInputPattern(mask: string, pattern: Pattern) {
   const patternKeys = Object.keys(pattern);
 
   return mask.split('').reduce((prev, item) => {
+    const lookahead = `(?!${item})`;
+
     const symbol = patternKeys.includes(item)
-      ? `(?!${item})${pattern[item].toString().slice(1, -1)}`
+      ? lookahead + pattern[item].toString().slice(1, -1)
       : special.includes(item)
       ? `\\${item}`
       : item;

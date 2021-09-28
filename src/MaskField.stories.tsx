@@ -229,7 +229,6 @@ export const MaskFieldTestProps: ComponentStory<typeof MaskFieldComponent> = (ar
           pattern={{ _: /\d/ }}
           showMask={state.showMask}
           defaultValue="+9 (___) ___-__"
-          onInputAction={(event) => {}}
         />
       </Form>
       <div>

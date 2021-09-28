@@ -112,12 +112,12 @@ export function getCursorPosition(inputType: string, changeData: ChangeData, mas
 
 /**
  * Применяем позиционирование курсора
- * @param input html-элемент ввода
+ * @param inputElement html-элемент ввода
  * @param position позиция на которую нужно установить курсор
  */
-export function setCursorPosition(input: HTMLInputElement, position: number) {
+export function setCursorPosition(inputElement: HTMLInputElement, position: number) {
   requestAnimationFrame(() => {
-    input.setSelectionRange(position, position);
+    inputElement.setSelectionRange(position, position);
   });
 }
 

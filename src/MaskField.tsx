@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useCallback, forwardRef } from 'react';
+import { useState, useRef, useCallback, forwardRef } from 'react';
 import PropTypes from 'prop-types';
 import {
   getPattern,
@@ -8,25 +8,34 @@ import {
   setCursorPosition,
 } from './utils';
 import useInitialState from './useInitialState';
-import useSelection from './useSelection';
 import useError from './useError';
-import type { Pattern, Range } from './types';
+import type { Pattern, Selection, Range } from './types';
+
+export interface MaskingEvent<
+  T = HTMLInputElement,
+  D = { value: string; added: string; pattern: string }
+> extends CustomEvent<D> {
+  target: EventTarget & T;
+}
+
+export type MaskingEventHandler<T = HTMLInputElement> = (event: MaskingEvent<T>) => void;
 
 export type ModifiedData = Pick<MaskFieldProps, 'value' | 'mask' | 'pattern' | 'showMask'>;
 
+export type Modify = (modifiedData: ModifiedData) => Partial<ModifiedData> | undefined;
+
 export interface MaskFieldProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'pattern' | 'onChange'> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'pattern'> {
   component?: React.ComponentClass | React.FunctionComponent;
   mask: string;
   pattern: string | Pattern;
   showMask?: boolean;
   break?: boolean;
   validatePattern?: boolean;
-  modify?: (modifiedData: ModifiedData) => Partial<ModifiedData> | undefined;
+  modify?: Modify;
+  onMasking?: MaskingEventHandler;
   defaultValue?: string;
   value?: string;
-  onInputAction?: (event: CustomEvent<{ value: string; added: string }>) => void;
-  onChange?: (event: React.ChangeEvent<HTMLInputElement>, value: string) => void;
 }
 
 const MaskFieldComponent = (
@@ -38,11 +47,11 @@ const MaskFieldComponent = (
     break: breakSymbolsProps = false,
     validatePattern = false,
     modify,
+    onMasking,
     // Свойство `defaultValue` не должно быть передано дальше в `props`,
     // так как компонент всегда использует свойство `value`
     defaultValue,
     value,
-    onInputAction,
     onChange,
     onFocus,
     onBlur,
@@ -51,7 +60,7 @@ const MaskFieldComponent = (
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ) => {
   let mask = maskProps;
-  let pattern = useMemo(() => getPattern(patternProps), [patternProps]);
+  let pattern = getPattern(patternProps);
   let showMask = showMaskProps;
   const breakSymbols = breakSymbolsProps;
 
@@ -60,6 +69,7 @@ const MaskFieldComponent = (
   });
 
   const inputElement = useRef<HTMLInputElement | null>(null);
+  const selection = useRef<Selection>({ cachedRequestID: -1, requestID: -1, start: 0, end: 0 });
 
   // Инициализируем начальное состояние компонента
   const { maskData, changeData } = useInitialState({
@@ -70,35 +80,10 @@ const MaskFieldComponent = (
     maskedValue,
   });
 
-  // Определяем в фоне позицию курсора
-  const { selection, startSelectionRequest, stopSelectionRequest } = useSelection(
-    inputElement.current
-  );
-
   // Выводим в консоль ошибки
   useError({ maskedValue, mask, pattern });
 
-  const handleInputAction = () => {
-    if (inputElement.current === null) return;
-    if (maskData.current === null) return;
-    if (changeData.current === null) return;
-
-    const event = new CustomEvent('input-action', {
-      bubbles: true,
-      cancelable: false,
-      composed: true,
-      detail: {
-        value: changeData.current.value,
-        added: changeData.current.added,
-      },
-    });
-
-    inputElement.current.dispatchEvent(event);
-
-    onInputAction?.(event);
-  };
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const masking = () => {
     if (inputElement.current === null) return;
     if (maskData.current === null) return;
     if (changeData.current === null) return;
@@ -108,8 +93,8 @@ const MaskFieldComponent = (
     if (selection.current.cachedRequestID === selection.current.requestID) return;
     selection.current.cachedRequestID = selection.current.requestID;
 
-    const currentValue = event.target.value;
-    const currentPosition = event.target.selectionStart || 0;
+    const currentValue = inputElement.current.value;
+    const currentPosition = inputElement.current.selectionStart || 0;
     let currentInputType = '';
 
     // Определяем тип ввода (свойство `inputType` в объекте `event` не поддерживается старыми браузерами)
@@ -175,16 +160,44 @@ const MaskFieldComponent = (
     inputElement.current.selectionEnd = position;
     if (validatePattern) inputElement.current.pattern = maskData.current.inputPattern;
 
-    onChange?.(event, changeData.current.value);
+    const maskingEvent = new CustomEvent('masking', {
+      bubbles: true,
+      cancelable: false,
+      composed: true,
+      detail: {
+        value: changeData.current.value,
+        added: changeData.current.added,
+        pattern: maskData.current.inputPattern,
+      },
+    }) as MaskingEvent;
+
+    inputElement.current.dispatchEvent(maskingEvent);
+
+    // eslint-disable-next-line consistent-return
+    return maskingEvent;
+  };
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const maskingEvent = masking();
+    if (maskingEvent) onChange?.(event);
   };
 
   const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
-    startSelectionRequest();
+    const setSelection = () => {
+      selection.current.start = inputElement.current?.selectionStart || 0;
+      selection.current.end = inputElement.current?.selectionEnd || 0;
+
+      selection.current.requestID = requestAnimationFrame(setSelection);
+    };
+
+    // Запускаем кэширование позиции курсора
+    selection.current.requestID = requestAnimationFrame(setSelection);
     onFocus?.(event);
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    stopSelectionRequest();
+    // Останавливаем кэширование позиции курсора
+    cancelAnimationFrame(selection.current.requestID);
     onBlur?.(event);
   };
 
@@ -201,7 +214,7 @@ const MaskFieldComponent = (
 
   const inputProps = {
     ref: setRef,
-    value: value !== undefined ? value : maskedValue,
+    value: value === undefined ? maskedValue : value,
     pattern: validatePattern ? maskData.current?.inputPattern : undefined,
     onChange: handleChange,
     onFocus: handleFocus,

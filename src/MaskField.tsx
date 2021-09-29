@@ -1,15 +1,14 @@
-import { useState, useRef, useCallback, forwardRef } from 'react';
+import { useState, useEffect, useRef, useCallback, forwardRef } from 'react';
 import PropTypes from 'prop-types';
 import {
-  getPattern,
+  convertToPattern,
   getChangeData,
   getMaskData,
   getCursorPosition,
   setCursorPosition,
 } from './utils';
-import useInitialState from './useInitialState';
 import useError from './useError';
-import type { Pattern, Selection, Range } from './types';
+import type { Pattern, Selection, Range, ChangeData, MaskData } from './types';
 
 export interface MaskingEvent<
   T = HTMLInputElement,
@@ -20,7 +19,10 @@ export interface MaskingEvent<
 
 export type MaskingEventHandler<T = HTMLInputElement> = (event: MaskingEvent<T>) => void;
 
-export type ModifiedData = Pick<MaskFieldProps, 'value' | 'mask' | 'pattern' | 'showMask'>;
+export type ModifiedData = Pick<
+  MaskFieldProps,
+  'value' | 'mask' | 'pattern' | 'showMask' | 'break'
+>;
 
 export type Modify = (modifiedData: ModifiedData) => Partial<ModifiedData> | undefined;
 
@@ -60,37 +62,37 @@ const MaskFieldComponent = (
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ) => {
   let mask = maskProps;
-  let pattern = getPattern(patternProps);
+  let pattern = convertToPattern(patternProps);
   let showMask = showMaskProps;
-  const breakSymbols = breakSymbolsProps;
+  let breakSymbols = breakSymbolsProps;
+
+  const inputElement = useRef<HTMLInputElement | null>(null);
+  const maskData = useRef<MaskData | null>(null);
+  const changeData = useRef<ChangeData | null>(null);
+  const selection = useRef<Selection>({ cachedRequestID: -1, requestID: -1, start: 0, end: 0 });
 
   const [maskedValue, setMaskedValue] = useState(() => {
     return value === undefined ? defaultValue?.toString() || '' : value;
   });
 
-  const inputElement = useRef<HTMLInputElement | null>(null);
-  const selection = useRef<Selection>({ cachedRequestID: -1, requestID: -1, start: 0, end: 0 });
-
-  // Инициализируем начальное состояние компонента
-  const { maskData, changeData } = useInitialState({
-    mask,
-    pattern,
-    showMask,
-    breakSymbols,
-    maskedValue,
-  });
-
-  // Выводим в консоль ошибки
   useError({ maskedValue, mask, pattern });
 
   const masking = () => {
-    if (inputElement.current === null) return;
-    if (maskData.current === null) return;
-    if (changeData.current === null) return;
+    // Восстанавливаем значение элемента в случае ошибок
+    const reset = () => {
+      if (inputElement.current !== null) {
+        inputElement.current.value = maskData.current?.value || '';
+      }
+      return undefined;
+    };
+
+    if (inputElement.current === null) return reset();
+    if (maskData.current === null) return reset();
+    if (changeData.current === null) return reset();
 
     // Если событие вызывается слишком часто, смена курсора может не поспеть за новым событием,
     // поэтому сравниваем `requestID` кэшированный и текущий для избежания некорректного поведения маски
-    if (selection.current.cachedRequestID === selection.current.requestID) return;
+    if (selection.current.cachedRequestID === selection.current.requestID) return reset();
     selection.current.cachedRequestID = selection.current.requestID;
 
     const currentValue = inputElement.current.value;
@@ -124,7 +126,7 @@ const MaskFieldComponent = (
       if (!changeData.current.added) {
         const position = getCursorPosition(currentInputType, changeData.current, maskData.current);
         setCursorPosition(inputElement.current, position);
-        return;
+        return reset();
       }
     } else if (currentInputType === 'delete' || currentInputType === 'deleteForward') {
       // Подсчитываем количество удаленных символов
@@ -137,12 +139,19 @@ const MaskFieldComponent = (
 
     // Модифицируем свойства компонента, если задан `modify`
     if (modify) {
-      const modifiedData = modify({ value: changeData.current.value, mask, pattern, showMask });
+      const modifiedData = modify({
+        value: changeData.current.value,
+        mask,
+        pattern,
+        showMask,
+        break: breakSymbols,
+      });
 
       if (modifiedData?.value !== undefined) changeData.current.value = modifiedData.value;
       if (modifiedData?.mask !== undefined) mask = modifiedData.mask;
-      if (modifiedData?.pattern !== undefined) pattern = getPattern(modifiedData.pattern);
+      if (modifiedData?.pattern !== undefined) pattern = convertToPattern(modifiedData.pattern);
       if (modifiedData?.showMask !== undefined) showMask = modifiedData.showMask;
+      if (modifiedData?.break !== undefined) breakSymbols = modifiedData.break;
     }
 
     // Формируем данные маскированного значения
@@ -173,9 +182,28 @@ const MaskFieldComponent = (
 
     inputElement.current.dispatchEvent(maskingEvent);
 
-    // eslint-disable-next-line consistent-return
     return maskingEvent;
   };
+
+  useEffect(() => {
+    const patternKeys = Object.keys(pattern);
+
+    // Выбираем из маскированного значения все пользовательские символы
+    // методом определения ключей паттерна и наличием на их месте отличающегося символа
+    const changedSymbols = mask.split('').reduce((prev, symbol, index) => {
+      if (patternKeys.includes(symbol)) {
+        const isChangedSymbol = maskedValue[index] && !patternKeys.includes(maskedValue[index]);
+        if (isChangedSymbol) return prev + maskedValue[index];
+      }
+      return prev;
+    }, '');
+
+    maskData.current = getMaskData(changedSymbols, mask, pattern, showMask, breakSymbols);
+
+    const range: Range = [0, maskData.current.ast.length];
+    changeData.current = getChangeData(maskData.current, range, changedSymbols);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const maskingEvent = masking();

@@ -41,7 +41,7 @@ function getReplaceableSymbolIndex(value: string[], patternKeys: string[], posit
  * @param pattern шаблон ввода из `props`
  * @returns шаблон ввода в виде объекта
  */
-export function getPattern(pattern: string | Pattern) {
+export function convertToPattern(pattern: string | Pattern) {
   return typeof pattern === 'string' ? { [pattern]: /./ } : pattern;
 }
 

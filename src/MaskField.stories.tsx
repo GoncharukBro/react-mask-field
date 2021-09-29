@@ -44,6 +44,9 @@ export const UncontrolledMaskFieldAny: ComponentStory<typeof MaskFieldComponent>
         pattern={{ _: /\d/ }}
         showMask
         break
+        onChange={(event) => {
+          // console.log(event.target.value);
+        }}
       />
     </Form>
   );

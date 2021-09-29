@@ -32,7 +32,7 @@ interface UseErrorParams {
 export default function useError({ maskedValue, mask, pattern }: UseErrorParams) {
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') {
-      const isLong = maskedValue?.length > mask.length;
+      const isLong = maskedValue.length > mask.length;
       const invalidPatternKeys = Object.keys(pattern).filter((key) => key.length > 1);
       const patternKeys = Object.keys(pattern);
       const invalidSymbolIndex = mask
@@ -49,7 +49,7 @@ export default function useError({ maskedValue, mask, pattern }: UseErrorParams)
         });
 
       // Валидируем символы
-      if (invalidSymbolIndex !== undefined) {
+      if (invalidSymbolIndex !== -1) {
         const message = `An invalid character was found in the initialized property value \`value\` or \`defaultValue\` (index: ${invalidSymbolIndex}). Check the correctness of the initialized value in the specified property.
 
 Invalid value: "${maskedValue}".

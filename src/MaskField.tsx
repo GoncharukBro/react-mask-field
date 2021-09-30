@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, forwardRef } from 'react';
+import { useEffect, useRef, useMemo, useCallback, forwardRef } from 'react';
 import PropTypes from 'prop-types';
 import {
   convertToPattern,
@@ -50,8 +50,6 @@ const MaskFieldComponent = (
     validatePattern = false,
     modify,
     onMasking,
-    // Свойство `defaultValue` не должно быть передано дальше в `props`,
-    // так как компонент всегда использует свойство `value`
     defaultValue,
     value,
     onChange,
@@ -66,16 +64,21 @@ const MaskFieldComponent = (
   let showMask = showMaskProps;
   let breakSymbols = breakSymbolsProps;
 
+  const initialValue = useMemo(() => {
+    return value === undefined ? defaultValue?.toString() || '' : value;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // eslint-disable-next-line no-shadow
+  const stringifiedPattern = JSON.stringify(pattern, (key, value) => {
+    return value instanceof RegExp ? value.toString() : value;
+  });
+
   const inputElement = useRef<HTMLInputElement | null>(null);
   const maskData = useRef<MaskData | null>(null);
   const changeData = useRef<ChangeData | null>(null);
   const selection = useRef<Selection>({ cachedRequestID: -1, requestID: -1, start: 0, end: 0 });
 
-  const [maskedValue, setMaskedValue] = useState(() => {
-    return value === undefined ? defaultValue?.toString() || '' : value;
-  });
-
-  useError({ maskedValue, mask, pattern });
+  useError({ initialValue, mask, pattern });
 
   const masking = () => {
     // Восстанавливаем значение элемента в случае ошибок
@@ -161,9 +164,6 @@ const MaskFieldComponent = (
     const position = getCursorPosition(currentInputType, changeData.current, maskData.current);
     setCursorPosition(inputElement.current, position);
 
-    // Не меняем локальное состояние при контролируемом компоненте
-    if (value === undefined) setMaskedValue(maskData.current.value);
-
     inputElement.current.value = maskData.current.value;
     inputElement.current.selectionStart = position;
     inputElement.current.selectionEnd = position;
@@ -187,13 +187,12 @@ const MaskFieldComponent = (
 
   useEffect(() => {
     const patternKeys = Object.keys(pattern);
-
     // Выбираем из маскированного значения все пользовательские символы
     // методом определения ключей паттерна и наличием на их месте отличающегося символа
     const changedSymbols = mask.split('').reduce((prev, symbol, index) => {
       if (patternKeys.includes(symbol)) {
-        const isChangedSymbol = maskedValue[index] && !patternKeys.includes(maskedValue[index]);
-        if (isChangedSymbol) return prev + maskedValue[index];
+        const isChangedSymbol = initialValue[index] && !patternKeys.includes(initialValue[index]);
+        if (isChangedSymbol) return prev + initialValue[index];
       }
       return prev;
     }, '');
@@ -204,6 +203,11 @@ const MaskFieldComponent = (
     changeData.current = getChangeData(maskData.current, range, changedSymbols);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const maskingEvent = masking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mask, stringifiedPattern, showMask, breakSymbols]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const maskingEvent = masking();
@@ -242,11 +246,12 @@ const MaskFieldComponent = (
 
   const inputProps = {
     ref: setRef,
-    value: value === undefined ? maskedValue : value,
-    pattern: validatePattern ? maskData.current?.inputPattern : undefined,
     onChange: handleChange,
     onFocus: handleFocus,
     onBlur: handleBlur,
+    ...(defaultValue !== undefined ? { defaultValue } : undefined),
+    ...(value !== undefined ? { value } : undefined),
+    ...(validatePattern ? { pattern: maskData.current?.inputPattern } : undefined),
     ...other,
   };
 

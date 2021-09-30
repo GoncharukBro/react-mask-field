@@ -16,7 +16,7 @@ class SyntaxError extends Error {
 }
 
 interface UseErrorParams {
-  maskedValue: string;
+  initialValue: string;
   mask: string;
   pattern: Pattern;
 }
@@ -25,34 +25,34 @@ interface UseErrorParams {
  * Выводит в консоль сообщения об ошибках.
  * Сообщения выводятся один раз при монтировании компонента
  * @param param
- * @param param.maskedValue
+ * @param param.initialValue
  * @param param.mask
  * @param param.pattern
  */
-export default function useError({ maskedValue, mask, pattern }: UseErrorParams) {
+export default function useError({ initialValue, mask, pattern }: UseErrorParams) {
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') {
-      const isLong = maskedValue.length > mask.length;
+      const isLong = initialValue.length > mask.length;
       const invalidPatternKeys = Object.keys(pattern).filter((key) => key.length > 1);
       const patternKeys = Object.keys(pattern);
       const invalidSymbolIndex = mask
-        .slice(0, maskedValue.length)
+        .slice(0, initialValue.length)
         .split('')
         .findIndex((symbol, index) => {
           if (patternKeys.includes(symbol)) {
-            if (maskedValue[index] !== symbol) {
-              return !pattern[symbol].test(maskedValue[index]);
+            if (initialValue[index] !== symbol) {
+              return !pattern[symbol].test(initialValue[index]);
             }
             return false;
           }
-          return symbol !== maskedValue[index];
+          return symbol !== initialValue[index];
         });
 
       // Валидируем символы
       if (invalidSymbolIndex !== -1) {
         const message = `An invalid character was found in the initialized property value \`value\` or \`defaultValue\` (index: ${invalidSymbolIndex}). Check the correctness of the initialized value in the specified property.
 
-Invalid value: "${maskedValue}".
+Invalid value: "${initialValue}".
 `;
         // eslint-disable-next-line no-console
         console.error(new ValidationError(message));
@@ -62,7 +62,7 @@ Invalid value: "${maskedValue}".
       if (isLong) {
         const message = `The initialized value of the \`value\` or \`defaultValue\` property is longer than the value specified in the \`mask\` property. Check the correctness of the initialized value in the specified property.
 
-Invalid value: "${maskedValue}".
+Invalid value: "${initialValue}".
 `;
         // eslint-disable-next-line no-console
         console.error(new ValidationError(message));

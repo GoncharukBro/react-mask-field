@@ -1,4 +1,4 @@
-import { useState, forwardRef } from 'react';
+import { useState, useRef, forwardRef } from 'react';
 import type { ComponentStory, Meta } from '@storybook/react';
 import MaskFieldComponent from '.';
 import type { MaskFieldProps, ModifiedData } from '.';
@@ -36,18 +36,30 @@ export default {
  *
  */
 export const UncontrolledMaskFieldAny: ComponentStory<typeof MaskFieldComponent> = (args) => {
+  const [mask, setMask] = useState('+_ (___) ___-__-__');
+
   return (
     <Form>
       <MaskFieldComponent
         {...args}
-        mask="+_ (___) ___-__-__"
+        mask={mask}
         pattern={{ _: /\d/ }}
         showMask
         break
+        validatePattern
         onChange={(event) => {
           // console.log(event.target.value);
         }}
       />
+
+      <button
+        type="button"
+        onClick={() => {
+          setMask('___-___');
+        }}
+      >
+        Поменять ref
+      </button>
     </Form>
   );
 };

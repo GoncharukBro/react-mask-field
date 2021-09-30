@@ -8,7 +8,7 @@ import {
   setCursorPosition,
 } from './utils';
 import useError from './useError';
-import type { Pattern, Selection, Range, ChangeData, MaskData } from './types';
+import type { Pattern, Selection, SelectionRange, ChangeData, MaskData } from './types';
 
 export interface MaskingEvent<
   T = HTMLInputElement,
@@ -118,30 +118,28 @@ const MaskFieldComponent = (
     }
 
     if (currentInputType === 'insert') {
-      // Находим добавленные символы
       const addedSymbols = currentValue.slice(selection.current.start, currentPosition);
-      // Определяем диапозон изменяемых символов
-      const range: Range = [selection.current.start, selection.current.end];
-      // Получаем информацию о пользовательском значении
-      changeData.current = getChangeData(maskData.current, range, addedSymbols);
+      const selectionRange: SelectionRange = [selection.current.start, selection.current.end];
 
-      // Если нет добавленных символов, устанавливаем позицию курсора и завершаем выпонение функции
+      changeData.current = getChangeData(maskData.current, selectionRange, addedSymbols);
+
       if (!changeData.current.added) {
         const position = getCursorPosition(currentInputType, changeData.current, maskData.current);
         setCursorPosition(inputElement.current, position);
         return reset();
       }
     } else if (currentInputType === 'delete' || currentInputType === 'deleteForward') {
-      // Подсчитываем количество удаленных символов
       const countDeletedSymbols = maskData.current.value.length - currentValue.length;
-      // Определяем диапозон изменяемых символов
-      const range: Range = [currentPosition, currentPosition + countDeletedSymbols];
-      // Получаем информацию о пользовательском значении
-      changeData.current = getChangeData(maskData.current, range, '');
+      const selectionRange: SelectionRange = [
+        currentPosition,
+        currentPosition + countDeletedSymbols,
+      ];
+
+      changeData.current = getChangeData(maskData.current, selectionRange, '');
     }
 
     // Модифицируем свойства компонента, если задан `modify`
-    if (modify) {
+    if (modify !== undefined) {
       const modifiedData = modify({
         value: changeData.current.value,
         mask,
@@ -189,18 +187,18 @@ const MaskFieldComponent = (
     const patternKeys = Object.keys(pattern);
     // Выбираем из маскированного значения все пользовательские символы
     // методом определения ключей паттерна и наличием на их месте отличающегося символа
-    const changedSymbols = mask.split('').reduce((prev, symbol, index) => {
+    const unmaskedValue = mask.split('').reduce((prev, symbol, index) => {
       if (patternKeys.includes(symbol)) {
-        const isChangedSymbol = initialValue[index] && !patternKeys.includes(initialValue[index]);
+        const isChangedSymbol = !!initialValue[index] && !patternKeys.includes(initialValue[index]);
         if (isChangedSymbol) return prev + initialValue[index];
       }
       return prev;
     }, '');
 
-    maskData.current = getMaskData(changedSymbols, mask, pattern, showMask, breakSymbols);
+    maskData.current = getMaskData(unmaskedValue, mask, pattern, showMask, breakSymbols);
 
-    const range: Range = [0, maskData.current.ast.length];
-    changeData.current = getChangeData(maskData.current, range, changedSymbols);
+    const selectionRange: SelectionRange = [0, maskData.current.ast.length];
+    changeData.current = getChangeData(maskData.current, selectionRange, unmaskedValue);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -211,7 +209,7 @@ const MaskFieldComponent = (
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const maskingEvent = masking();
-    if (maskingEvent) onChange?.(event);
+    if (maskingEvent !== undefined) onChange?.(event);
   };
 
   const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {

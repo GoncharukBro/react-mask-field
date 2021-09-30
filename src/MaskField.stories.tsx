@@ -101,10 +101,10 @@ UncontrolledMaskFieldDate.args = {};
  *
  */
 export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (args) => {
-  const [data, setData] = useState({ maskedValue: '', value: '', pattern: '' });
+  const [data, setData] = useState({ maskedValue: '', pattern: '' });
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
-    setData({ maskedValue: event.target.value, value, pattern: event.target.pattern });
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setData({ maskedValue: event.target.value, pattern: event.target.pattern });
   };
 
   return (
@@ -134,15 +134,13 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
 export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComponent> = (args) => {
   const [data, setData] = useState({
     maskedValue: '',
-    value: '',
     pattern: '',
     selection: { start: 0, end: 0 },
   });
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setData({
       maskedValue: event.target.value,
-      value,
       pattern: event.target.pattern,
       selection: { start: event.target.selectionStart, end: event.target.selectionEnd },
     });
@@ -199,10 +197,10 @@ const CustomComponent = forwardRef(
 );
 
 export const MaskFieldWithCustomComponent: ComponentStory<typeof MaskFieldComponent> = (args) => {
-  const [data, setData] = useState({ maskedValue: '', value: '', pattern: '' });
+  const [data, setData] = useState({ maskedValue: '', pattern: '' });
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
-    setData({ maskedValue: event.target.value, value, pattern: event.target.pattern });
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setData({ maskedValue: event.target.value, pattern: event.target.pattern });
   };
 
   return (

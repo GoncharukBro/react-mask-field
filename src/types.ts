@@ -9,7 +9,7 @@ export type Selection = {
   end: number;
 };
 
-export type Range = [number, number];
+export type SelectionRange = [number, number];
 
 export type AST = Array<{
   symbol: string;
@@ -29,7 +29,7 @@ export interface MaskData {
   mask: string;
   pattern: Pattern;
   showMask: boolean;
-  breakSymbols: boolean;
+  break: boolean;
   ast: AST;
   inputPattern: string;
 }

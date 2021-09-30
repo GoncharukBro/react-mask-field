@@ -1,4 +1,4 @@
-import type { Pattern, Range, AST, ChangeData, MaskData } from './types';
+import type { Pattern, SelectionRange, AST, ChangeData, MaskData } from './types';
 
 // Находим первый символ в пользовательском значении
 function getFirstChangedSymbol(ast: AST) {
@@ -26,7 +26,10 @@ function getFirstAfterRangeSymbol(
   lastAddedSymbol: ReturnType<typeof getLastAddedSymbol>
 ) {
   const changedSymbols = ast.filter(({ own }) => own === 'change');
-  return lastAddedSymbol && changedSymbols.find((symbol) => lastAddedSymbol.index < symbol.index);
+  if (lastAddedSymbol !== undefined) {
+    return changedSymbols.find((symbol) => lastAddedSymbol.index < symbol.index);
+  }
+  return undefined;
 }
 
 // Находим индекс заменяемого символа маски
@@ -57,7 +60,7 @@ export function convertToPattern(pattern: string | Pattern) {
  * @returns позиция курсора
  */
 export function getCursorPosition(inputType: string, changeData: ChangeData, maskData: MaskData) {
-  const { value, pattern, showMask, breakSymbols, ast } = maskData;
+  const { value, pattern, showMask, break: breakSymbols, ast } = maskData;
   const { beforeRange, afterRange } = changeData;
 
   const isBreak = showMask && breakSymbols;
@@ -70,27 +73,27 @@ export function getCursorPosition(inputType: string, changeData: ChangeData, mas
     }
 
     const lastAddedSymbol = getLastAddedSymbol(ast, changeData, isBreak);
-    if (lastAddedSymbol) return lastAddedSymbol.index + 1;
+    if (lastAddedSymbol !== undefined) return lastAddedSymbol.index + 1;
   }
 
   // 1. Действие в начале строки
   if (!beforeRange && afterRange) {
     const lastAddedSymbol = getLastAddedSymbol(ast, changeData);
-    if (lastAddedSymbol) return lastAddedSymbol.index + 1;
+    if (lastAddedSymbol !== undefined) return lastAddedSymbol.index + 1;
 
     const firstChangedSymbol = getFirstChangedSymbol(ast);
-    if (firstChangedSymbol) return firstChangedSymbol.index;
+    if (firstChangedSymbol !== undefined) return firstChangedSymbol.index;
   }
 
   // 2. Действие в середине строки
   if (beforeRange && afterRange) {
     const lastAddedSymbol = getLastAddedSymbol(ast, changeData);
 
-    if (lastAddedSymbol) {
+    if (lastAddedSymbol !== undefined) {
       // При событии "delete" (не "backspace"), возвращаем индекс первого, после добавленного, символа
       if (inputType === 'deleteForward') {
         const firstAfterRangeSymbol = getFirstAfterRangeSymbol(ast, lastAddedSymbol);
-        if (firstAfterRangeSymbol) return firstAfterRangeSymbol.index;
+        if (firstAfterRangeSymbol !== undefined) return firstAfterRangeSymbol.index;
       }
 
       return lastAddedSymbol.index + 1;
@@ -100,7 +103,7 @@ export function getCursorPosition(inputType: string, changeData: ChangeData, mas
   // 3. Действие в конце строки
   if (!afterRange) {
     const lastChangedSymbol = getLastChangedSymbol(ast);
-    if (lastChangedSymbol) return lastChangedSymbol.index + 1;
+    if (lastChangedSymbol !== undefined) return lastChangedSymbol.index + 1;
   }
 
   // Если предыдущие условия не выполнены возвращаем индекс первого заменяемого символа маски
@@ -141,14 +144,14 @@ function generateInputPattern(mask: string, pattern: Pattern) {
 
 /**
  * Получаем данные маскированного значения
- * @param changedSymbols пользовательские символы (без учета символов маски)
+ * @param unmaskedValue пользовательские символы (без учета символов маски)
  * @param mask маска
  * @param pattern шаблон ввода
  * @param showMask атрибут определяющий, стоит ли показывать маску полностью
  * @returns объект с данными маскированного значение
  */
 export function getMaskData(
-  changedSymbols: string,
+  unmaskedValue: string,
   mask: string,
   pattern: Pattern,
   showMask: boolean,
@@ -158,7 +161,7 @@ export function getMaskData(
   const patternKeys = Object.keys(pattern);
   let position = 0;
 
-  changedSymbols.split('').forEach((symbol) => {
+  unmaskedValue.split('').forEach((symbol) => {
     const replaceableSymbolIndex = getReplaceableSymbolIndex(maskSymbols, patternKeys, position);
     // Если символ пользователя соответствует значению шаблона обновляем `maskSymbols`
     if (replaceableSymbolIndex !== -1) {
@@ -190,12 +193,12 @@ export function getMaskData(
   // Если `showMask === false`, обрезаем значение по последний пользовательский символ
   if (value && !showMask) {
     const lastChangedSymbol = getLastChangedSymbol(ast);
-    value = value.slice(0, lastChangedSymbol ? lastChangedSymbol.index + 1 : 0);
+    value = value.slice(0, lastChangedSymbol !== undefined ? lastChangedSymbol.index + 1 : 0);
   }
 
   const inputPattern = generateInputPattern(mask, pattern);
 
-  return { value, mask, pattern, showMask, breakSymbols, ast, inputPattern };
+  return { value, mask, pattern, showMask, break: breakSymbols, ast, inputPattern };
 }
 
 // Фильтруем символы для соответствия значениям паттерна
@@ -227,12 +230,16 @@ function filterSymbols(
  * функция выявляет значение до диапазона изменяемых символов и после него. Сам диапазон заменяется
  * символами пользовательского ввода (при событии `insert`) или пустой строкой (при событии `delete`).
  * @param maskData объект с данными маскированного значения
- * @param range диапозон изменяемых символов
+ * @param selectionRange диапозон изменяемых символов
  * @param added добавленные символы в строку (при событии `insert`)
  * @returns объект содержащий информацию о пользовательском значении
  */
-export function getChangeData(maskData: MaskData, range: Range, added: string): ChangeData {
-  const isBreak = maskData.showMask && maskData.breakSymbols;
+export function getChangeData(
+  maskData: MaskData,
+  selectionRange: SelectionRange,
+  added: string
+): ChangeData {
+  const isBreak = maskData.showMask && maskData.break;
 
   let addedSymbols = added;
   let beforeRange = '';
@@ -241,8 +248,8 @@ export function getChangeData(maskData: MaskData, range: Range, added: string): 
   // Определяем символы до и после диапозона изменяемых символов
   maskData.ast.forEach(({ symbol, own }, index) => {
     if (isBreak ? own === 'change' || own === 'pattern' : own === 'change') {
-      if (index < range[0]) beforeRange += symbol;
-      else if (index >= range[1]) afterRange += symbol;
+      if (index < selectionRange[0]) beforeRange += symbol;
+      else if (index >= selectionRange[1]) afterRange += symbol;
     }
   });
 
@@ -266,10 +273,10 @@ export function getChangeData(maskData: MaskData, range: Range, added: string): 
   if (isBreak) {
     // Находим заменяемые символы в диапозоне изменяемых символов
     const breakSymbols = maskData.mask.split('').reduce((prev, symbol, index) => {
-      const isRange = index >= range[0] && index < range[1];
+      const isSelectionRange = index >= selectionRange[0] && index < selectionRange[1];
       const isPatternKey = patternKeys.includes(symbol);
 
-      return isRange && isPatternKey ? prev + symbol : prev;
+      return isSelectionRange && isPatternKey ? prev + symbol : prev;
     }, '');
 
     // Количество символов для сохранения перед `afterRange` при `break === true`.

@@ -18,7 +18,7 @@ interface UseInitialStateParam {
  * @param param.pattern
  * @param param.showMask
  * @param param.break
- * @returns
+ * @returns объект с начальным состоянием `maskData` и `changeData`
  */
 export default function useInitialState({
   initialValue,

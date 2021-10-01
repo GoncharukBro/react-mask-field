@@ -65,16 +65,19 @@ const MaskFieldComponent = (
   let showMask = showMaskProps;
   let breakSymbols = breakSymbolsProps;
 
+  // Преобразовываем паттерн в строку для сравнения с зависимостью в `useEffect`
   // eslint-disable-next-line no-shadow
   const stringifiedPattern = JSON.stringify(pattern, (key, value) => {
     return value instanceof RegExp ? value.toString() : value;
   });
 
   const initialValue = useMemo(() => {
-    return value === undefined ? defaultValue?.toString() || '' : value;
+    return value !== undefined ? value : defaultValue?.toString() || '';
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Возвращаем данные для инициализации состояния,
+  // используется только при монтировании компонента
   const { initialMaskData, initialChangeData } = useInitialState({
     initialValue,
     mask,
@@ -85,6 +88,7 @@ const MaskFieldComponent = (
 
   useError({ initialValue, mask, pattern });
 
+  const isFirstRender = useRef(false);
   const inputElement = useRef<HTMLInputElement | null>(null);
   const maskData = useRef<MaskData>(initialMaskData);
   const changeData = useRef<ChangeData>(initialChangeData);
@@ -192,9 +196,11 @@ const MaskFieldComponent = (
   };
 
   useEffect(() => {
-    const maskingEvent = masking();
-    if (maskingEvent !== undefined) {
-      onMasking?.(maskingEvent);
+    if (isFirstRender.current) {
+      const maskingEvent = masking();
+      if (maskingEvent !== undefined) onMasking?.(maskingEvent);
+    } else {
+      isFirstRender.current = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mask, stringifiedPattern, showMask, breakSymbols]);

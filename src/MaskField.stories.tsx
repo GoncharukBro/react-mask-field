@@ -37,30 +37,36 @@ export default {
  */
 export const UncontrolledMaskFieldAny: ComponentStory<typeof MaskFieldComponent> = (args) => {
   const [mask, setMask] = useState('+_ (___) ___-__-__');
+  const [value, setValue] = useState('');
 
   return (
-    <Form>
-      <MaskFieldComponent
-        {...args}
-        mask={mask}
-        pattern={{ _: /\d/ }}
-        showMask
-        break
-        validatePattern
-        onChange={(event) => {
-          // console.log(event.target.value);
-        }}
-      />
+    <>
+      <Form>
+        <MaskFieldComponent
+          {...args}
+          mask={mask}
+          pattern={{ _: /\d/ }}
+          showMask
+          break
+          validatePattern
+          value={value}
+          onChange={(event) => {
+            setValue(event.target.value);
+          }}
+        />
 
-      <button
-        type="button"
-        onClick={() => {
-          setMask('___-___');
-        }}
-      >
-        Поменять ref
-      </button>
-    </Form>
+        <button
+          type="button"
+          onClick={() => {
+            setMask('___-___');
+          }}
+        >
+          Поменять ref
+        </button>
+      </Form>
+
+      <pre>{value}</pre>
+    </>
   );
 };
 

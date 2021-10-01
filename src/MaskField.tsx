@@ -7,6 +7,7 @@ import {
   getCursorPosition,
   setCursorPosition,
 } from './utils';
+import useInitialState from './useInitialState';
 import useError from './useError';
 import type { Pattern, Selection, SelectionRange, ChangeData, MaskData } from './types';
 
@@ -64,34 +65,41 @@ const MaskFieldComponent = (
   let showMask = showMaskProps;
   let breakSymbols = breakSymbolsProps;
 
-  const initialValue = useMemo(() => {
-    return value === undefined ? defaultValue?.toString() || '' : value;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
   // eslint-disable-next-line no-shadow
   const stringifiedPattern = JSON.stringify(pattern, (key, value) => {
     return value instanceof RegExp ? value.toString() : value;
   });
 
-  const inputElement = useRef<HTMLInputElement | null>(null);
-  const maskData = useRef<MaskData | null>(null);
-  const changeData = useRef<ChangeData | null>(null);
-  const selection = useRef<Selection>({ cachedRequestID: -1, requestID: -1, start: 0, end: 0 });
+  const initialValue = useMemo(() => {
+    return value === undefined ? defaultValue?.toString() || '' : value;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const { initialMaskData, initialChangeData } = useInitialState({
+    initialValue,
+    mask,
+    pattern,
+    showMask,
+    break: breakSymbols,
+  });
 
   useError({ initialValue, mask, pattern });
+
+  const inputElement = useRef<HTMLInputElement | null>(null);
+  const maskData = useRef<MaskData>(initialMaskData);
+  const changeData = useRef<ChangeData>(initialChangeData);
+  const selection = useRef<Selection>({ cachedRequestID: -1, requestID: -1, start: 0, end: 0 });
 
   const masking = () => {
     // Восстанавливаем значение элемента в случае ошибок
     const reset = () => {
       if (inputElement.current !== null) {
-        inputElement.current.value = maskData.current?.value || '';
+        inputElement.current.value = maskData.current.value || '';
       }
       return undefined;
     };
 
     if (inputElement.current === null) return reset();
-    if (maskData.current === null) return reset();
-    if (changeData.current === null) return reset();
 
     // Если событие вызывается слишком часто, смена курсора может не поспеть за новым событием,
     // поэтому сравниваем `requestID` кэшированный и текущий для избежания некорректного поведения маски
@@ -184,32 +192,19 @@ const MaskFieldComponent = (
   };
 
   useEffect(() => {
-    const patternKeys = Object.keys(pattern);
-    // Выбираем из маскированного значения все пользовательские символы
-    // методом определения ключей паттерна и наличием на их месте отличающегося символа
-    const unmaskedValue = mask.split('').reduce((prev, symbol, index) => {
-      if (patternKeys.includes(symbol)) {
-        const isChangedSymbol = !!initialValue[index] && !patternKeys.includes(initialValue[index]);
-        if (isChangedSymbol) return prev + initialValue[index];
-      }
-      return prev;
-    }, '');
-
-    maskData.current = getMaskData(unmaskedValue, mask, pattern, showMask, breakSymbols);
-
-    const selectionRange: SelectionRange = [0, maskData.current.ast.length];
-    changeData.current = getChangeData(maskData.current, selectionRange, unmaskedValue);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     const maskingEvent = masking();
+    if (maskingEvent !== undefined) {
+      onMasking?.(maskingEvent);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mask, stringifiedPattern, showMask, breakSymbols]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const maskingEvent = masking();
-    if (maskingEvent !== undefined) onChange?.(event);
+    if (maskingEvent !== undefined) {
+      onMasking?.(maskingEvent);
+      onChange?.(event);
+    }
   };
 
   const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
@@ -249,7 +244,7 @@ const MaskFieldComponent = (
     onBlur: handleBlur,
     ...(defaultValue !== undefined ? { defaultValue } : undefined),
     ...(value !== undefined ? { value } : undefined),
-    ...(validatePattern ? { pattern: maskData.current?.inputPattern } : undefined),
+    ...(validatePattern ? { pattern: maskData.current.inputPattern } : undefined),
     ...other,
   };
 
@@ -272,6 +267,7 @@ MaskField.propTypes = {
   break: PropTypes.bool,
   validatePattern: PropTypes.bool,
   modify: PropTypes.func,
+  onMasking: PropTypes.func,
 };
 
 export default MaskField;

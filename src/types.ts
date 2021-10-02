@@ -29,7 +29,7 @@ export interface MaskData {
   mask: string;
   replacement: Replacement;
   showMask: boolean;
-  break: boolean;
+  separate: boolean;
   ast: AST;
   pattern: string;
 }

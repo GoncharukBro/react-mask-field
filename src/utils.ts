@@ -12,9 +12,9 @@ function getLastChangedSymbol(ast: AST) {
 }
 
 // Находим последний добавленный пользователем символ
-function getLastAddedSymbol(ast: AST, changeData: ChangeData, isBreak?: boolean) {
+function getLastAddedSymbol(ast: AST, changeData: ChangeData, isSeparate?: boolean) {
   const changedSymbols = ast.filter(({ own }) => {
-    return isBreak ? own === 'change' || own === 'replacement' : own === 'change';
+    return isSeparate ? own === 'change' || own === 'replacement' : own === 'change';
   });
   const length = changeData.beforeRange.length + changeData.added.length;
   return changedSymbols.find((symbol, index) => length === index + 1);
@@ -60,19 +60,19 @@ export function convertToReplacementObject(replacement: string | Replacement) {
  * @returns позиция курсора
  */
 export function getCursorPosition(inputType: string, changeData: ChangeData, maskData: MaskData) {
-  const { value, replacement, showMask, break: breakSymbols, ast } = maskData;
+  const { value, replacement, showMask, separate, ast } = maskData;
   const { beforeRange, afterRange } = changeData;
 
-  const isBreak = showMask && breakSymbols;
+  const isSeparate = showMask && separate;
 
-  if (isBreak) {
+  if (isSeparate) {
     if (!beforeRange) {
       const replacementKeys = Object.keys(replacement);
       const replaceableSymbolIndex = getReplaceableSymbolIndex(value.split(''), replacementKeys);
       if (replaceableSymbolIndex !== -1) return replaceableSymbolIndex;
     }
 
-    const lastAddedSymbol = getLastAddedSymbol(ast, changeData, isBreak);
+    const lastAddedSymbol = getLastAddedSymbol(ast, changeData, isSeparate);
     if (lastAddedSymbol !== undefined) return lastAddedSymbol.index + 1;
   }
 
@@ -125,12 +125,12 @@ export function setCursorPosition(inputElement: HTMLInputElement, position: numb
 }
 
 // Формируем регулярное выражение для паттерна в `input`
-function generatePattern(mask: string, replacement: Replacement) {
+function generatePattern(mask: string, replacement: Replacement, disableReplacementKey?: boolean) {
   const special = ['[', ']', '\\', '/', '^', '$', '.', '|', '?', '*', '+', '(', ')', '{', '}'];
   const replacementKeys = Object.keys(replacement);
 
   return mask.split('').reduce((prev, item) => {
-    const lookahead = `(?!${item})`;
+    const lookahead = disableReplacementKey ? `(?!${item})` : '';
 
     const symbol = replacementKeys.includes(item)
       ? lookahead + replacement[item].toString().slice(1, -1)
@@ -155,7 +155,7 @@ export function getMaskData(
   mask: string,
   replacement: Replacement,
   showMask: boolean,
-  breakSymbols: boolean
+  separate: boolean
 ): MaskData {
   const maskSymbols = mask.split('');
   const replacementKeys = Object.keys(replacement);
@@ -170,7 +170,7 @@ export function getMaskData(
     // Если символ пользователя соответствует значению шаблона обновляем `maskSymbols`
     if (replaceableSymbolIndex !== -1) {
       maskSymbols[replaceableSymbolIndex] = symbol;
-      // Позиция позволяет не учитывать заменяемые символы при `break === true`,
+      // Позиция позволяет не учитывать заменяемые символы при `separate === true`,
       // в остальных случаях помогает более быстро находить индекс символа
       position = replaceableSymbolIndex + 1;
     }
@@ -202,7 +202,7 @@ export function getMaskData(
 
   const pattern = generatePattern(mask, replacement);
 
-  return { value, mask, replacement, showMask, break: breakSymbols, ast, pattern };
+  return { value, mask, replacement, showMask, separate, ast, pattern };
 }
 
 // Фильтруем символы для соответствия значениям паттерна
@@ -211,7 +211,7 @@ function filterSymbols(
   replacement: Replacement,
   replacementKeys: string[],
   replaceableSymbols: string,
-  isBreak?: boolean
+  isSeparate?: boolean
 ) {
   let symbols = replaceableSymbols;
 
@@ -221,7 +221,7 @@ function filterSymbols(
     const isReplacementKey = replacementKeys.includes(symbol);
     const isCorrectSymbol = replacement[symbols[0]]?.test(symbol);
 
-    if (isBreak ? isReplacementKey || isCorrectSymbol : !isReplacementKey && isCorrectSymbol) {
+    if (isSeparate ? isReplacementKey || isCorrectSymbol : !isReplacementKey && isCorrectSymbol) {
       symbols = symbols.slice(1);
       return prev + symbol;
     }
@@ -243,7 +243,7 @@ export function getChangeData(
   selectionRange: SelectionRange,
   added: string
 ): ChangeData {
-  const isBreak = maskData.showMask && maskData.break;
+  const isSeparate = maskData.showMask && maskData.separate;
 
   let addedSymbols = added;
   let beforeRange = '';
@@ -251,7 +251,7 @@ export function getChangeData(
 
   // Определяем символы до и после диапозона изменяемых символов
   maskData.ast.forEach(({ symbol, own }, index) => {
-    if (isBreak ? own === 'change' || own === 'replacement' : own === 'change') {
+    if (isSeparate ? own === 'change' || own === 'replacement' : own === 'change') {
       if (index < selectionRange[0]) beforeRange += symbol;
       else if (index >= selectionRange[1]) afterRange += symbol;
     }
@@ -279,24 +279,24 @@ export function getChangeData(
   }
 
   // Изменяем `afterRange` чтобы позиция символов не смещалась (обязательно перед фильтрацией).
-  if (isBreak) {
+  if (isSeparate) {
     // Находим заменяемые символы в диапозоне изменяемых символов
-    const breakSymbols = maskData.mask.split('').reduce((prev, symbol, index) => {
+    const separateSymbols = maskData.mask.split('').reduce((prev, symbol, index) => {
       const isSelectionRange = index >= selectionRange[0] && index < selectionRange[1];
       const isReplacementKey = replacementKeys.includes(symbol);
 
       return isSelectionRange && isReplacementKey ? prev + symbol : prev;
     }, '');
 
-    // Количество символов для сохранения перед `afterRange` при `break === true`.
+    // Количество символов для сохранения перед `afterRange` при `separate === true`.
     // Возможны значения: меньше ноля - обрезаем значение с начала на количество символов,
     // ноль - не меняем значение и больше ноля - добавляем к началу значения заменяемые символы
-    const countBreakSymbols = breakSymbols.length - addedSymbols.length;
+    const countSeparateSymbols = separateSymbols.length - addedSymbols.length;
 
-    if (countBreakSymbols < 0) {
-      afterRange = afterRange.slice(-countBreakSymbols);
-    } else if (countBreakSymbols > 0) {
-      afterRange = breakSymbols.slice(-countBreakSymbols) + afterRange;
+    if (countSeparateSymbols < 0) {
+      afterRange = afterRange.slice(-countSeparateSymbols);
+    } else if (countSeparateSymbols > 0) {
+      afterRange = separateSymbols.slice(-countSeparateSymbols) + afterRange;
     }
   }
 
@@ -309,7 +309,7 @@ export function getChangeData(
       maskData.replacement,
       replacementKeys,
       replaceableSymbols,
-      isBreak
+      isSeparate
     );
   }
 

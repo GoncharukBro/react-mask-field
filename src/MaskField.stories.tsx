@@ -47,7 +47,7 @@ export const UncontrolledMaskFieldAny: ComponentStory<typeof MaskFieldComponent>
           mask={mask}
           replacement={{ _: /\d/ }}
           showMask
-          break
+          separate
           value={value}
           onChange={(event) => {
             setValue(event.target.value);
@@ -94,6 +94,9 @@ export const UncontrolledMaskFieldDate: ComponentStory<typeof MaskFieldComponent
       replacement={{ d: new RegExp('\\d'), m: /\d/, y: /\d/, D: /\D/ }}
       showMask
       placeholder="dd-Dm-yyDy"
+      onMasking={(event) => {
+        console.log(event.detail.pattern);
+      }}
     />
   </Form>
 );

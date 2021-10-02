@@ -21,7 +21,7 @@ export const TestProps = (args) => {
         mask={mask}
         replacement={{ _: /\d/ }}
         showMask
-        break
+        separate
         onChange={(event) => {
           // console.log(event.target.value);
         }}

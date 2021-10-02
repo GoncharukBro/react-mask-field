@@ -7,7 +7,7 @@ interface UseInitialStateParam {
   mask: string;
   replacement: Replacement;
   showMask: boolean;
-  break: boolean;
+  separate: boolean;
 }
 
 /**
@@ -17,7 +17,7 @@ interface UseInitialStateParam {
  * @param param.mask
  * @param param.replacement
  * @param param.showMask
- * @param param.break
+ * @param param.separate
  * @returns объект с начальным состоянием `maskData` и `changeData`
  */
 export default function useInitialState({
@@ -25,7 +25,7 @@ export default function useInitialState({
   mask,
   replacement,
   showMask,
-  break: breakSymbols,
+  separate,
 }: UseInitialStateParam) {
   return useMemo(() => {
     const replacementKeys = Object.keys(replacement);
@@ -40,7 +40,7 @@ export default function useInitialState({
       return prev;
     }, '');
 
-    const initialMaskData = getMaskData(unmaskedValue, mask, replacement, showMask, breakSymbols);
+    const initialMaskData = getMaskData(unmaskedValue, mask, replacement, showMask, separate);
 
     const selectionRange: SelectionRange = [0, initialMaskData.ast.length];
     const initialChangeData = getChangeData(initialMaskData, selectionRange, unmaskedValue);

@@ -113,17 +113,6 @@ export function getCursorPosition(inputType: string, changeData: ChangeData, mas
   return replaceableSymbolIndex !== -1 ? replaceableSymbolIndex : value.length;
 }
 
-/**
- * Применяем позиционирование курсора
- * @param inputElement html-элемент ввода
- * @param position позиция на которую нужно установить курсор
- */
-export function setCursorPosition(inputElement: HTMLInputElement, position: number) {
-  requestAnimationFrame(() => {
-    inputElement.setSelectionRange(position, position);
-  });
-}
-
 // Формируем регулярное выражение для паттерна в `input`
 function generatePattern(mask: string, replacement: Replacement, disableReplacementKey?: boolean) {
   const special = ['[', ']', '\\', '/', '^', '$', '.', '|', '?', '*', '+', '(', ')', '{', '}'];
@@ -159,6 +148,8 @@ export function getMaskData(
 ): MaskData {
   const maskSymbols = mask.split('');
   const replacementKeys = Object.keys(replacement);
+  // Позиция позволяет не учитывать заменяемые символы при `separate === true`,
+  // в остальных случаях помогает более быстро находить индекс символа
   let position = 0;
 
   unmaskedValue.split('').forEach((symbol) => {
@@ -167,11 +158,8 @@ export function getMaskData(
       replacementKeys,
       position
     );
-    // Если символ пользователя соответствует значению шаблона обновляем `maskSymbols`
     if (replaceableSymbolIndex !== -1) {
       maskSymbols[replaceableSymbolIndex] = symbol;
-      // Позиция позволяет не учитывать заменяемые символы при `separate === true`,
-      // в остальных случаях помогает более быстро находить индекс символа
       position = replaceableSymbolIndex + 1;
     }
   });
@@ -216,8 +204,6 @@ function filterSymbols(
   let symbols = replaceableSymbols;
 
   return value.split('').reduce((prev, symbol) => {
-    // Не учитываем символ равный ключам паттерна,
-    // а также символ не соответствующий текущему значению паттерна
     const isReplacementKey = replacementKeys.includes(symbol);
     const isCorrectSymbol = replacement[symbols[0]]?.test(symbol);
 
@@ -266,7 +252,7 @@ export function getChangeData(
   }, '');
 
   // Фильтруем добавленные символы на соответствие значениям паттерна.
-  // Поскольку нас интересуют только "полезные" символы, фильтуем без заменяемых символов
+  // Поскольку нас интересуют только "полезные" символы, фильтуем без учёта заменяемых символов
   replaceableSymbols = replaceableSymbols.slice(beforeRange.length);
 
   if (addedSymbols) {

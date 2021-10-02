@@ -1,12 +1,6 @@
 import { useEffect, useRef, useMemo, useCallback, forwardRef } from 'react';
 import PropTypes from 'prop-types';
-import {
-  convertToReplacementObject,
-  getChangeData,
-  getMaskData,
-  getCursorPosition,
-  setCursorPosition,
-} from './utils';
+import { convertToReplacementObject, getChangeData, getMaskData, getCursorPosition } from './utils';
 import useInitialState from './useInitialState';
 import useError from './useError';
 import type { Replacement, Selection, SelectionRange, ChangeData, MaskData } from './types';
@@ -92,11 +86,21 @@ const MaskFieldComponent = (
   const isFirstRender = useRef(false);
 
   const masking = () => {
-    // Восстанавливаем значение элемента в случае ошибок
-    const reset = () => {
+    // Устанавливаем стостояние элемента через ссылку
+    const setInputElementState = (maskedValue: string, cursorPosition: number) => {
       if (inputElement.current !== null) {
-        inputElement.current.value = maskData.current.value || '';
+        // Важно установить позицию курсора после установки значения,
+        // так как после установки значения, курсор автоматически уходит в конец значения
+        inputElement.current.value = maskedValue;
+        inputElement.current.setSelectionRange(cursorPosition, cursorPosition);
       }
+    };
+
+    // Восстанавливаем состояние элемента в случае ошибок
+    const reset = () => {
+      const position = getCursorPosition('', changeData.current, maskData.current);
+      setInputElementState(maskData.current.value, position);
+
       return undefined;
     };
 
@@ -132,11 +136,7 @@ const MaskFieldComponent = (
 
       changeData.current = getChangeData(maskData.current, selectionRange, addedSymbols);
 
-      if (!changeData.current.added) {
-        const position = getCursorPosition(currentInputType, changeData.current, maskData.current);
-        setCursorPosition(inputElement.current, position);
-        return reset();
-      }
+      if (!changeData.current.added) return reset();
     } else if (currentInputType === 'delete' || currentInputType === 'deleteForward') {
       const countDeletedSymbols = maskData.current.value.length - currentValue.length;
       const selectionRange: SelectionRange = [
@@ -165,16 +165,10 @@ const MaskFieldComponent = (
       if (modifiedData?.separate !== undefined) separate = modifiedData.separate;
     }
 
-    // Формируем данные маскированного значения
     maskData.current = getMaskData(changeData.current.value, mask, replacement, showMask, separate);
-
-    // Устанавливаем позицию курсора курсор
     const position = getCursorPosition(currentInputType, changeData.current, maskData.current);
-    setCursorPosition(inputElement.current, position);
 
-    inputElement.current.value = maskData.current.value;
-    inputElement.current.selectionStart = position;
-    inputElement.current.selectionEnd = position;
+    setInputElementState(maskData.current.value, position);
 
     const maskingEvent = new CustomEvent('masking', {
       bubbles: true,

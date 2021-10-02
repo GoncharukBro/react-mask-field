@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { getChangeData, getMaskData } from './utils';
-import type { Replacement, SelectionRange } from './types';
+import type { Replacement } from './types';
 
 interface UseInitialStateParam {
   initialValue: string;
@@ -42,7 +42,7 @@ export default function useInitialState({
 
     const initialMaskData = getMaskData(unmaskedValue, mask, replacement, showMask, separate);
 
-    const selectionRange: SelectionRange = [0, initialMaskData.ast.length];
+    const selectionRange = { start: 0, end: initialMaskData.ast.length };
     const initialChangeData = getChangeData(initialMaskData, selectionRange, unmaskedValue);
 
     return { initialMaskData, initialChangeData };

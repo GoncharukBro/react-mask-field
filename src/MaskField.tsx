@@ -3,23 +3,15 @@ import PropTypes from 'prop-types';
 import { convertToReplacementObject, getChangeData, getMaskData, getCursorPosition } from './utils';
 import useInitialState from './useInitialState';
 import useError from './useError';
-import type { Replacement, Selection, SelectionRange, ChangeData, MaskData } from './types';
-
-export interface MaskingEvent<
-  T = HTMLInputElement,
-  D = { value: string; added: string; pattern: string }
-> extends CustomEvent<D> {
-  target: EventTarget & T;
-}
-
-export type MaskingEventHandler<T = HTMLInputElement> = (event: MaskingEvent<T>) => void;
-
-export type ModifiedData = Pick<
-  MaskFieldProps,
-  'value' | 'mask' | 'replacement' | 'showMask' | 'separate'
->;
-
-export type Modify = (modifiedData: ModifiedData) => Partial<ModifiedData> | undefined;
+import type {
+  Replacement,
+  Selection,
+  ChangeData,
+  MaskData,
+  MaskingEvent,
+  MaskingEventHandler,
+  Modify,
+} from './types';
 
 export interface MaskFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   component?: React.ComponentClass | React.FunctionComponent;
@@ -33,7 +25,7 @@ export interface MaskFieldProps extends React.InputHTMLAttributes<HTMLInputEleme
   value?: string;
 }
 
-const MaskFieldComponent = (
+function MaskFieldComponent(
   {
     component: Component,
     mask: maskProps,
@@ -50,7 +42,7 @@ const MaskFieldComponent = (
     ...other
   }: MaskFieldProps,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
-) => {
+) {
   let mask = maskProps;
   let replacement = convertToReplacementObject(replacementProps);
   let showMask = showMaskProps;
@@ -132,17 +124,14 @@ const MaskFieldComponent = (
 
     if (currentInputType === 'insert') {
       const addedSymbols = currentValue.slice(selection.current.start, currentPosition);
-      const selectionRange: SelectionRange = [selection.current.start, selection.current.end];
+      const selectionRange = { start: selection.current.start, end: selection.current.end };
 
       changeData.current = getChangeData(maskData.current, selectionRange, addedSymbols);
 
       if (!changeData.current.added) return reset();
     } else if (currentInputType === 'delete' || currentInputType === 'deleteForward') {
       const countDeletedSymbols = maskData.current.value.length - currentValue.length;
-      const selectionRange: SelectionRange = [
-        currentPosition,
-        currentPosition + countDeletedSymbols,
-      ];
+      const selectionRange = { start: currentPosition, end: currentPosition + countDeletedSymbols };
 
       changeData.current = getChangeData(maskData.current, selectionRange, '');
     }
@@ -245,7 +234,7 @@ const MaskFieldComponent = (
   };
 
   return Component ? <Component {...inputProps} /> : <input {...inputProps} />;
-};
+}
 
 const MaskField = forwardRef(MaskFieldComponent) as React.FunctionComponent<
   MaskFieldProps & React.RefAttributes<HTMLInputElement>

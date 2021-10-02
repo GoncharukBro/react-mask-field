@@ -238,8 +238,8 @@ export function getChangeData(
   // Определяем символы до и после диапозона изменяемых символов
   maskData.ast.forEach(({ symbol, own }, index) => {
     if (isSeparate ? own === 'change' || own === 'replacement' : own === 'change') {
-      if (index < selectionRange[0]) beforeRange += symbol;
-      else if (index >= selectionRange[1]) afterRange += symbol;
+      if (index < selectionRange.start) beforeRange += symbol;
+      else if (index >= selectionRange.end) afterRange += symbol;
     }
   });
 
@@ -268,7 +268,7 @@ export function getChangeData(
   if (isSeparate) {
     // Находим заменяемые символы в диапозоне изменяемых символов
     const separateSymbols = maskData.mask.split('').reduce((prev, symbol, index) => {
-      const isSelectionRange = index >= selectionRange[0] && index < selectionRange[1];
+      const isSelectionRange = index >= selectionRange.start && index < selectionRange.end;
       const isReplacementKey = replacementKeys.includes(symbol);
 
       return isSelectionRange && isReplacementKey ? prev + symbol : prev;

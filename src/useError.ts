@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { Pattern } from './types';
+import type { Replacement } from './types';
 
 class ValidationError extends Error {
   constructor(message: string) {
@@ -18,7 +18,7 @@ class SyntaxError extends Error {
 interface UseErrorParams {
   initialValue: string;
   mask: string;
-  pattern: Pattern;
+  replacement: Replacement;
 }
 
 /**
@@ -27,21 +27,21 @@ interface UseErrorParams {
  * @param param
  * @param param.initialValue
  * @param param.mask
- * @param param.pattern
+ * @param param.replacement
  */
-export default function useError({ initialValue, mask, pattern }: UseErrorParams) {
+export default function useError({ initialValue, mask, replacement }: UseErrorParams) {
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') {
       const isLong = initialValue.length > mask.length;
-      const invalidPatternKeys = Object.keys(pattern).filter((key) => key.length > 1);
-      const patternKeys = Object.keys(pattern);
+      const replacementKeys = Object.keys(replacement);
+      const invalidReplacementKeys = replacementKeys.filter((key) => key.length > 1);
       const invalidSymbolIndex = mask
         .slice(0, initialValue.length)
         .split('')
         .findIndex((symbol, index) => {
-          if (patternKeys.includes(symbol)) {
+          if (replacementKeys.includes(symbol)) {
             if (initialValue[index] !== symbol) {
-              return !pattern[symbol].test(initialValue[index]);
+              return !replacement[symbol].test(initialValue[index]);
             }
             return false;
           }
@@ -69,10 +69,10 @@ Invalid value: "${initialValue}".
       }
 
       // Валидируем длину ключей паттерна
-      if (invalidPatternKeys.length > 0) {
-        const message = `Object keys in the \`pattern\` property are longer than one character. Pattern keys must be one character long. Check the correctness of the value in the specified property.
+      if (invalidReplacementKeys.length > 0) {
+        const message = `Object keys in the \`replacement\` property are longer than one character. Replacement keys must be one character long. Check the correctness of the value in the specified property.
 
-Invalid keys: ${invalidPatternKeys.join(', ')}.
+Invalid keys: ${invalidReplacementKeys.join(', ')}.
 `;
         // eslint-disable-next-line no-console
         console.error(new SyntaxError(message));

@@ -21,7 +21,7 @@ export default {
     mask: {
       description: 'Маска ввода',
     },
-    pattern: {
+    replacement: {
       description: 'Символ для замены',
     },
     showMask: {
@@ -45,10 +45,9 @@ export const UncontrolledMaskFieldAny: ComponentStory<typeof MaskFieldComponent>
         <MaskFieldComponent
           {...args}
           mask={mask}
-          pattern={{ _: /\d/ }}
+          replacement={{ _: /\d/ }}
           showMask
           break
-          validatePattern
           value={value}
           onChange={(event) => {
             setValue(event.target.value);
@@ -78,7 +77,7 @@ export const UncontrolledMaskFieldPhone: ComponentStory<typeof MaskFieldComponen
       {...args}
       name="phone"
       mask="+_ (___) ___-__-__"
-      pattern={{ _: /\d/ }}
+      replacement={{ _: /\d/ }}
       showMask
       defaultValue="+7 (a12) 345-67-89"
     />
@@ -92,7 +91,7 @@ export const UncontrolledMaskFieldDate: ComponentStory<typeof MaskFieldComponent
     <MaskFieldComponent
       {...args}
       mask="dd-Dm-yyDy"
-      pattern={{ d: new RegExp('\\d'), m: /\d/, y: /\d/, D: /\D/ }}
+      replacement={{ d: new RegExp('\\d'), m: /\d/, y: /\d/, D: /\D/ }}
       showMask
       placeholder="dd-Dm-yyDy"
     />
@@ -107,10 +106,10 @@ UncontrolledMaskFieldDate.args = {};
  *
  */
 export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (args) => {
-  const [data, setData] = useState({ maskedValue: '', pattern: '' });
+  const [data, setData] = useState({ maskedValue: '' });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setData({ maskedValue: event.target.value, pattern: event.target.pattern });
+    setData({ maskedValue: event.target.value });
   };
 
   return (
@@ -119,7 +118,7 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
         <MaskFieldComponent
           {...args}
           mask="+_ (___) ___-__-__"
-          pattern={{ _: /./ }}
+          replacement={{ _: /./ }}
           showMask
           value={data.maskedValue}
           onChange={handleChange}
@@ -140,14 +139,12 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
 export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComponent> = (args) => {
   const [data, setData] = useState({
     maskedValue: '',
-    pattern: '',
     selection: { start: 0, end: 0 },
   });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setData({
       maskedValue: event.target.value,
-      pattern: event.target.pattern,
       selection: { start: event.target.selectionStart, end: event.target.selectionEnd },
     });
   };
@@ -173,9 +170,8 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
         <MaskFieldComponent
           {...args}
           mask={ruPhoneMask}
-          pattern={{ _: /\d/ }}
+          replacement={{ _: /\d/ }}
           showMask
-          validatePattern
           modify={modify}
           value={data.maskedValue}
           onChange={handleChange}
@@ -203,10 +199,10 @@ const CustomComponent = forwardRef(
 );
 
 export const MaskFieldWithCustomComponent: ComponentStory<typeof MaskFieldComponent> = (args) => {
-  const [data, setData] = useState({ maskedValue: '', pattern: '' });
+  const [data, setData] = useState({ maskedValue: '' });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setData({ maskedValue: event.target.value, pattern: event.target.pattern });
+    setData({ maskedValue: event.target.value });
   };
 
   return (
@@ -217,8 +213,7 @@ export const MaskFieldWithCustomComponent: ComponentStory<typeof MaskFieldCompon
           name="phone"
           component={CustomComponent}
           mask="+_ (___) ___-__-__"
-          pattern={{ _: /\d/ }}
-          validatePattern
+          replacement={{ _: /\d/ }}
           value={data.maskedValue}
           onChange={handleChange}
         />
@@ -245,7 +240,7 @@ export const MaskFieldTestProps: ComponentStory<typeof MaskFieldComponent> = (ar
           {...args}
           name="phone"
           mask="+_ (___) ___-__-__"
-          pattern={{ _: /\d/ }}
+          replacement={{ _: /\d/ }}
           showMask={state.showMask}
           defaultValue="+а (___) ___-__"
         />

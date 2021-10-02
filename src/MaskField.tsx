@@ -1,7 +1,7 @@
 import { useEffect, useRef, useMemo, useCallback, forwardRef } from 'react';
 import PropTypes from 'prop-types';
 import {
-  convertToPattern,
+  convertToReplacementObject,
   getChangeData,
   getMaskData,
   getCursorPosition,
@@ -9,7 +9,7 @@ import {
 } from './utils';
 import useInitialState from './useInitialState';
 import useError from './useError';
-import type { Pattern, Selection, SelectionRange, ChangeData, MaskData } from './types';
+import type { Replacement, Selection, SelectionRange, ChangeData, MaskData } from './types';
 
 export interface MaskingEvent<
   T = HTMLInputElement,
@@ -22,19 +22,17 @@ export type MaskingEventHandler<T = HTMLInputElement> = (event: MaskingEvent<T>)
 
 export type ModifiedData = Pick<
   MaskFieldProps,
-  'value' | 'mask' | 'pattern' | 'showMask' | 'break'
+  'value' | 'mask' | 'replacement' | 'showMask' | 'break'
 >;
 
 export type Modify = (modifiedData: ModifiedData) => Partial<ModifiedData> | undefined;
 
-export interface MaskFieldProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'pattern'> {
+export interface MaskFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   component?: React.ComponentClass | React.FunctionComponent;
   mask: string;
-  pattern: string | Pattern;
+  replacement: string | Replacement;
   showMask?: boolean;
   break?: boolean;
-  validatePattern?: boolean;
   modify?: Modify;
   onMasking?: MaskingEventHandler;
   defaultValue?: string;
@@ -45,10 +43,9 @@ const MaskFieldComponent = (
   {
     component: Component,
     mask: maskProps,
-    pattern: patternProps,
+    replacement: replacementProps,
     showMask: showMaskProps = false,
     break: breakSymbolsProps = false,
-    validatePattern = false,
     modify,
     onMasking,
     defaultValue,
@@ -61,13 +58,13 @@ const MaskFieldComponent = (
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ) => {
   let mask = maskProps;
-  let pattern = convertToPattern(patternProps);
+  let replacement = convertToReplacementObject(replacementProps);
   let showMask = showMaskProps;
   let breakSymbols = breakSymbolsProps;
 
   // Преобразовываем паттерн в строку для сравнения с зависимостью в `useEffect`
   // eslint-disable-next-line no-shadow
-  const stringifiedPattern = JSON.stringify(pattern, (key, value) => {
+  const stringifiedReplacement = JSON.stringify(replacement, (key, value) => {
     return value instanceof RegExp ? value.toString() : value;
   });
 
@@ -81,12 +78,12 @@ const MaskFieldComponent = (
   const { initialMaskData, initialChangeData } = useInitialState({
     initialValue,
     mask,
-    pattern,
+    replacement,
     showMask,
     break: breakSymbols,
   });
 
-  useError({ initialValue, mask, pattern });
+  useError({ initialValue, mask, replacement });
 
   const isFirstRender = useRef(false);
   const inputElement = useRef<HTMLInputElement | null>(null);
@@ -155,20 +152,27 @@ const MaskFieldComponent = (
       const modifiedData = modify({
         value: changeData.current.value,
         mask,
-        pattern,
+        replacement,
         showMask,
         break: breakSymbols,
       });
 
       if (modifiedData?.value !== undefined) changeData.current.value = modifiedData.value;
       if (modifiedData?.mask !== undefined) mask = modifiedData.mask;
-      if (modifiedData?.pattern !== undefined) pattern = convertToPattern(modifiedData.pattern);
+      if (modifiedData?.replacement !== undefined)
+        replacement = convertToReplacementObject(modifiedData.replacement);
       if (modifiedData?.showMask !== undefined) showMask = modifiedData.showMask;
       if (modifiedData?.break !== undefined) breakSymbols = modifiedData.break;
     }
 
     // Формируем данные маскированного значения
-    maskData.current = getMaskData(changeData.current.value, mask, pattern, showMask, breakSymbols);
+    maskData.current = getMaskData(
+      changeData.current.value,
+      mask,
+      replacement,
+      showMask,
+      breakSymbols
+    );
 
     // Устанавливаем позицию курсора курсор
     const position = getCursorPosition(currentInputType, changeData.current, maskData.current);
@@ -177,7 +181,6 @@ const MaskFieldComponent = (
     inputElement.current.value = maskData.current.value;
     inputElement.current.selectionStart = position;
     inputElement.current.selectionEnd = position;
-    if (validatePattern) inputElement.current.pattern = maskData.current.inputPattern;
 
     const maskingEvent = new CustomEvent('masking', {
       bubbles: true,
@@ -186,7 +189,7 @@ const MaskFieldComponent = (
       detail: {
         value: changeData.current.value,
         added: changeData.current.added,
-        pattern: maskData.current.inputPattern,
+        pattern: maskData.current.pattern,
       },
     }) as MaskingEvent;
 
@@ -203,7 +206,7 @@ const MaskFieldComponent = (
       isFirstRender.current = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mask, stringifiedPattern, showMask, breakSymbols]);
+  }, [mask, stringifiedReplacement, showMask, breakSymbols]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const maskingEvent = masking();
@@ -250,7 +253,6 @@ const MaskFieldComponent = (
     onBlur: handleBlur,
     ...(defaultValue !== undefined ? { defaultValue } : undefined),
     ...(value !== undefined ? { value } : undefined),
-    ...(validatePattern ? { pattern: maskData.current.inputPattern } : undefined),
     ...other,
   };
 
@@ -265,13 +267,12 @@ MaskField.propTypes = {
   // eslint-disable-next-line react/forbid-prop-types
   component: PropTypes.any,
   mask: PropTypes.string.isRequired,
-  pattern: PropTypes.oneOfType([
+  replacement: PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.objectOf(PropTypes.instanceOf(RegExp).isRequired),
   ]).isRequired,
   showMask: PropTypes.bool,
   break: PropTypes.bool,
-  validatePattern: PropTypes.bool,
   modify: PropTypes.func,
   onMasking: PropTypes.func,
 };

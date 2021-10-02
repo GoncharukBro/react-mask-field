@@ -19,10 +19,9 @@ export const TestProps = (args) => {
       <MaskFieldComponent
         {...args}
         mask={mask}
-        pattern={{ _: /\d/ }}
+        replacement={{ _: /\d/ }}
         showMask
         break
-        validatePattern
         onChange={(event) => {
           // console.log(event.target.value);
         }}

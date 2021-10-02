@@ -1,4 +1,4 @@
-export type Pattern = {
+export type Replacement = {
   [key: string]: RegExp;
 };
 
@@ -14,7 +14,7 @@ export type SelectionRange = [number, number];
 export type AST = Array<{
   symbol: string;
   index: number;
-  own: 'pattern' | 'mask' | 'change';
+  own: 'replacement' | 'mask' | 'change';
 }>;
 
 export interface ChangeData {
@@ -27,9 +27,9 @@ export interface ChangeData {
 export interface MaskData {
   value: string;
   mask: string;
-  pattern: Pattern;
+  replacement: Replacement;
   showMask: boolean;
   break: boolean;
   ast: AST;
-  inputPattern: string;
+  pattern: string;
 }

@@ -44,7 +44,7 @@ export const UncontrolledMaskFieldAny: ComponentStory<typeof MaskFieldComponent>
       <Form>
         <MaskFieldComponent
           {...args}
-          mask={mask}
+          // mask=""
           replacement={{ _: /\d/ }}
           showMask
           separate

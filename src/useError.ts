@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { hasKey } from './utils';
 import type { Replacement } from './types';
 
 class ValidationError extends Error {
@@ -32,14 +33,12 @@ interface UseErrorParams {
 export default function useError({ initialValue, mask, replacement }: UseErrorParams) {
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') {
-      const isLong = initialValue.length > mask.length;
-      const replacementKeys = Object.keys(replacement);
-      const invalidReplacementKeys = replacementKeys.filter((key) => key.length > 1);
+      const invalidReplacementKeys = Object.keys(replacement).filter((key) => key.length > 1);
       const invalidSymbolIndex = mask
         .slice(0, initialValue.length)
         .split('')
         .findIndex((symbol, index) => {
-          if (replacementKeys.includes(symbol)) {
+          if (hasKey(replacement, symbol)) {
             if (initialValue[index] !== symbol) {
               return !replacement[symbol].test(initialValue[index]);
             }
@@ -59,7 +58,7 @@ Invalid value: "${initialValue}".
       }
 
       // Валидируем длину инициализируемого значения
-      if (isLong) {
+      if (initialValue.length > mask.length) {
         const message = `The initialized value of the \`value\` or \`defaultValue\` property is longer than the value specified in the \`mask\` property. Check the correctness of the initialized value in the specified property.
 
 Invalid value: "${initialValue}".
@@ -68,7 +67,7 @@ Invalid value: "${initialValue}".
         console.error(new ValidationError(message));
       }
 
-      // Валидируем длину ключей паттерна
+      // Валидируем длину ключей `replacement`
       if (invalidReplacementKeys.length > 0) {
         const message = `Object keys in the \`replacement\` property are longer than one character. Replacement keys must be one character long. Check the correctness of the value in the specified property.
 

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { getChangeData, getMaskData } from './utils';
+import { hasKey, getChangeData, getMaskData } from './utils';
 import type { Replacement } from './types';
 
 interface UseInitialStateParam {
@@ -28,24 +28,22 @@ export default function useInitialState({
   separate,
 }: UseInitialStateParam) {
   return useMemo(() => {
-    const replacementKeys = Object.keys(replacement);
     // Выбираем из маскированного значения все пользовательские символы
-    // методом определения ключей паттерна и наличием на их месте отличающегося символа
+    // методом определения ключей `replacement` и наличием на их месте отличающегося символа
     const unmaskedValue = mask.split('').reduce((prev, symbol, index) => {
-      if (replacementKeys.includes(symbol)) {
-        const isChangedSymbol =
-          !!initialValue[index] && !replacementKeys.includes(initialValue[index]);
+      if (hasKey(replacement, symbol)) {
+        const isChangedSymbol = !!initialValue[index] && !hasKey(replacement, initialValue[index]);
         if (isChangedSymbol) return prev + initialValue[index];
       }
       return prev;
     }, '');
 
-    const initialMaskData = getMaskData(unmaskedValue, mask, replacement, showMask, separate);
+    const maskData = getMaskData(unmaskedValue, mask, replacement, showMask, separate);
 
-    const selectionRange = { start: 0, end: initialMaskData.ast.length };
-    const initialChangeData = getChangeData(initialMaskData, selectionRange, unmaskedValue);
+    const selectionRange = { start: 0, end: maskData.ast.length };
+    const changeData = getChangeData(maskData, selectionRange, unmaskedValue);
 
-    return { initialMaskData, initialChangeData };
+    return { maskData, changeData };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

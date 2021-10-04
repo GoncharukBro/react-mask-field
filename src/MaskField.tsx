@@ -15,8 +15,8 @@ import type {
 
 export interface MaskFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   component?: React.ComponentClass | React.FunctionComponent;
-  mask: string;
-  replacement: string | Replacement;
+  mask?: string;
+  replacement?: string | Replacement;
   showMask?: boolean;
   separate?: boolean;
   modify?: Modify;
@@ -28,8 +28,8 @@ export interface MaskFieldProps extends React.InputHTMLAttributes<HTMLInputEleme
 function MaskFieldComponent(
   {
     component: Component,
-    mask: maskProps,
-    replacement: replacementProps,
+    mask: maskProps = '',
+    replacement: replacementProps = {},
     showMask: showMaskProps = false,
     separate: separateProps = false,
     modify,
@@ -48,34 +48,20 @@ function MaskFieldComponent(
   let showMask = showMaskProps;
   let separate = separateProps;
 
-  // Преобразовываем паттерн в строку для сравнения с зависимостью в `useEffect`
-  // eslint-disable-next-line no-shadow
-  const stringifiedReplacement = JSON.stringify(replacement, (key, value) => {
-    return value instanceof RegExp ? value.toString() : value;
-  });
-
   const initialValue = useMemo(() => {
-    return value !== undefined ? value : defaultValue?.toString() || '';
+    return value !== undefined ? value : defaultValue !== undefined ? defaultValue : '';
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Возвращаем данные для инициализации состояния,
-  // используется только при монтировании компонента
-  const { initialMaskData, initialChangeData } = useInitialState({
-    initialValue,
-    mask,
-    replacement,
-    showMask,
-    separate,
-  });
-
   useError({ initialValue, mask, replacement });
 
+  const initialState = useInitialState({ initialValue, mask, replacement, showMask, separate });
+
   const inputElement = useRef<HTMLInputElement | null>(null);
-  const maskData = useRef<MaskData>(initialMaskData);
-  const changeData = useRef<ChangeData>(initialChangeData);
+  const maskData = useRef<MaskData>(initialState.maskData);
+  const changeData = useRef<ChangeData>(initialState.changeData);
   const selection = useRef<Selection>({ cachedRequestID: -1, requestID: -1, start: 0, end: 0 });
-  const isFirstRender = useRef(false);
+  const isFirstRender = useRef(true);
 
   const masking = () => {
     // Устанавливаем стостояние элемента через ссылку
@@ -175,12 +161,19 @@ function MaskFieldComponent(
     return maskingEvent;
   };
 
+  // Преобразовываем объект `replacement` в строку для сравнения с зависимостью в `useEffect`
+  // eslint-disable-next-line no-shadow
+  const stringifiedReplacement = JSON.stringify(replacement, (key, value) => {
+    return value instanceof RegExp ? value.toString() : value;
+  });
+
+  // Позволяет маскировать значение не только при событии `change`, но и сразу после изменения `props`
   useEffect(() => {
-    if (isFirstRender.current) {
+    if (!isFirstRender.current) {
       const maskingEvent = masking();
       if (maskingEvent !== undefined) onMasking?.(maskingEvent);
     } else {
-      isFirstRender.current = true;
+      isFirstRender.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mask, stringifiedReplacement, showMask, separate]);
@@ -201,13 +194,11 @@ function MaskFieldComponent(
       selection.current.requestID = requestAnimationFrame(setSelection);
     };
 
-    // Запускаем кэширование позиции курсора
     selection.current.requestID = requestAnimationFrame(setSelection);
     onFocus?.(event);
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    // Останавливаем кэширование позиции курсора
     cancelAnimationFrame(selection.current.requestID);
     onBlur?.(event);
   };
@@ -243,11 +234,11 @@ const MaskField = forwardRef(MaskFieldComponent) as React.FunctionComponent<
 MaskField.propTypes = {
   // eslint-disable-next-line react/forbid-prop-types
   component: PropTypes.any,
-  mask: PropTypes.string.isRequired,
+  mask: PropTypes.string,
   replacement: PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.objectOf(PropTypes.instanceOf(RegExp).isRequired),
-  ]).isRequired,
+  ]),
   showMask: PropTypes.bool,
   separate: PropTypes.bool,
   modify: PropTypes.func,

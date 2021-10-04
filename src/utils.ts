@@ -249,13 +249,19 @@ export function getChangeData(
 
   // Фильтруем добавленные символы на соответствие значениям `replacement`.
   // Поскольку нас интересуют только "полезные" символы, фильтуем без учёта заменяемых символов
+  if (beforeRange) {
+    beforeRange = filterSymbols(beforeRange, maskData.replacement, replaceableSymbols);
+  }
+
   replaceableSymbols = replaceableSymbols.slice(beforeRange.length);
 
+  // Фильтруем добавленные символы на соответствие значениям `replacement`.
+  // Поскольку нас интересуют только "полезные" символы, фильтуем без учёта заменяемых символов
   if (addedSymbols) {
     addedSymbols = filterSymbols(addedSymbols, maskData.replacement, replaceableSymbols);
   }
 
-  // Изменяем `afterRange` чтобы позиция символов не смещалась (обязательно перед фильтрацией).
+  // Изменяем `afterRange` чтобы позиция символов не смещалась (обязательно перед фильтрацией `afterRange`).
   if (isSeparate) {
     // Находим заменяемые символы в диапозоне изменяемых символов
     const separateSymbols = maskData.mask.split('').reduce((prev, symbol, index) => {
@@ -277,9 +283,9 @@ export function getChangeData(
     }
   }
 
-  // Фильтруем символы (после добавленных) на соответствие значениям `replacement`
   replaceableSymbols = replaceableSymbols.slice(addedSymbols.length);
 
+  // Фильтруем символы (после добавленных) на соответствие значениям `replacement`
   if (afterRange) {
     afterRange = filterSymbols(afterRange, maskData.replacement, replaceableSymbols, isSeparate);
   }

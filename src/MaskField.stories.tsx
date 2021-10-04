@@ -44,11 +44,12 @@ export const UncontrolledMaskFieldAny: ComponentStory<typeof MaskFieldComponent>
       <Form>
         <MaskFieldComponent
           {...args}
-          // mask=""
-          replacement={{ _: /\d/ }}
+          mask={mask}
+          replacement="_"
           showMask
           separate
           value={value}
+          onMasking={(event) => console.log(event.detail)}
           onChange={(event) => {
             setValue(event.target.value);
           }}

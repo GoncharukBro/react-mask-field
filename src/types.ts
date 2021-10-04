@@ -1,7 +1,9 @@
 export interface Detail {
-  value: string;
+  masked: string;
+  unmasked: string;
   added: string;
   pattern: string;
+  isValid: boolean;
 }
 
 export interface MaskingEvent<T = HTMLInputElement, D = Detail> extends CustomEvent<D> {
@@ -43,8 +45,9 @@ export interface MaskData {
   replacement: Replacement;
   showMask: boolean;
   separate: boolean;
-  ast: AST;
   pattern: string;
+  isValid: boolean;
+  ast: AST;
 }
 
 export interface ModifiedData {

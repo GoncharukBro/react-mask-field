@@ -119,7 +119,7 @@ export function getCursorPosition(inputType: string, changeData: ChangeData, mas
 function generatePattern(mask: string, replacement: Replacement, disableReplacementKey?: boolean) {
   const special = ['[', ']', '\\', '/', '^', '$', '.', '|', '?', '*', '+', '(', ')', '{', '}'];
 
-  return mask.split('').reduce((prev, item) => {
+  return mask.split('').reduce((prev, item, index, array) => {
     const lookahead = disableReplacementKey ? `(?!${item})` : '';
 
     const symbol = hasKey(replacement, item)
@@ -128,8 +128,9 @@ function generatePattern(mask: string, replacement: Replacement, disableReplacem
       ? `\\${item}`
       : item;
 
-    return prev + symbol;
-  }, '');
+    const value = prev + symbol;
+    return index + 1 === array.length ? `${value}$` : value;
+  }, '^');
 }
 
 /**
@@ -185,8 +186,10 @@ export function getMaskData(
   }
 
   const pattern = generatePattern(mask, replacement);
+  const patternForbiddingReplacement = generatePattern(mask, replacement, true);
+  const isValid = new RegExp(patternForbiddingReplacement).test(value);
 
-  return { value, mask, replacement, showMask, separate, ast, pattern };
+  return { value, mask, replacement, showMask, separate, pattern, isValid, ast };
 }
 
 // Фильтруем символы для соответствия значениям `replacement`

@@ -145,20 +145,24 @@ function MaskFieldComponent(
 
     setInputElementState(maskData.current.value, position);
 
-    const maskingEvent = new CustomEvent('masking', {
+    // Генерируем и отправляем пользовательское событие `masking`
+    const customEvent = new CustomEvent('masking', {
       bubbles: true,
       cancelable: false,
       composed: true,
       detail: {
-        value: changeData.current.value,
+        masked: maskData.current.value,
+        unmasked: changeData.current.value,
         added: changeData.current.added,
         pattern: maskData.current.pattern,
+        isValid: maskData.current.isValid,
       },
     }) as MaskingEvent;
 
-    inputElement.current.dispatchEvent(maskingEvent);
+    const result = inputElement.current.dispatchEvent(customEvent);
+    if (result) onMasking?.(customEvent);
 
-    return maskingEvent;
+    return result;
   };
 
   // Преобразовываем объект `replacement` в строку для сравнения с зависимостью в `useEffect`
@@ -169,21 +173,14 @@ function MaskFieldComponent(
 
   // Позволяет маскировать значение не только при событии `change`, но и сразу после изменения `props`
   useEffect(() => {
-    if (!isFirstRender.current) {
-      const maskingEvent = masking();
-      if (maskingEvent !== undefined) onMasking?.(maskingEvent);
-    } else {
-      isFirstRender.current = false;
-    }
+    if (!isFirstRender.current) masking();
+    else isFirstRender.current = false;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mask, stringifiedReplacement, showMask, separate]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const maskingEvent = masking();
-    if (maskingEvent !== undefined) {
-      onMasking?.(maskingEvent);
-      onChange?.(event);
-    }
+    const result = masking();
+    if (result) onChange?.(event);
   };
 
   const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {

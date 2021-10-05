@@ -36,9 +36,19 @@ function getFirstAfterRangeSymbol(
   return undefined;
 }
 
-// Находим индекс заменяемого символа маски
-function getReplaceableSymbolIndex(value: string[], replacement: Replacement, position?: number) {
-  return value.findIndex((symbol, index) => {
+/**
+ * Находит индекс заменяемого символа указанного в свойстве `replacement`
+ * @param value значение в котором необходимо осуществить поиск
+ * @param replacement объект с заменяемыми символами из `props`
+ * @param position индекс с которого требуется искать, если индекс не передан, поиск будет идти с начала
+ * @returns индекс заменяемого символа
+ */
+export function getReplaceableSymbolIndex(
+  value: string,
+  replacement: Replacement,
+  position?: number
+) {
+  return value.split('').findIndex((symbol, index) => {
     return index >= (position || 0) && hasKey(replacement, symbol);
   });
 }
@@ -69,7 +79,7 @@ export function getCursorPosition(inputType: string, changeData: ChangeData, mas
 
   if (separate) {
     if (!beforeRange) {
-      const replaceableSymbolIndex = getReplaceableSymbolIndex(value.split(''), replacement);
+      const replaceableSymbolIndex = getReplaceableSymbolIndex(value, replacement);
       if (replaceableSymbolIndex !== -1) return replaceableSymbolIndex;
     }
 
@@ -109,7 +119,7 @@ export function getCursorPosition(inputType: string, changeData: ChangeData, mas
 
   // Если предыдущие условия не выполнены возвращаем индекс первого заменяемого символа маски
   // Если индекс не найден, перемещаем курсор в конец строки
-  const replaceableSymbolIndex = getReplaceableSymbolIndex(value.split(''), replacement);
+  const replaceableSymbolIndex = getReplaceableSymbolIndex(value, replacement);
   return replaceableSymbolIndex !== -1 ? replaceableSymbolIndex : value.length;
 }
 
@@ -137,6 +147,8 @@ function generatePattern(mask: string, replacement: Replacement, disableReplacem
  * @param mask маска
  * @param replacement шаблон ввода
  * @param showMask атрибут определяющий, стоит ли показывать маску полностью
+ * @param separate
+ * @param initialValue
  * @returns объект с данными маскированного значение
  */
 export function getMaskData(
@@ -144,7 +156,8 @@ export function getMaskData(
   mask: string,
   replacement: Replacement,
   showMask: boolean,
-  separate: boolean
+  separate: boolean,
+  initialValue?: string
 ): MaskData {
   const maskSymbols = mask.split('');
   // Позиция позволяет не учитывать заменяемые символы при `separate === true`,
@@ -152,7 +165,11 @@ export function getMaskData(
   let position = 0;
 
   unmaskedValue.split('').forEach((symbol) => {
-    const replaceableSymbolIndex = getReplaceableSymbolIndex(maskSymbols, replacement, position);
+    const replaceableSymbolIndex = getReplaceableSymbolIndex(
+      maskSymbols.join(''),
+      replacement,
+      position
+    );
     if (replaceableSymbolIndex !== -1) {
       maskSymbols[replaceableSymbolIndex] = symbol;
       position = replaceableSymbolIndex + 1;
@@ -175,7 +192,7 @@ export function getMaskData(
 
   // Если пользователь не ввел ниодного символа,
   // присваиваем пустую строку для соответсвия поведения `input`
-  let value = getFirstChangedSymbol(ast) ? maskSymbols.join('') : '';
+  let value = getFirstChangedSymbol(ast) !== undefined ? maskSymbols.join('') : initialValue || '';
 
   // Если `showMask === false`, обрезаем значение по последний пользовательский символ
   if (value && !showMask) {

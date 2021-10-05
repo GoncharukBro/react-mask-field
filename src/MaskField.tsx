@@ -1,16 +1,14 @@
-import { useEffect, useRef, useMemo, useCallback, forwardRef } from 'react';
-import { convertToReplacementObject, getChangeData, getMaskData, getCursorPosition } from './utils';
+import { useLayoutEffect, useEffect, useRef, useMemo, useCallback, forwardRef } from 'react';
+import {
+  getReplaceableSymbolIndex,
+  convertToReplacementObject,
+  getChangeData,
+  getMaskData,
+  getCursorPosition,
+} from './utils';
 import useInitialState from './useInitialState';
 import useError from './useError';
-import type {
-  Replacement,
-  Selection,
-  ChangeData,
-  MaskData,
-  MaskingEvent,
-  MaskingEventHandler,
-  Modify,
-} from './types';
+import type { Replacement, MaskingEvent, MaskingEventHandler, Modify } from './types';
 
 export interface MaskFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   component?: React.ComponentClass | React.FunctionComponent;
@@ -33,12 +31,10 @@ function MaskFieldComponent(
     separate: separateProps = false,
     modify,
     onMasking,
-    defaultValue,
-    value,
     onChange,
     onFocus,
     onBlur,
-    ...other
+    ...otherProps
   }: MaskFieldProps,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ) {
@@ -48,20 +44,22 @@ function MaskFieldComponent(
   let separate = separateProps;
 
   const initialValue = useMemo(() => {
-    return value !== undefined ? value : defaultValue !== undefined ? defaultValue : '';
+    if (otherProps.value !== undefined) return otherProps.value;
+    if (otherProps.defaultValue !== undefined) return otherProps.defaultValue;
+    return '';
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useError({ initialValue, mask, replacement });
 
   const initialState = useInitialState({ initialValue, mask, replacement, showMask, separate });
 
   const inputElement = useRef<HTMLInputElement | null>(null);
-  const maskData = useRef<MaskData>(initialState.maskData);
-  const changeData = useRef<ChangeData>(initialState.changeData);
-  const selection = useRef<Selection>({ cachedRequestID: -1, requestID: -1, start: 0, end: 0 });
+  const maskData = useRef(initialState.maskData);
+  const changeData = useRef(initialState.changeData);
+  const selection = useRef({ cachedRequestID: -1, requestID: -1, start: 0, end: 0 });
   const isFirstRender = useRef(true);
 
+  // Запускаем процесс маскирования.
+  // Возарвщает `true` если процесс прошёл успешно или `false` если произошла ошибка
   const masking = () => {
     // Устанавливаем стостояние элемента через ссылку
     const setInputElementState = (maskedValue: string, cursorPosition: number) => {
@@ -78,7 +76,7 @@ function MaskFieldComponent(
       const position = getCursorPosition('', changeData.current, maskData.current);
       setInputElementState(maskData.current.value, position);
 
-      return undefined;
+      return false;
     };
 
     if (inputElement.current === null) return reset();
@@ -157,17 +155,26 @@ function MaskFieldComponent(
       },
     }) as MaskingEvent;
 
-    const result = inputElement.current.dispatchEvent(customEvent);
-    if (result) onMasking?.(customEvent);
+    inputElement.current.dispatchEvent(customEvent);
+    onMasking?.(customEvent);
 
-    return result;
+    return true;
   };
 
   // Преобразовываем объект `replacement` в строку для сравнения с зависимостью в `useEffect`
-  // eslint-disable-next-line no-shadow
   const stringifiedReplacement = JSON.stringify(replacement, (key, value) => {
     return value instanceof RegExp ? value.toString() : value;
   });
+
+  // При `autoFocus === true` курсор становится в конец инициализированного значения,
+  // поэтому заранее устанавливаем курсор на первый заменяемый символ
+  useLayoutEffect(() => {
+    if (otherProps.autoFocus) {
+      const position = getReplaceableSymbolIndex(initialValue, replacement);
+      if (position !== -1) inputElement.current?.setSelectionRange(position, position);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Позволяет маскировать значение не только при событии `change`, но и сразу после изменения `props`
   useEffect(() => {
@@ -175,6 +182,9 @@ function MaskFieldComponent(
     else isFirstRender.current = false;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mask, stringifiedReplacement, showMask, separate]);
+
+  // При наличии ошибок, выводим их в консоль
+  useError({ initialValue, mask, replacement });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const result = masking();
@@ -214,9 +224,7 @@ function MaskFieldComponent(
     onChange: handleChange,
     onFocus: handleFocus,
     onBlur: handleBlur,
-    ...(defaultValue !== undefined ? { defaultValue } : undefined),
-    ...(value !== undefined ? { value } : undefined),
-    ...other,
+    ...otherProps,
   };
 
   return Component ? <Component {...inputProps} /> : <input {...inputProps} />;

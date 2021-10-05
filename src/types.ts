@@ -20,11 +20,6 @@ export interface SelectionRange {
   end: number;
 }
 
-export interface Selection extends SelectionRange {
-  cachedRequestID: number;
-  requestID: number;
-}
-
 export type AST = {
   symbol: string;
   index: number;

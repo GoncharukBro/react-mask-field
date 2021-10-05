@@ -18,7 +18,13 @@ export const UncontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = 
 
   return (
     <>
-      <MaskFieldComponent {...args} onMasking={(event) => setDetail(event.detail)} />
+      <MaskFieldComponent
+        {...args}
+        autoFocus
+        defaultValue="+7 (___) ___-__-__"
+        onMasking={(event) => setDetail(event.detail)}
+        onChange={(event) => console.log(event)}
+      />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>
   );

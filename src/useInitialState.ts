@@ -38,7 +38,14 @@ export default function useInitialState({
       return prev;
     }, '');
 
-    const maskData = getMaskData(unmaskedValue, mask, replacement, showMask, separate);
+    const maskData = getMaskData(
+      unmaskedValue,
+      mask,
+      replacement,
+      showMask,
+      separate,
+      initialValue
+    );
 
     const selectionRange = { start: 0, end: maskData.ast.length };
     const changeData = getChangeData(maskData, selectionRange, unmaskedValue);

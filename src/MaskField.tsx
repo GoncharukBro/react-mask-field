@@ -152,7 +152,6 @@ function MaskFieldComponent(
       detail: {
         masked: maskData.current.value,
         unmasked: changeData.current.value,
-        added: changeData.current.added,
         pattern: maskData.current.pattern,
         isValid: maskData.current.isValid,
       },

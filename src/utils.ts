@@ -16,9 +16,9 @@ function getLastChangedSymbol(ast: AST) {
 }
 
 // Находим последний добавленный пользователем символ
-function getLastAddedSymbol(ast: AST, changeData: ChangeData, isSeparate?: boolean) {
+function getLastAddedSymbol(ast: AST, changeData: ChangeData, separate?: boolean) {
   const changedSymbols = ast.filter(({ own }) => {
-    return isSeparate ? own === 'change' || own === 'replacement' : own === 'change';
+    return separate ? own === 'change' || own === 'replacement' : own === 'change';
   });
   const length = changeData.beforeRange.length + changeData.added.length;
   return changedSymbols.find((symbol, index) => length === index + 1);
@@ -64,18 +64,16 @@ export function convertToReplacementObject(replacement: string | Replacement) {
  * @returns позиция курсора
  */
 export function getCursorPosition(inputType: string, changeData: ChangeData, maskData: MaskData) {
-  const { value, replacement, showMask, separate, ast } = maskData;
+  const { value, replacement, separate, ast } = maskData;
   const { beforeRange, afterRange } = changeData;
 
-  const isSeparate = showMask && separate;
-
-  if (isSeparate) {
+  if (separate) {
     if (!beforeRange) {
       const replaceableSymbolIndex = getReplaceableSymbolIndex(value.split(''), replacement);
       if (replaceableSymbolIndex !== -1) return replaceableSymbolIndex;
     }
 
-    const lastAddedSymbol = getLastAddedSymbol(ast, changeData, isSeparate);
+    const lastAddedSymbol = getLastAddedSymbol(ast, changeData, separate);
     if (lastAddedSymbol !== undefined) return lastAddedSymbol.index + 1;
   }
 
@@ -197,7 +195,7 @@ function filterSymbols(
   value: string,
   replacement: Replacement,
   replaceableSymbols: string,
-  isSeparate?: boolean
+  separate?: boolean
 ) {
   let symbols = replaceableSymbols;
 
@@ -205,7 +203,7 @@ function filterSymbols(
     const isReplacementKey = hasKey(replacement, symbol);
     const isCorrectSymbol = replacement[symbols[0]]?.test(symbol);
 
-    if (isSeparate ? isReplacementKey || isCorrectSymbol : !isReplacementKey && isCorrectSymbol) {
+    if (separate ? isReplacementKey || isCorrectSymbol : !isReplacementKey && isCorrectSymbol) {
       symbols = symbols.slice(1);
       return prev + symbol;
     }
@@ -227,15 +225,13 @@ export function getChangeData(
   selectionRange: SelectionRange,
   added: string
 ): ChangeData {
-  const isSeparate = maskData.showMask && maskData.separate;
-
   let addedSymbols = added;
   let beforeRange = '';
   let afterRange = '';
 
   // Определяем символы до и после диапозона изменяемых символов
   maskData.ast.forEach(({ symbol, own }, index) => {
-    if (isSeparate ? own === 'change' || own === 'replacement' : own === 'change') {
+    if (maskData.separate ? own === 'change' || own === 'replacement' : own === 'change') {
       if (index < selectionRange.start) beforeRange += symbol;
       else if (index >= selectionRange.end) afterRange += symbol;
     }
@@ -247,10 +243,14 @@ export function getChangeData(
     return hasKey(maskData.replacement, symbol) ? prev + symbol : prev;
   }, '');
 
-  // Фильтруем добавленные символы на соответствие значениям `replacement`.
-  // Поскольку нас интересуют только "полезные" символы, фильтуем без учёта заменяемых символов
+  // Фильтруем добавленные символы на соответствие значениям `replacement`
   if (beforeRange) {
-    beforeRange = filterSymbols(beforeRange, maskData.replacement, replaceableSymbols);
+    beforeRange = filterSymbols(
+      beforeRange,
+      maskData.replacement,
+      replaceableSymbols,
+      maskData.separate
+    );
   }
 
   replaceableSymbols = replaceableSymbols.slice(beforeRange.length);
@@ -262,7 +262,7 @@ export function getChangeData(
   }
 
   // Изменяем `afterRange` чтобы позиция символов не смещалась (обязательно перед фильтрацией `afterRange`).
-  if (isSeparate) {
+  if (maskData.separate) {
     // Находим заменяемые символы в диапозоне изменяемых символов
     const separateSymbols = maskData.mask.split('').reduce((prev, symbol, index) => {
       const isSelectionRange = index >= selectionRange.start && index < selectionRange.end;
@@ -287,7 +287,12 @@ export function getChangeData(
 
   // Фильтруем символы (после добавленных) на соответствие значениям `replacement`
   if (afterRange) {
-    afterRange = filterSymbols(afterRange, maskData.replacement, replaceableSymbols, isSeparate);
+    afterRange = filterSymbols(
+      afterRange,
+      maskData.replacement,
+      replaceableSymbols,
+      maskData.separate
+    );
   }
 
   const value = beforeRange + addedSymbols + afterRange;

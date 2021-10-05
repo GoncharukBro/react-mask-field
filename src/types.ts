@@ -1,7 +1,6 @@
 export interface Detail {
   masked: string;
   unmasked: string;
-  added: string;
   pattern: string;
   isValid: boolean;
 }

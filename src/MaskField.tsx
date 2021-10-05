@@ -1,5 +1,4 @@
 import { useEffect, useRef, useMemo, useCallback, forwardRef } from 'react';
-import PropTypes from 'prop-types';
 import { convertToReplacementObject, getChangeData, getMaskData, getCursorPosition } from './utils';
 import useInitialState from './useInitialState';
 import useError from './useError';
@@ -227,19 +226,5 @@ function MaskFieldComponent(
 const MaskField = forwardRef(MaskFieldComponent) as React.FunctionComponent<
   MaskFieldProps & React.RefAttributes<HTMLInputElement>
 >;
-
-MaskField.propTypes = {
-  // eslint-disable-next-line react/forbid-prop-types
-  component: PropTypes.any,
-  mask: PropTypes.string,
-  replacement: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.objectOf(PropTypes.instanceOf(RegExp).isRequired),
-  ]),
-  showMask: PropTypes.bool,
-  separate: PropTypes.bool,
-  modify: PropTypes.func,
-  onMasking: PropTypes.func,
-};
 
 export default MaskField;

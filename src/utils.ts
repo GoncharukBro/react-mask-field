@@ -30,16 +30,15 @@ function getFirstAfterRangeSymbol(
   lastAddedSymbol: ReturnType<typeof getLastAddedSymbol>
 ) {
   const changedSymbols = ast.filter(({ own }) => own === 'change');
-  if (lastAddedSymbol !== undefined) {
-    return changedSymbols.find((symbol) => lastAddedSymbol.index < symbol.index);
-  }
-  return undefined;
+  return lastAddedSymbol !== undefined
+    ? changedSymbols.find((symbol) => lastAddedSymbol.index < symbol.index)
+    : undefined;
 }
 
 /**
  * Находит индекс заменяемого символа указанного в свойстве `replacement`
  * @param value значение в котором необходимо осуществить поиск
- * @param replacement объект с заменяемыми символами из `props`
+ * @param replacement
  * @param position индекс с которого требуется искать, если индекс не передан, поиск будет идти с начала
  * @returns индекс заменяемого символа
  */
@@ -55,8 +54,8 @@ export function getReplaceableSymbolIndex(
 
 /**
  * Приводит значение шаблона к объекту если шаблон является строкой
- * @param replacement шаблон ввода из `props`
- * @returns шаблон ввода в виде объекта
+ * @param replacement
+ * @returns объект с заменяемыми символом
  */
 export function convertToReplacementObject(replacement: string | Replacement) {
   return typeof replacement === 'string' ? { [replacement]: /./ } : replacement;
@@ -69,8 +68,8 @@ export function convertToReplacementObject(replacement: string | Replacement) {
  * 2. действие в середине строки;
  * 3. действие в конце строки.
  * @param inputType тип ввода
- * @param changeData объект содержащий информацию о пользовательском значении
- * @param maskData объект с данными маскированного значения
+ * @param changeData
+ * @param maskData
  * @returns позиция курсора
  */
 export function getCursorPosition(inputType: string, changeData: ChangeData, maskData: MaskData) {
@@ -141,24 +140,34 @@ function generatePattern(mask: string, replacement: Replacement, disableReplacem
   }, '^');
 }
 
+interface GetMaskDataParams {
+  unmaskedValue: string;
+  initialValue: string;
+  mask: string;
+  replacement: Replacement;
+  showMask: boolean;
+  separate: boolean;
+}
+
 /**
- * Получаем данные маскированного значения
- * @param unmaskedValue пользовательские символы (без учета символов маски)
- * @param mask маска
- * @param replacement шаблон ввода
- * @param showMask атрибут определяющий, стоит ли показывать маску полностью
- * @param separate
- * @param initialValue
+ * Формирует данные маскированного значения
+ * @param param
+ * @param param.unmaskedValue пользовательские символы без учета символов маски
+ * @param param.initialValue при наличии, значение в `input` будет соответствовать инициализированному значению
+ * @param param.mask
+ * @param param.replacement
+ * @param param.showMask
+ * @param param.separate
  * @returns объект с данными маскированного значение
  */
-export function getMaskData(
-  unmaskedValue: string,
-  mask: string,
-  replacement: Replacement,
-  showMask: boolean,
-  separate: boolean,
-  initialValue: string
-): MaskData {
+export function getMaskData({
+  unmaskedValue,
+  initialValue,
+  mask,
+  replacement,
+  showMask,
+  separate,
+}: GetMaskDataParams): MaskData {
   const maskSymbols = mask.split('');
   // Позиция позволяет не учитывать заменяемые символы при `separate === true`,
   // в остальных случаях помогает более быстро находить индекс символа
@@ -235,7 +244,7 @@ function filterSymbols(
  * Получает значение введенное пользователем. Для определения пользовательского значения,
  * функция выявляет значение до диапазона изменяемых символов и после него. Сам диапазон заменяется
  * символами пользовательского ввода (при событии `insert`) или пустой строкой (при событии `delete`).
- * @param maskData объект с данными маскированного значения
+ * @param maskData
  * @param selectionRange диапозон изменяемых символов
  * @param added добавленные символы в строку (при событии `insert`)
  * @returns объект содержащий информацию о пользовательском значении

@@ -26,7 +26,7 @@ interface UseErrorParams {
  * Выводит в консоль сообщения об ошибках.
  * Сообщения выводятся один раз при монтировании компонента
  * @param param
- * @param param.initialValue
+ * @param param.initialValue инициализированное значение
  * @param param.mask
  * @param param.replacement
  */
@@ -39,10 +39,9 @@ export default function useError({ initialValue, mask, replacement }: UseErrorPa
         .split('')
         .findIndex((symbol, index) => {
           if (hasKey(replacement, symbol)) {
-            if (initialValue[index] !== symbol) {
-              return !replacement[symbol].test(initialValue[index]);
-            }
-            return false;
+            return initialValue[index] !== symbol
+              ? !replacement[symbol].test(initialValue[index])
+              : false;
           }
           return symbol !== initialValue[index];
         });

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { hasKey, getChangeData, getMaskData } from './utils';
 import type { Replacement } from './types';
 
-interface UseInitialStateParam {
+interface UseInitialStateParams {
   initialValue: string;
   mask: string;
   replacement: Replacement;
@@ -13,7 +13,7 @@ interface UseInitialStateParam {
 /**
  * Инициализирует начальное состояние компонента
  * @param param
- * @param param.initialValue
+ * @param param.initialValue инициализированное значение
  * @param param.mask
  * @param param.replacement
  * @param param.showMask
@@ -26,7 +26,7 @@ export default function useInitialState({
   replacement,
   showMask,
   separate,
-}: UseInitialStateParam) {
+}: UseInitialStateParams) {
   return useMemo(() => {
     // Выбираем из маскированного значения все пользовательские символы
     // методом определения ключей `replacement` и наличием на их месте отличающегося символа
@@ -38,14 +38,14 @@ export default function useInitialState({
       return prev;
     }, '');
 
-    const maskData = getMaskData(
+    const maskData = getMaskData({
       unmaskedValue,
+      initialValue,
       mask,
       replacement,
       showMask,
       separate,
-      initialValue
-    );
+    });
 
     const selectionRange = { start: 0, end: maskData.ast.length };
     const changeData = getChangeData(maskData, selectionRange, unmaskedValue);

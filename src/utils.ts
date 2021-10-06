@@ -157,7 +157,7 @@ export function getMaskData(
   replacement: Replacement,
   showMask: boolean,
   separate: boolean,
-  initialValue?: string
+  initialValue: string
 ): MaskData {
   const maskSymbols = mask.split('');
   // Позиция позволяет не учитывать заменяемые символы при `separate === true`,
@@ -190,12 +190,15 @@ export function getMaskData(
     return { symbol, index, own };
   });
 
-  // Если пользователь не ввел ниодного символа,
-  // присваиваем пустую строку для соответсвия поведения `input`
-  let value = getFirstChangedSymbol(ast) !== undefined ? maskSymbols.join('') : initialValue || '';
+  let value = initialValue || maskSymbols.join('');
+
+  // Если пользователь не ввел ниодного символа, присваиваем пустую строку для соответсвия поведения `input`
+  if (!initialValue && getFirstChangedSymbol(ast) === undefined) {
+    value = '';
+  }
 
   // Если `showMask === false`, обрезаем значение по последний пользовательский символ
-  if (value && !showMask) {
+  if (!initialValue && !showMask && value) {
     const lastChangedSymbol = getLastChangedSymbol(ast);
     value = value.slice(0, lastChangedSymbol !== undefined ? lastChangedSymbol.index + 1 : 0);
   }

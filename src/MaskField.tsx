@@ -137,7 +137,14 @@ function MaskFieldComponent(
       if (modifiedData?.separate !== undefined) separate = modifiedData.separate;
     }
 
-    maskData.current = getMaskData(changeData.current.value, mask, replacement, showMask, separate);
+    maskData.current = getMaskData(
+      changeData.current.value,
+      mask,
+      replacement,
+      showMask,
+      separate,
+      ''
+    );
     const position = getCursorPosition(currentInputType, changeData.current, maskData.current);
 
     setInputElementState(maskData.current.value, position);

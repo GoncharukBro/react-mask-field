@@ -15,6 +15,8 @@ export interface Replacement {
   [key: string]: RegExp;
 }
 
+export type InputType = 'insert' | 'delete' | 'deleteForward' | 'initial';
+
 export interface SelectionRange {
   start: number;
   end: number;
@@ -31,9 +33,10 @@ export interface ChangeData {
   added: string;
   beforeRange: string;
   afterRange: string;
+  inputType: InputType;
 }
 
-export interface MaskData {
+export interface MaskingData {
   value: string;
   mask: string;
   replacement: Replacement;

@@ -3,12 +3,19 @@ import {
   getReplaceableSymbolIndex,
   convertToReplacementObject,
   getChangeData,
-  getMaskData,
+  getMaskingData,
   getCursorPosition,
 } from './utils';
 import useInitialState from './useInitialState';
 import useError from './useError';
 import type { Replacement, MaskingEvent, MaskingEventHandler, Modify } from './types';
+
+class SyntheticChangeError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'SyntheticChangeError';
+  }
+}
 
 export interface MaskFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   component?: React.ComponentClass | React.FunctionComponent;
@@ -53,72 +60,27 @@ function MaskFieldComponent(
   const initialState = useInitialState({ initialValue, mask, replacement, showMask, separate });
 
   const inputElement = useRef<HTMLInputElement | null>(null);
-  const maskData = useRef(initialState.maskData);
+  const maskingData = useRef(initialState.maskingData);
   const changeData = useRef(initialState.changeData);
   const selection = useRef({ cachedRequestID: -1, requestID: -1, start: 0, end: 0 });
   const isFirstRender = useRef(true);
 
-  // Запускаем процесс маскирования.
-  // Возарвщает `true` если процесс прошёл успешно или `false` если произошла ошибка
+  // При наличии ошибок, выводим их в консоль
+  useError({ initialValue, mask, replacement });
+
+  // Устанавливаем стостояние элемента через ссылку
+  const setInputElementState = () => {
+    if (inputElement.current !== null) {
+      const cursorPosition = getCursorPosition(changeData.current, maskingData.current);
+      // Важно установить позицию курсора после установки значения,
+      // так как после установки значения, курсор автоматически уходит в конец значения
+      inputElement.current.value = maskingData.current.value;
+      inputElement.current.setSelectionRange(cursorPosition, cursorPosition);
+    }
+  };
+
+  // Формируем данные маскирования и отправляем событие `masking`
   const masking = () => {
-    // Устанавливаем стостояние элемента через ссылку
-    const setInputElementState = (maskedValue: string, cursorPosition: number) => {
-      if (inputElement.current !== null) {
-        // Важно установить позицию курсора после установки значения,
-        // так как после установки значения, курсор автоматически уходит в конец значения
-        inputElement.current.value = maskedValue;
-        inputElement.current.setSelectionRange(cursorPosition, cursorPosition);
-      }
-    };
-
-    // Восстанавливаем состояние элемента в случае ошибок
-    const reset = () => {
-      const position = getCursorPosition('', changeData.current, maskData.current);
-      setInputElementState(maskData.current.value, position);
-
-      return false;
-    };
-
-    if (inputElement.current === null) return reset();
-
-    // Если событие вызывается слишком часто, смена курсора может не поспеть за новым событием,
-    // поэтому сравниваем `requestID` кэшированный и текущий для избежания некорректного поведения маски
-    if (selection.current.cachedRequestID === selection.current.requestID) return reset();
-    selection.current.cachedRequestID = selection.current.requestID;
-
-    const currentValue = inputElement.current.value;
-    const currentPosition = inputElement.current.selectionStart || 0;
-    let currentInputType = '';
-
-    // Определяем тип ввода (свойство `inputType` в объекте `event` не поддерживается старыми браузерами)
-    if (currentPosition > selection.current.start) {
-      currentInputType = 'insert';
-    } else if (
-      currentPosition <= selection.current.start &&
-      currentPosition < selection.current.end
-    ) {
-      currentInputType = 'delete';
-    } else if (
-      currentPosition === selection.current.end &&
-      currentValue.length < maskData.current.value.length
-    ) {
-      currentInputType = 'deleteForward';
-    }
-
-    if (currentInputType === 'insert') {
-      const addedSymbols = currentValue.slice(selection.current.start, currentPosition);
-      const selectionRange = { start: selection.current.start, end: selection.current.end };
-
-      changeData.current = getChangeData(maskData.current, selectionRange, addedSymbols);
-
-      if (!changeData.current.added) return reset();
-    } else if (currentInputType === 'delete' || currentInputType === 'deleteForward') {
-      const countDeletedSymbols = maskData.current.value.length - currentValue.length;
-      const selectionRange = { start: currentPosition, end: currentPosition + countDeletedSymbols };
-
-      changeData.current = getChangeData(maskData.current, selectionRange, '');
-    }
-
     // Модифицируем свойства компонента, если задан `modify`
     if (modify !== undefined) {
       const modifiedData = modify({
@@ -137,7 +99,7 @@ function MaskFieldComponent(
       if (modifiedData?.separate !== undefined) separate = modifiedData.separate;
     }
 
-    maskData.current = getMaskData({
+    maskingData.current = getMaskingData({
       unmaskedValue: changeData.current.value,
       initialValue: '',
       mask,
@@ -146,9 +108,7 @@ function MaskFieldComponent(
       separate,
     });
 
-    const position = getCursorPosition(currentInputType, changeData.current, maskData.current);
-
-    setInputElementState(maskData.current.value, position);
+    setInputElementState();
 
     // Генерируем и отправляем пользовательское событие `masking`
     const customEvent = new CustomEvent('masking', {
@@ -156,17 +116,15 @@ function MaskFieldComponent(
       cancelable: false,
       composed: true,
       detail: {
-        masked: maskData.current.value,
+        masked: maskingData.current.value,
         unmasked: changeData.current.value,
-        pattern: maskData.current.pattern,
-        isValid: maskData.current.isValid,
+        pattern: maskingData.current.pattern,
+        isValid: maskingData.current.isValid,
       },
     }) as MaskingEvent;
 
-    inputElement.current.dispatchEvent(customEvent);
+    inputElement.current?.dispatchEvent(customEvent);
     onMasking?.(customEvent);
-
-    return true;
   };
 
   // Преобразовываем объект `replacement` в строку для сравнения с зависимостью в `useEffect`
@@ -174,8 +132,9 @@ function MaskFieldComponent(
     return value instanceof RegExp ? value.toString() : value;
   });
 
-  // При `autoFocus === true` курсор становится в конец инициализированного значения,
-  // поэтому заранее устанавливаем курсор на первый заменяемый символ
+  // При `autoFocus === true` курсор становится в конец инициализированного значения, поэтому заранее
+  // устанавливаем курсор на первый заменяемый символ. Нам не обязательно устанавливть зависимости, так
+  // как `autoFocus` срабатывает только один раз при монтировании компонента
   useLayoutEffect(() => {
     if (otherProps.autoFocus) {
       const position = getReplaceableSymbolIndex(initialValue, replacement);
@@ -191,12 +150,72 @@ function MaskFieldComponent(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mask, stringifiedReplacement, showMask, separate]);
 
-  // При наличии ошибок, выводим их в консоль
-  useError({ initialValue, mask, replacement });
-
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const result = masking();
-    if (result) onChange?.(event);
+    try {
+      // Если событие вызывается слишком часто, смена курсора может не поспеть за новым событием,
+      // поэтому сравниваем `requestID` кэшированный и текущий для избежания некорректного поведения маски
+      if (selection.current.cachedRequestID === selection.current.requestID) {
+        throw new SyntheticChangeError('The input cursor has not been updated.');
+      }
+
+      selection.current.cachedRequestID = selection.current.requestID;
+
+      const currentValue = inputElement.current?.value || '';
+      const currentPosition = inputElement.current?.selectionStart || 0;
+      let currentInputType = '';
+
+      // Определяем тип ввода. Ручное определение типа ввода способствует кроссбраузерности
+      if (currentPosition > selection.current.start) {
+        currentInputType = 'insert';
+      } else if (
+        currentPosition <= selection.current.start &&
+        currentPosition < selection.current.end
+      ) {
+        currentInputType = 'delete';
+      } else if (
+        currentPosition === selection.current.end &&
+        currentValue.length < maskingData.current.value.length
+      ) {
+        currentInputType = 'deleteForward';
+      }
+
+      if (currentInputType === 'insert') {
+        const addedSymbols = currentValue.slice(selection.current.start, currentPosition);
+
+        changeData.current = getChangeData({
+          maskingData: maskingData.current,
+          inputType: currentInputType,
+          selectionRange: { start: selection.current.start, end: selection.current.end },
+          added: addedSymbols,
+        });
+
+        if (!changeData.current.added) {
+          throw new SyntheticChangeError(
+            'The symbol does not match the value of the `replacement` object.'
+          );
+        }
+      } else if (currentInputType === 'delete' || currentInputType === 'deleteForward') {
+        const countDeletedSymbols = maskingData.current.value.length - currentValue.length;
+
+        changeData.current = getChangeData({
+          maskingData: maskingData.current,
+          inputType: currentInputType,
+          selectionRange: { start: currentPosition, end: currentPosition + countDeletedSymbols },
+          added: '',
+        });
+      }
+
+      masking();
+      onChange?.(event);
+    } catch (error) {
+      // Поскольку внутреннее состояние элемента `input` изменилось после ввода,
+      // его необходимо восстановить
+      setInputElementState();
+
+      if ((error as Error).name !== 'SyntheticChangeError') {
+        throw error;
+      }
+    }
   };
 
   const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {

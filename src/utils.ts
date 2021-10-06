@@ -1,4 +1,4 @@
-import type { Replacement, SelectionRange, AST, ChangeData, MaskData } from './types';
+import type { Replacement, InputType, SelectionRange, AST, ChangeData, MaskingData } from './types';
 
 export function hasKey(object: object, key: string) {
   return Object.prototype.hasOwnProperty.call(object, key);
@@ -67,14 +67,13 @@ export function convertToReplacementObject(replacement: string | Replacement) {
  * 1. действие в начале строки;
  * 2. действие в середине строки;
  * 3. действие в конце строки.
- * @param inputType тип ввода
  * @param changeData
- * @param maskData
+ * @param maskingData
  * @returns позиция курсора
  */
-export function getCursorPosition(inputType: string, changeData: ChangeData, maskData: MaskData) {
-  const { value, replacement, separate, ast } = maskData;
-  const { beforeRange, afterRange } = changeData;
+export function getCursorPosition(changeData: ChangeData, maskingData: MaskingData) {
+  const { value, replacement, separate, ast } = maskingData;
+  const { beforeRange, afterRange, inputType } = changeData;
 
   if (separate) {
     if (!beforeRange) {
@@ -116,7 +115,7 @@ export function getCursorPosition(inputType: string, changeData: ChangeData, mas
     if (lastChangedSymbol !== undefined) return lastChangedSymbol.index + 1;
   }
 
-  // Если предыдущие условия не выполнены возвращаем индекс первого заменяемого символа маски
+  // Если предыдущие условия не выполнены возвращаем индекс первого заменяемого символа маски.
   // Если индекс не найден, перемещаем курсор в конец строки
   const replaceableSymbolIndex = getReplaceableSymbolIndex(value, replacement);
   return replaceableSymbolIndex !== -1 ? replaceableSymbolIndex : value.length;
@@ -140,7 +139,7 @@ function generatePattern(mask: string, replacement: Replacement, disableReplacem
   }, '^');
 }
 
-interface GetMaskDataParams {
+interface GetMaskingDataParams {
   unmaskedValue: string;
   initialValue: string;
   mask: string;
@@ -160,14 +159,14 @@ interface GetMaskDataParams {
  * @param param.separate
  * @returns объект с данными маскированного значение
  */
-export function getMaskData({
+export function getMaskingData({
   unmaskedValue,
   initialValue,
   mask,
   replacement,
   showMask,
   separate,
-}: GetMaskDataParams): MaskData {
+}: GetMaskingDataParams): MaskingData {
   const maskSymbols = mask.split('');
   // Позиция позволяет не учитывать заменяемые символы при `separate === true`,
   // в остальных случаях помогает более быстро находить индекс символа
@@ -185,10 +184,9 @@ export function getMaskData({
     }
   });
 
-  // Генерируем дерево синтаксического анализа (AST).
-  // AST представляет собой массив объектов, где каждый объект содержит в себе
-  // всю необходимую информацию о каждом символе значения.
-  // AST используется для точечного манипулирования символом или группой символов.
+  // Генерируем дерево синтаксического анализа (AST). AST представляет собой массив объектов, где
+  // каждый объект содержит в себе всю необходимую информацию о каждом символе значения. AST
+  // используется для точечного манипулирования символом или группой символов.
   const ast = maskSymbols.map((symbol, index) => {
     const own = hasKey(replacement, symbol)
       ? ('replacement' as const)
@@ -240,27 +238,36 @@ function filterSymbols(
   }, '');
 }
 
+interface GetChangeDataParams {
+  maskingData: MaskingData;
+  inputType: InputType;
+  selectionRange: SelectionRange;
+  added: string;
+}
+
 /**
- * Получает значение введенное пользователем. Для определения пользовательского значения,
- * функция выявляет значение до диапазона изменяемых символов и после него. Сам диапазон заменяется
- * символами пользовательского ввода (при событии `insert`) или пустой строкой (при событии `delete`).
- * @param maskData
+ * Получает значение введенное пользователем. Для определения пользовательского значения, функция
+ * выявляет значение до диапазона изменяемых символов и после него. Сам диапазон заменяется символами
+ * пользовательского ввода (при событии `insert`) или пустой строкой (при событии `delete`).
+ * @param maskingData
+ * @param inputType тип ввода
  * @param selectionRange диапозон изменяемых символов
  * @param added добавленные символы в строку (при событии `insert`)
  * @returns объект содержащий информацию о пользовательском значении
  */
-export function getChangeData(
-  maskData: MaskData,
-  selectionRange: SelectionRange,
-  added: string
-): ChangeData {
+export function getChangeData({
+  maskingData,
+  inputType,
+  selectionRange,
+  added,
+}: GetChangeDataParams): ChangeData {
   let addedSymbols = added;
   let beforeRange = '';
   let afterRange = '';
 
   // Определяем символы до и после диапозона изменяемых символов
-  maskData.ast.forEach(({ symbol, own }, index) => {
-    if (maskData.separate ? own === 'change' || own === 'replacement' : own === 'change') {
+  maskingData.ast.forEach(({ symbol, own }, index) => {
+    if (maskingData.separate ? own === 'change' || own === 'replacement' : own === 'change') {
       if (index < selectionRange.start) beforeRange += symbol;
       else if (index >= selectionRange.end) afterRange += symbol;
     }
@@ -268,41 +275,42 @@ export function getChangeData(
 
   // Находим все заменяемые символы для фильтрации пользовательского значения.
   // Важно определить корректное значение на данном этапе
-  let replaceableSymbols = maskData.mask.split('').reduce((prev, symbol) => {
-    return hasKey(maskData.replacement, symbol) ? prev + symbol : prev;
+  let replaceableSymbols = maskingData.mask.split('').reduce((prev, symbol) => {
+    return hasKey(maskingData.replacement, symbol) ? prev + symbol : prev;
   }, '');
 
   // Фильтруем добавленные символы на соответствие значениям `replacement`
   if (beforeRange) {
     beforeRange = filterSymbols(
       beforeRange,
-      maskData.replacement,
+      maskingData.replacement,
       replaceableSymbols,
-      maskData.separate
+      maskingData.separate
     );
   }
 
   replaceableSymbols = replaceableSymbols.slice(beforeRange.length);
 
-  // Фильтруем добавленные символы на соответствие значениям `replacement`.
-  // Поскольку нас интересуют только "полезные" символы, фильтуем без учёта заменяемых символов
+  // Фильтруем добавленные символы на соответствие значениям `replacement`. Поскольку нас интересуют
+  // только "полезные" символы, фильтуем без учёта заменяемых символов
   if (addedSymbols) {
-    addedSymbols = filterSymbols(addedSymbols, maskData.replacement, replaceableSymbols);
+    addedSymbols = filterSymbols(addedSymbols, maskingData.replacement, replaceableSymbols);
   }
 
-  // Изменяем `afterRange` чтобы позиция символов не смещалась (обязательно перед фильтрацией `afterRange`).
-  if (maskData.separate) {
+  // Изменяем `afterRange` чтобы позиция символов не смещалась (обязательно перед фильтрацией `afterRange`)
+  if (maskingData.separate) {
     // Находим заменяемые символы в диапозоне изменяемых символов
-    const separateSymbols = maskData.mask.split('').reduce((prev, symbol, index) => {
+    const separateSymbols = maskingData.mask.split('').reduce((prev, symbol, index) => {
       const isSelectionRange = index >= selectionRange.start && index < selectionRange.end;
-      const isReplacementKey = hasKey(maskData.replacement, symbol);
+      const isReplacementKey = hasKey(maskingData.replacement, symbol);
 
       return isSelectionRange && isReplacementKey ? prev + symbol : prev;
     }, '');
 
-    // Количество символов для сохранения перед `afterRange` при `separate === true`.
-    // Возможны значения: меньше ноля - обрезаем значение с начала на количество символов,
-    // ноль - не меняем значение и больше ноля - добавляем к началу значения заменяемые символы
+    // Количество символов для сохранения перед `afterRange` при `separate === true`. Возможны значения:
+    // `меньше ноля` - обрезаем значение с начала на количество символов;
+    // `ноль` - не меняем значение;
+    // `больше ноля` - добавляем к началу значения заменяемые символы.
     const countSeparateSymbols = separateSymbols.length - addedSymbols.length;
 
     if (countSeparateSymbols < 0) {
@@ -318,13 +326,13 @@ export function getChangeData(
   if (afterRange) {
     afterRange = filterSymbols(
       afterRange,
-      maskData.replacement,
+      maskingData.replacement,
       replaceableSymbols,
-      maskData.separate
+      maskingData.separate
     );
   }
 
   const value = beforeRange + addedSymbols + afterRange;
 
-  return { value, beforeRange, added: addedSymbols, afterRange };
+  return { value, beforeRange, added: addedSymbols, afterRange, inputType };
 }

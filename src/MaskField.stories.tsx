@@ -23,7 +23,7 @@ export const UncontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = 
         autoFocus
         defaultValue="+7 (___) ___-__-__"
         onMasking={(event) => setDetail(event.detail)}
-        onChange={(event) => console.log(event)}
+        // onChange={(event) => console.log(event)}
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>
@@ -143,3 +143,71 @@ MaskFieldWithCustomComponent.args = {
   showMask: true,
   separate: true,
 };
+
+/**
+ *
+ * Тестируем динамику `props`
+ *
+ */
+export const TestProps: ComponentStory<typeof MaskFieldComponent> = (args) => {
+  const [detail, setDetail] = useState<Detail | null>(null);
+  const [state, setState] = useState({
+    mask: '+7 (___) ___-__-__',
+    replacement: '_',
+    showMask: true,
+    separate: true,
+  });
+
+  return (
+    <>
+      <MaskFieldComponent
+        {...args}
+        mask={state.mask}
+        replacement={state.replacement}
+        showMask={state.showMask}
+        separate={state.separate}
+        defaultValue="+7 (91_) ___-__-__"
+        onMasking={(event) => setDetail(event.detail)}
+      />
+
+      <button
+        type="button"
+        onClick={() =>
+          setState((prev) => ({
+            ...prev,
+            mask: prev.mask === '+7 (___) ___-__-__' ? '___-___' : '+7 (___) ___-__-__',
+          }))
+        }
+      >
+        Изменить mask
+      </button>
+
+      <button
+        type="button"
+        onClick={() =>
+          setState((prev) => ({ ...prev, replacement: prev.replacement === '_' ? '0' : '_' }))
+        }
+      >
+        Изменить replacement
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setState((prev) => ({ ...prev, showMask: !prev.showMask }))}
+      >
+        Изменить showMask
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setState((prev) => ({ ...prev, separate: !prev.separate }))}
+      >
+        Изменить separate
+      </button>
+
+      <pre>{JSON.stringify({ state, detail }, null, 2)}</pre>
+    </>
+  );
+};
+
+TestProps.args = {};

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { hasKey, getChangeData, getMaskData } from './utils';
+import { hasKey, getChangeData, getMaskingData } from './utils';
 import type { Replacement } from './types';
 
 interface UseInitialStateParams {
@@ -18,7 +18,7 @@ interface UseInitialStateParams {
  * @param param.replacement
  * @param param.showMask
  * @param param.separate
- * @returns объект с начальным состоянием `maskData` и `changeData`
+ * @returns объект с начальным состоянием `maskingData` и `changeData`
  */
 export default function useInitialState({
   initialValue,
@@ -28,8 +28,8 @@ export default function useInitialState({
   separate,
 }: UseInitialStateParams) {
   return useMemo(() => {
-    // Выбираем из маскированного значения все пользовательские символы
-    // методом определения ключей `replacement` и наличием на их месте отличающегося символа
+    // Выбираем из маскированного значения все пользовательские символы методом определения ключей
+    // `replacement` и наличием на их месте отличающегося символа
     const unmaskedValue = mask.split('').reduce((prev, symbol, index) => {
       if (hasKey(replacement, symbol)) {
         const isChangedSymbol = !!initialValue[index] && !hasKey(replacement, initialValue[index]);
@@ -38,7 +38,7 @@ export default function useInitialState({
       return prev;
     }, '');
 
-    const maskData = getMaskData({
+    const maskingData = getMaskingData({
       unmaskedValue,
       initialValue,
       mask,
@@ -47,10 +47,14 @@ export default function useInitialState({
       separate,
     });
 
-    const selectionRange = { start: 0, end: maskData.ast.length };
-    const changeData = getChangeData(maskData, selectionRange, unmaskedValue);
+    const changeData = getChangeData({
+      maskingData,
+      inputType: 'initial',
+      selectionRange: { start: 0, end: maskingData.ast.length },
+      added: unmaskedValue,
+    });
 
-    return { maskData, changeData };
+    return { maskingData, changeData };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

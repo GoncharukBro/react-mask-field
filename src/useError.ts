@@ -2,20 +2,6 @@ import { useEffect } from 'react';
 import { hasKey } from './utils';
 import type { Replacement } from './types';
 
-class ValidationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'Validation Error';
-  }
-}
-
-class SyntaxError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'Syntax Error';
-  }
-}
-
 interface UseErrorParams {
   initialValue: string;
   mask: string;
@@ -53,7 +39,7 @@ export default function useError({ initialValue, mask, replacement }: UseErrorPa
 Invalid value: "${initialValue}".
 `;
         // eslint-disable-next-line no-console
-        console.error(new ValidationError(message));
+        console.error(new Error(message));
       }
 
       // Валидируем длину инициализируемого значения
@@ -63,7 +49,7 @@ Invalid value: "${initialValue}".
 Invalid value: "${initialValue}".
 `;
         // eslint-disable-next-line no-console
-        console.error(new ValidationError(message));
+        console.error(new Error(message));
       }
 
       // Валидируем длину ключей `replacement`
@@ -73,7 +59,7 @@ Invalid value: "${initialValue}".
 Invalid keys: ${invalidReplacementKeys.join(', ')}.
 `;
         // eslint-disable-next-line no-console
-        console.error(new SyntaxError(message));
+        console.error(new Error(message));
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

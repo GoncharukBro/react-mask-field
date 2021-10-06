@@ -39,8 +39,8 @@ export default function useInitialState({
     }, '');
 
     const maskingData = getMaskingData({
-      unmaskedValue,
       initialValue,
+      unmaskedValue,
       mask,
       replacement,
       showMask,

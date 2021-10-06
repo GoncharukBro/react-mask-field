@@ -1,7 +1,8 @@
 import { useLayoutEffect, useEffect, useRef, useMemo, useCallback, forwardRef } from 'react';
 import {
-  getReplaceableSymbolIndex,
+  hasKey,
   convertToReplacementObject,
+  getReplaceableSymbolIndex,
   getChangeData,
   getMaskingData,
   getCursorPosition,
@@ -32,10 +33,10 @@ export interface MaskFieldProps extends React.InputHTMLAttributes<HTMLInputEleme
 function MaskFieldComponent(
   {
     component: Component,
-    mask: maskProps = '',
+    mask = '',
     replacement: replacementProps = {},
-    showMask: showMaskProps = false,
-    separate: separateProps = false,
+    showMask = false,
+    separate = false,
     modify,
     onMasking,
     onChange,
@@ -45,10 +46,7 @@ function MaskFieldComponent(
   }: MaskFieldProps,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ) {
-  let mask = maskProps;
-  let replacement = convertToReplacementObject(replacementProps);
-  let showMask = showMaskProps;
-  let separate = separateProps;
+  const replacement = convertToReplacementObject(replacementProps);
 
   const initialValue = useMemo(() => {
     if (otherProps.value !== undefined) return otherProps.value;
@@ -81,31 +79,39 @@ function MaskFieldComponent(
 
   // Формируем данные маскирования и отправляем событие `masking`
   const masking = () => {
+    let unmaskedValue = changeData.current.value;
+
+    if (!separate) {
+      unmaskedValue = unmaskedValue.split('').reduce((prev, symbol) => {
+        if (hasKey(replacement, symbol)) return prev;
+        return prev + symbol;
+      }, '');
+    }
+
+    let modifiedMask = mask;
+    let modifiedReplacement = replacement;
+    let modifiedShowMask = showMask;
+    let modifiedSeparate = separate;
+
     // Модифицируем свойства компонента, если задан `modify`
     if (modify !== undefined) {
-      const modifiedData = modify({
-        value: changeData.current.value,
-        mask,
-        replacement,
-        showMask,
-        separate,
-      });
+      const modifiedData = modify({ value: unmaskedValue, mask, replacement, showMask, separate });
 
-      if (modifiedData?.value !== undefined) changeData.current.value = modifiedData.value;
-      if (modifiedData?.mask !== undefined) mask = modifiedData.mask;
+      if (modifiedData?.value !== undefined) unmaskedValue = modifiedData.value;
+      if (modifiedData?.mask !== undefined) modifiedMask = modifiedData.mask;
       if (modifiedData?.replacement !== undefined)
-        replacement = convertToReplacementObject(modifiedData.replacement);
-      if (modifiedData?.showMask !== undefined) showMask = modifiedData.showMask;
-      if (modifiedData?.separate !== undefined) separate = modifiedData.separate;
+        modifiedReplacement = convertToReplacementObject(modifiedData.replacement);
+      if (modifiedData?.showMask !== undefined) modifiedShowMask = modifiedData.showMask;
+      if (modifiedData?.separate !== undefined) modifiedSeparate = modifiedData.separate;
     }
 
     maskingData.current = getMaskingData({
-      unmaskedValue: changeData.current.value,
       initialValue: '',
-      mask,
-      replacement,
-      showMask,
-      separate,
+      unmaskedValue,
+      mask: modifiedMask,
+      replacement: modifiedReplacement,
+      showMask: modifiedShowMask,
+      separate: modifiedSeparate,
     });
 
     setInputElementState();
@@ -117,7 +123,7 @@ function MaskFieldComponent(
       composed: true,
       detail: {
         masked: maskingData.current.value,
-        unmasked: changeData.current.value,
+        unmasked: unmaskedValue,
         pattern: maskingData.current.pattern,
         isValid: maskingData.current.isValid,
       },
@@ -164,7 +170,7 @@ function MaskFieldComponent(
       const currentPosition = inputElement.current?.selectionStart || 0;
       let currentInputType = '';
 
-      // Определяем тип ввода. Ручное определение типа ввода способствует кроссбраузерности
+      // Определяем тип ввода (ручное определение типа ввода способствует кроссбраузерности)
       if (currentPosition > selection.current.start) {
         currentInputType = 'insert';
       } else if (
@@ -181,28 +187,34 @@ function MaskFieldComponent(
 
       if (currentInputType === 'insert') {
         const addedSymbols = currentValue.slice(selection.current.start, currentPosition);
+        const range = { start: selection.current.start, end: selection.current.end };
 
-        changeData.current = getChangeData({
+        const data = getChangeData({
           maskingData: maskingData.current,
           inputType: currentInputType,
-          selectionRange: { start: selection.current.start, end: selection.current.end },
+          selectionRange: range,
           added: addedSymbols,
         });
 
-        if (!changeData.current.added) {
+        if (!data.added) {
           throw new SyntheticChangeError(
             'The symbol does not match the value of the `replacement` object.'
           );
         }
+
+        changeData.current = data;
       } else if (currentInputType === 'delete' || currentInputType === 'deleteForward') {
         const countDeletedSymbols = maskingData.current.value.length - currentValue.length;
+        const range = { start: currentPosition, end: currentPosition + countDeletedSymbols };
 
         changeData.current = getChangeData({
           maskingData: maskingData.current,
           inputType: currentInputType,
-          selectionRange: { start: currentPosition, end: currentPosition + countDeletedSymbols },
+          selectionRange: range,
           added: '',
         });
+      } else {
+        throw new SyntheticChangeError('The input type is undefined.');
       }
 
       masking();

@@ -140,8 +140,8 @@ function generatePattern(mask: string, replacement: Replacement, disableReplacem
 }
 
 interface GetMaskingDataParams {
-  unmaskedValue: string;
   initialValue: string;
+  unmaskedValue: string;
   mask: string;
   replacement: Replacement;
   showMask: boolean;
@@ -151,8 +151,8 @@ interface GetMaskingDataParams {
 /**
  * Формирует данные маскированного значения
  * @param param
- * @param param.unmaskedValue пользовательские символы без учета символов маски
  * @param param.initialValue при наличии, значение в `input` будет соответствовать инициализированному значению
+ * @param param.unmaskedValue пользовательские символы без учета символов маски
  * @param param.mask
  * @param param.replacement
  * @param param.showMask
@@ -160,8 +160,8 @@ interface GetMaskingDataParams {
  * @returns объект с данными маскированного значение
  */
 export function getMaskingData({
-  unmaskedValue,
   initialValue,
+  unmaskedValue,
   mask,
   replacement,
   showMask,
@@ -220,8 +220,8 @@ export function getMaskingData({
 // Фильтруем символы для соответствия значениям `replacement`
 function filterSymbols(
   value: string,
-  replacement: Replacement,
   replaceableSymbols: string,
+  replacement: Replacement,
   separate?: boolean
 ) {
   let symbols = replaceableSymbols;
@@ -283,8 +283,8 @@ export function getChangeData({
   if (beforeRange) {
     beforeRange = filterSymbols(
       beforeRange,
-      maskingData.replacement,
       replaceableSymbols,
+      maskingData.replacement,
       maskingData.separate
     );
   }
@@ -294,23 +294,23 @@ export function getChangeData({
   // Фильтруем добавленные символы на соответствие значениям `replacement`. Поскольку нас интересуют
   // только "полезные" символы, фильтуем без учёта заменяемых символов
   if (addedSymbols) {
-    addedSymbols = filterSymbols(addedSymbols, maskingData.replacement, replaceableSymbols);
+    addedSymbols = filterSymbols(addedSymbols, replaceableSymbols, maskingData.replacement);
   }
 
-  // Изменяем `afterRange` чтобы позиция символов не смещалась (обязательно перед фильтрацией `afterRange`)
+  // Модифицируем `afterRange` чтобы позиция символов не смещалась. Необходимо выполнять
+  // после фильтрации `added` и перед фильтрацией `afterRange`
   if (maskingData.separate) {
     // Находим заменяемые символы в диапозоне изменяемых символов
     const separateSymbols = maskingData.mask.split('').reduce((prev, symbol, index) => {
       const isSelectionRange = index >= selectionRange.start && index < selectionRange.end;
       const isReplacementKey = hasKey(maskingData.replacement, symbol);
-
       return isSelectionRange && isReplacementKey ? prev + symbol : prev;
     }, '');
 
-    // Количество символов для сохранения перед `afterRange` при `separate === true`. Возможны значения:
-    // `меньше ноля` - обрезаем значение с начала на количество символов;
+    // Получаем количество символов для сохранения перед `afterRange`. Возможные значения:
+    // `меньше ноля` - обрезаем значение от начала на количество символов;
     // `ноль` - не меняем значение;
-    // `больше ноля` - добавляем к началу значения заменяемые символы.
+    // `больше ноля` - добавляем заменяемые символы к началу значения.
     const countSeparateSymbols = separateSymbols.length - addedSymbols.length;
 
     if (countSeparateSymbols < 0) {
@@ -326,8 +326,8 @@ export function getChangeData({
   if (afterRange) {
     afterRange = filterSymbols(
       afterRange,
-      maskingData.replacement,
       replaceableSymbols,
+      maskingData.replacement,
       maskingData.separate
     );
   }

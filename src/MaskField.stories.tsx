@@ -166,7 +166,7 @@ export const TestProps: ComponentStory<typeof MaskFieldComponent> = (args) => {
         replacement={state.replacement}
         showMask={state.showMask}
         separate={state.separate}
-        defaultValue="+7 (91_) ___-__-__"
+        defaultValue="+7 (91_) ___-58-__"
         onMasking={(event) => setDetail(event.detail)}
       />
 

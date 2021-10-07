@@ -72,12 +72,12 @@ export function convertToReplacementObject(replacement: string | Replacement) {
  * @returns позиция курсора
  */
 export function getCursorPosition(changeData: ChangeData, maskingData: MaskingData) {
-  const { value, replacement, separate, ast } = maskingData;
+  const { maskedValue, replacement, separate, ast } = maskingData;
   const { beforeRange, afterRange, inputType } = changeData;
 
   if (separate) {
     if (!beforeRange) {
-      const replaceableSymbolIndex = getReplaceableSymbolIndex(value, replacement);
+      const replaceableSymbolIndex = getReplaceableSymbolIndex(maskedValue, replacement);
       if (replaceableSymbolIndex !== -1) return replaceableSymbolIndex;
     }
 
@@ -117,8 +117,8 @@ export function getCursorPosition(changeData: ChangeData, maskingData: MaskingDa
 
   // Если предыдущие условия не выполнены возвращаем индекс первого заменяемого символа маски.
   // Если индекс не найден, перемещаем курсор в конец строки
-  const replaceableSymbolIndex = getReplaceableSymbolIndex(value, replacement);
-  return replaceableSymbolIndex !== -1 ? replaceableSymbolIndex : value.length;
+  const replaceableSymbolIndex = getReplaceableSymbolIndex(maskedValue, replacement);
+  return replaceableSymbolIndex !== -1 ? replaceableSymbolIndex : maskedValue.length;
 }
 
 // Формируем регулярное выражение для паттерна в `input`
@@ -197,24 +197,25 @@ export function getMaskingData({
     return { symbol, index, own };
   });
 
-  let value = initialValue || maskSymbols.join('');
+  let maskedValue = initialValue || maskSymbols.join('');
 
   // Если пользователь не ввел ниодного символа, присваиваем пустую строку для соответсвия поведения `input`
   if (!initialValue && getFirstChangedSymbol(ast) === undefined) {
-    value = '';
+    maskedValue = '';
   }
 
   // Если `showMask === false`, обрезаем значение по последний пользовательский символ
-  if (!initialValue && !showMask && value) {
+  if (!initialValue && !showMask && maskedValue) {
     const lastChangedSymbol = getLastChangedSymbol(ast);
-    value = value.slice(0, lastChangedSymbol !== undefined ? lastChangedSymbol.index + 1 : 0);
+    const to = lastChangedSymbol !== undefined ? lastChangedSymbol.index + 1 : 0;
+    maskedValue = maskedValue.slice(0, to);
   }
 
   const pattern = generatePattern(mask, replacement);
   const patternForbiddingReplacement = generatePattern(mask, replacement, true);
-  const isValid = new RegExp(patternForbiddingReplacement).test(value);
+  const isValid = new RegExp(patternForbiddingReplacement).test(maskedValue);
 
-  return { value, mask, replacement, showMask, separate, pattern, isValid, ast };
+  return { maskedValue, isValid, mask, replacement, showMask, separate, pattern, ast };
 }
 
 // Фильтруем символы для соответствия значениям `replacement`
@@ -332,7 +333,7 @@ export function getChangeData({
     );
   }
 
-  const value = beforeRange + addedSymbols + afterRange;
+  const unmaskedValue = beforeRange + addedSymbols + afterRange;
 
-  return { value, beforeRange, added: addedSymbols, afterRange, inputType };
+  return { unmaskedValue, beforeRange, added: addedSymbols, afterRange, inputType };
 }

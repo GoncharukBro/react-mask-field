@@ -58,8 +58,8 @@ function MaskFieldComponent(
   const initialState = useInitialState({ initialValue, mask, replacement, showMask, separate });
 
   const inputElement = useRef<HTMLInputElement | null>(null);
-  const maskingData = useRef(initialState.maskingData);
   const changeData = useRef(initialState.changeData);
+  const maskingData = useRef(initialState.maskingData);
   const selection = useRef({ cachedRequestID: -1, requestID: -1, start: 0, end: 0 });
   const isFirstRender = useRef(true);
 
@@ -72,14 +72,14 @@ function MaskFieldComponent(
       const cursorPosition = getCursorPosition(changeData.current, maskingData.current);
       // Важно установить позицию курсора после установки значения,
       // так как после установки значения, курсор автоматически уходит в конец значения
-      inputElement.current.value = maskingData.current.value;
+      inputElement.current.value = maskingData.current.maskedValue;
       inputElement.current.setSelectionRange(cursorPosition, cursorPosition);
     }
   };
 
   // Формируем данные маскирования и отправляем событие `masking`
   const masking = () => {
-    let unmaskedValue = changeData.current.value;
+    let { unmaskedValue } = changeData.current;
 
     if (!separate) {
       unmaskedValue = unmaskedValue.split('').reduce((prev, symbol) => {
@@ -122,7 +122,7 @@ function MaskFieldComponent(
       cancelable: false,
       composed: true,
       detail: {
-        masked: maskingData.current.value,
+        masked: maskingData.current.maskedValue,
         unmasked: unmaskedValue,
         pattern: maskingData.current.pattern,
         isValid: maskingData.current.isValid,
@@ -180,7 +180,7 @@ function MaskFieldComponent(
         currentInputType = 'delete';
       } else if (
         currentPosition === selection.current.end &&
-        currentValue.length < maskingData.current.value.length
+        currentValue.length < maskingData.current.maskedValue.length
       ) {
         currentInputType = 'deleteForward';
       }
@@ -204,7 +204,7 @@ function MaskFieldComponent(
 
         changeData.current = data;
       } else if (currentInputType === 'delete' || currentInputType === 'deleteForward') {
-        const countDeletedSymbols = maskingData.current.value.length - currentValue.length;
+        const countDeletedSymbols = maskingData.current.maskedValue.length - currentValue.length;
         const range = { start: currentPosition, end: currentPosition + countDeletedSymbols };
 
         changeData.current = getChangeData({

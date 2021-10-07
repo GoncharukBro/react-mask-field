@@ -29,7 +29,7 @@ export type AST = {
 }[];
 
 export interface ChangeData {
-  value: string;
+  unmaskedValue: string;
   added: string;
   beforeRange: string;
   afterRange: string;
@@ -37,13 +37,13 @@ export interface ChangeData {
 }
 
 export interface MaskingData {
-  value: string;
+  maskedValue: string;
+  isValid: boolean;
   mask: string;
   replacement: Replacement;
   showMask: boolean;
   separate: boolean;
   pattern: string;
-  isValid: boolean;
   ast: AST;
 }
 

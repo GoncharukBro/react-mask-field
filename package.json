@@ -23,6 +23,7 @@
   "homepage": "https://github.com/GoncharukBro/react-mask-field#readme",
   "license": "MIT",
   "main": "dist/index.js",
+  "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist"

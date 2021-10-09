@@ -49,7 +49,7 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
     <>
       <MaskFieldComponent
         {...args}
-        value={detail?.masked}
+        value={detail?.maskedValue}
         onMasking={(event) => setDetail(event.detail)}
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
@@ -75,16 +75,16 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
   const ruPhoneMask = '+_ (___) ___-__-__';
   const otherPhoneMask = '+_ __________';
 
-  const modify = ({ value }: ModifiedData) => {
-    let newValue = value;
-    if (value[0] === '8') {
-      newValue = `7${value.slice(1)}`;
+  const modify = ({ unmaskedValue }: ModifiedData) => {
+    let newUnmaskedValue = unmaskedValue;
+    if (unmaskedValue[0] === '8') {
+      newUnmaskedValue = `7${unmaskedValue.slice(1)}`;
     }
-    if (value[0] === '9') {
-      newValue = `7${value}`;
+    if (unmaskedValue[0] === '9') {
+      newUnmaskedValue = `7${unmaskedValue}`;
     }
-    const newMask = !newValue || newValue[0] === '7' ? ruPhoneMask : otherPhoneMask;
-    return { value: newValue, mask: newMask };
+    const newMask = !newUnmaskedValue || newUnmaskedValue[0] === '7' ? ruPhoneMask : otherPhoneMask;
+    return { unmaskedValue: newUnmaskedValue, mask: newMask };
   };
 
   return (
@@ -93,7 +93,7 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
         {...args}
         mask={ruPhoneMask}
         modify={modify}
-        value={detail?.masked}
+        value={detail?.maskedValue}
         onMasking={(event) => setDetail(event.detail)}
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
@@ -129,7 +129,8 @@ export const MaskFieldWithCustomComponent: ComponentStory<typeof MaskFieldCompon
       <MaskFieldComponent
         {...args}
         component={CustomComponent}
-        value={detail?.masked}
+        defaultValue="+7 (9__)"
+        value={detail?.maskedValue}
         onMasking={(event) => setDetail(event.detail)}
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
@@ -153,7 +154,7 @@ export const TestProps: ComponentStory<typeof MaskFieldComponent> = (args) => {
   const [detail, setDetail] = useState<Detail | null>(null);
   const [state, setState] = useState({
     mask: '+7 (___) ___-__-__',
-    replacement: '_',
+    replacement: { _: /\d/ },
     showMask: true,
     separate: true,
   });
@@ -166,7 +167,7 @@ export const TestProps: ComponentStory<typeof MaskFieldComponent> = (args) => {
         replacement={state.replacement}
         showMask={state.showMask}
         separate={state.separate}
-        defaultValue="+7 (91_) ___-58-__"
+        defaultValue="fegoj0fwfwe"
         onMasking={(event) => setDetail(event.detail)}
       />
 
@@ -182,14 +183,17 @@ export const TestProps: ComponentStory<typeof MaskFieldComponent> = (args) => {
         Изменить mask
       </button>
 
-      <button
+      {/* <button
         type="button"
         onClick={() =>
-          setState((prev) => ({ ...prev, replacement: prev.replacement === '_' ? '0' : '_' }))
+          setState((prev) => ({
+            ...prev,
+            replacement: prev.replacement === { _: /\d/ } ? '0' : '_',
+          }))
         }
       >
         Изменить replacement
-      </button>
+      </button> */}
 
       <button
         type="button"

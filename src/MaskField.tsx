@@ -32,10 +32,10 @@ export interface MaskFieldProps extends React.InputHTMLAttributes<HTMLInputEleme
 function MaskFieldComponent(
   {
     component: Component,
-    mask = '',
-    replacement: replacementProps = {},
-    showMask = false,
-    separate = false,
+    mask: maskProps,
+    replacement: replacementProps,
+    showMask: showMaskProps,
+    separate: separateProps,
     modify,
     onMasking,
     onChange,
@@ -45,12 +45,13 @@ function MaskFieldComponent(
   }: MaskFieldProps,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ) {
-  const replacement = convertToReplacementObject(replacementProps);
+  let mask = maskProps ?? '';
+  let replacement = convertToReplacementObject(replacementProps ?? {});
+  let showMask = showMaskProps ?? false;
+  let separate = separateProps ?? false;
 
   const initialValue = useMemo(() => {
-    if (otherProps.value !== undefined) return otherProps.value;
-    if (otherProps.defaultValue !== undefined) return otherProps.defaultValue;
-    return '';
+    return otherProps.value ?? otherProps.defaultValue ?? '';
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -88,30 +89,29 @@ function MaskFieldComponent(
       }, '');
     }
 
-    let modifiedMask = mask;
-    let modifiedReplacement = replacement;
-    let modifiedShowMask = showMask;
-    let modifiedSeparate = separate;
+    const modifiedData = modify?.({
+      unmaskedValue,
+      mask,
+      replacement,
+      showMask,
+      separate,
+    });
 
-    // Модифицируем свойства компонента, если задан `modify`
-    if (modify !== undefined) {
-      const modifiedData = modify({ value: unmaskedValue, mask, replacement, showMask, separate });
-
-      if (modifiedData?.value !== undefined) unmaskedValue = modifiedData.value;
-      if (modifiedData?.mask !== undefined) modifiedMask = modifiedData.mask;
-      if (modifiedData?.replacement !== undefined)
-        modifiedReplacement = convertToReplacementObject(modifiedData.replacement);
-      if (modifiedData?.showMask !== undefined) modifiedShowMask = modifiedData.showMask;
-      if (modifiedData?.separate !== undefined) modifiedSeparate = modifiedData.separate;
+    if (modifiedData) {
+      unmaskedValue = modifiedData.unmaskedValue ?? unmaskedValue;
+      mask = modifiedData.mask ?? mask;
+      replacement = convertToReplacementObject(modifiedData.replacement ?? replacement);
+      showMask = modifiedData.showMask ?? showMask;
+      separate = modifiedData.separate ?? separate;
     }
 
     maskingData.current = getMaskingData({
       initialValue: '',
       unmaskedValue,
-      mask: modifiedMask,
-      replacement: modifiedReplacement,
-      showMask: modifiedShowMask,
-      separate: modifiedSeparate,
+      mask,
+      replacement,
+      showMask,
+      separate,
     });
 
     setInputElementState();
@@ -122,8 +122,8 @@ function MaskFieldComponent(
       cancelable: false,
       composed: true,
       detail: {
-        masked: maskingData.current.maskedValue,
-        unmasked: unmaskedValue,
+        unmaskedValue,
+        maskedValue: maskingData.current.maskedValue,
         pattern: maskingData.current.pattern,
         isValid: maskingData.current.isValid,
       },
@@ -251,9 +251,12 @@ function MaskFieldComponent(
     (ref: HTMLInputElement | null) => {
       inputElement.current = ref;
       // Добавляем ссылку на элемент для родительских компонентов
-      if (typeof forwardedRef === 'function') forwardedRef(ref);
-      // eslint-disable-next-line no-param-reassign
-      if (typeof forwardedRef === 'object' && forwardedRef !== null) forwardedRef.current = ref;
+      if (typeof forwardedRef === 'function') {
+        forwardedRef(ref);
+      } else if (typeof forwardedRef === 'object' && forwardedRef !== null) {
+        // eslint-disable-next-line no-param-reassign
+        forwardedRef.current = ref;
+      }
     },
     [forwardedRef, inputElement]
   );

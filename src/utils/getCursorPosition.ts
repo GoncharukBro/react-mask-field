@@ -18,9 +18,7 @@ function getFirstAfterRangeSymbol(
   lastAddedSymbol: ReturnType<typeof getLastAddedSymbol>
 ) {
   const changedSymbols = ast.filter(({ own }) => own === 'change');
-  return lastAddedSymbol !== undefined
-    ? changedSymbols.find((symbol) => lastAddedSymbol.index < symbol.index)
-    : undefined;
+  return lastAddedSymbol && changedSymbols.find((symbol) => lastAddedSymbol.index < symbol.index);
 }
 
 /**

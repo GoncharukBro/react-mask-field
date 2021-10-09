@@ -1,6 +1,6 @@
 export interface Detail {
-  masked: string;
-  unmasked: string;
+  unmaskedValue: string;
+  maskedValue: string;
   pattern: string;
   isValid: boolean;
 }
@@ -48,7 +48,7 @@ export interface MaskingData {
 }
 
 export interface ModifiedData {
-  value: string;
+  unmaskedValue: string;
   mask: string;
   replacement: Replacement;
   showMask: boolean;

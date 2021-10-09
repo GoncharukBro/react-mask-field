@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { hasKey, getMaskingData } from './utils';
+import { getMaskingData } from './utils';
 import type { Replacement, ChangeData, MaskingData } from './types';
 
 interface UseInitialStateParams {
@@ -31,7 +31,9 @@ export default function useInitialState({
     // Выбираем из инициализированного значения все символы, не являющиеся символами маски.
     // Ожидается, что инициализированное значение соответствует маске
     const unmaskedValue = mask.split('').reduce((prev, symbol, index) => {
-      if (hasKey(replacement, symbol)) {
+      const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
+
+      if (isReplacementKey) {
         if (initialValue[index] !== undefined && initialValue[index] !== symbol) {
           return prev + initialValue[index];
         }
@@ -39,6 +41,7 @@ export default function useInitialState({
           return prev + symbol;
         }
       }
+
       return prev;
     }, '');
 

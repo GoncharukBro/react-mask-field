@@ -1,6 +1,5 @@
 import { useLayoutEffect, useEffect, useRef, useMemo, useCallback, forwardRef } from 'react';
 import {
-  hasKey,
   convertToReplacementObject,
   getReplaceableSymbolIndex,
   getChangeData,
@@ -83,7 +82,8 @@ function MaskFieldComponent(
 
     if (!separate) {
       unmaskedValue = unmaskedValue.split('').reduce((prev, symbol) => {
-        if (hasKey(replacement, symbol)) return prev;
+        const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
+        if (isReplacementKey) return prev;
         return prev + symbol;
       }, '');
     }

@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { hasKey } from './utils';
 import type { Replacement } from './types';
 
 interface UseErrorParams {
@@ -24,7 +23,8 @@ export default function useError({ initialValue, mask, replacement }: UseErrorPa
         .slice(0, initialValue.length)
         .split('')
         .findIndex((symbol, index) => {
-          if (hasKey(replacement, symbol)) {
+          const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
+          if (isReplacementKey) {
             return initialValue[index] !== symbol
               ? !replacement[symbol].test(initialValue[index])
               : false;

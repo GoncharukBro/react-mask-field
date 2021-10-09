@@ -28,10 +28,16 @@ export default function useInitialState({
   separate,
 }: UseInitialStateParams) {
   return useMemo(() => {
+    // Выбираем из инициализированного значения все символы, не являющиеся символами маски.
+    // Ожидается, что инициализированное значение соответствует маске
     const unmaskedValue = mask.split('').reduce((prev, symbol, index) => {
       if (hasKey(replacement, symbol)) {
-        if (initialValue[index] !== symbol) return prev + initialValue[index];
-        if (separate) return prev + symbol;
+        if (initialValue[index] !== undefined && initialValue[index] !== symbol) {
+          return prev + initialValue[index];
+        }
+        if (separate) {
+          return prev + symbol;
+        }
       }
       return prev;
     }, '');

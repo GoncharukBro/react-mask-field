@@ -185,34 +185,42 @@ function MaskFieldComponent(
         currentInputType = 'deleteForward';
       }
 
-      if (currentInputType === 'insert') {
-        const addedSymbols = currentValue.slice(selection.current.start, currentPosition);
-        const range = { start: selection.current.start, end: selection.current.end };
+      switch (currentInputType) {
+        case 'insert': {
+          const addedSymbols = currentValue.slice(selection.current.start, currentPosition);
+          const range = { start: selection.current.start, end: selection.current.end };
 
-        changeData.current = getChangeData({
-          maskingData: maskingData.current,
-          inputType: currentInputType,
-          selectionRange: range,
-          added: addedSymbols,
-        });
+          changeData.current = getChangeData({
+            maskingData: maskingData.current,
+            inputType: currentInputType,
+            selectionRange: range,
+            added: addedSymbols,
+          });
 
-        if (!changeData.current.added) {
-          throw new SyntheticChangeError(
-            'The symbol does not match the value of the `replacement` object.'
-          );
+          if (!changeData.current.added) {
+            throw new SyntheticChangeError(
+              'The symbol does not match the value of the `replacement` object.'
+            );
+          }
+
+          break;
         }
-      } else if (currentInputType === 'delete' || currentInputType === 'deleteForward') {
-        const countDeletedSymbols = maskingData.current.maskedValue.length - currentValue.length;
-        const range = { start: currentPosition, end: currentPosition + countDeletedSymbols };
+        case 'delete':
+        case 'deleteForward': {
+          const countDeletedSymbols = maskingData.current.maskedValue.length - currentValue.length;
+          const range = { start: currentPosition, end: currentPosition + countDeletedSymbols };
 
-        changeData.current = getChangeData({
-          maskingData: maskingData.current,
-          inputType: currentInputType,
-          selectionRange: range,
-          added: '',
-        });
-      } else {
-        throw new SyntheticChangeError('The input type is undefined.');
+          changeData.current = getChangeData({
+            maskingData: maskingData.current,
+            inputType: currentInputType,
+            selectionRange: range,
+            added: '',
+          });
+
+          break;
+        }
+        default:
+          throw new SyntheticChangeError('The input type is undefined.');
       }
 
       masking();

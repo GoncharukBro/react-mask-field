@@ -15,27 +15,24 @@ export default function getCursorPosition(changeData: ChangeData, maskingData: M
     return separate ? own === 'change' || own === 'replacement' : own === 'change';
   });
 
+  const getSymbolIndex = (index: number | false) => {
+    return index !== false ? unmaskedSymbols[index]?.index ?? -1 : -1;
+  };
+
+  const addedLastIndex = getSymbolIndex(!!added && beforeRange.length + added.length - 1);
+  const beforeRangeLastIndex = getSymbolIndex(!!beforeRange && beforeRange.length - 1);
+  const afterRangeFirstIndex = getSymbolIndex(!!afterRange && beforeRange.length + added.length);
+
   switch (inputType) {
     case 'insert':
     case 'deleteForward':
-      if (added) {
-        const addedLastIndex = beforeRange.length + added.length - 1;
-        return unmaskedSymbols[addedLastIndex].index + 1;
-      }
-      if (afterRange) {
-        const afterRangeFirstIndex = beforeRange.length + added.length;
-        return unmaskedSymbols[afterRangeFirstIndex].index;
-      }
+      if (addedLastIndex !== -1) return addedLastIndex + 1;
+      if (afterRangeFirstIndex !== -1) return afterRangeFirstIndex;
+      if (beforeRangeLastIndex !== -1) return beforeRangeLastIndex + 1;
       break;
     case 'delete':
-      if (beforeRange) {
-        const beforeRangeLastIndex = beforeRange.length - 1;
-        return unmaskedSymbols[beforeRangeLastIndex].index + 1;
-      }
-      if (afterRange) {
-        const afterRangeFirstIndex = beforeRange.length + added.length;
-        return unmaskedSymbols[afterRangeFirstIndex].index;
-      }
+      if (beforeRangeLastIndex !== -1) return beforeRangeLastIndex + 1;
+      if (afterRangeFirstIndex !== -1) return afterRangeFirstIndex;
       break;
   }
 

@@ -4,6 +4,7 @@ The MaskField component allows you to apply a mask to the input field.
 
 ![npm](https://img.shields.io/npm/dt/react-mask-field?style=flat-square)
 ![npm](https://img.shields.io/npm/v/react-mask-field?style=flat-square)
+![npm bundle size](https://img.shields.io/bundlephobia/min/react-mask-field?style=flat-square)
 
 ## Installation
 

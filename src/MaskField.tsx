@@ -189,20 +189,18 @@ function MaskFieldComponent(
         const addedSymbols = currentValue.slice(selection.current.start, currentPosition);
         const range = { start: selection.current.start, end: selection.current.end };
 
-        const data = getChangeData({
+        changeData.current = getChangeData({
           maskingData: maskingData.current,
           inputType: currentInputType,
           selectionRange: range,
           added: addedSymbols,
         });
 
-        if (!data.added) {
+        if (!changeData.current.added) {
           throw new SyntheticChangeError(
             'The symbol does not match the value of the `replacement` object.'
           );
         }
-
-        changeData.current = data;
       } else if (currentInputType === 'delete' || currentInputType === 'deleteForward') {
         const countDeletedSymbols = maskingData.current.maskedValue.length - currentValue.length;
         const range = { start: currentPosition, end: currentPosition + countDeletedSymbols };

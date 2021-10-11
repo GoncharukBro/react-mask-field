@@ -1,5 +1,3 @@
-import getFirstChangedSymbol from './getFirstChangedSymbol';
-import getLastChangedSymbol from './getLastChangedSymbol';
 import getReplaceableSymbolIndex from './getReplaceableSymbolIndex';
 import type { Replacement, MaskingData } from '../types';
 
@@ -84,13 +82,14 @@ export default function getMaskingData({
   let maskedValue = initialValue || maskSymbols.join('');
 
   // Если пользователь не ввел ниодного символа, присваиваем пустую строку для соответсвия поведения `input`
-  if (!initialValue && getFirstChangedSymbol(ast) === undefined) {
+  const firstChangedSymbol = ast.find(({ own }) => own === 'change');
+  if (!initialValue && firstChangedSymbol === undefined) {
     maskedValue = '';
   }
 
   // Если `showMask === false`, обрезаем значение по последний пользовательский символ
   if (!initialValue && !showMask && maskedValue) {
-    const lastChangedSymbol = getLastChangedSymbol(ast);
+    const lastChangedSymbol = [...ast].reverse().find(({ own }) => own === 'change');
     const to = lastChangedSymbol !== undefined ? lastChangedSymbol.index + 1 : 0;
     maskedValue = maskedValue.slice(0, to);
   }

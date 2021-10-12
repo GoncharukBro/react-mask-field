@@ -1,4 +1,3 @@
-import getReplaceableSymbolIndex from './getReplaceableSymbolIndex';
 import type { Replacement, MaskingData } from '../types';
 
 // Формируем регулярное выражение для паттерна в `input`
@@ -20,8 +19,23 @@ function generatePattern(mask: string, replacement: Replacement, disableReplacem
   }, '^');
 }
 
+// Маскируем значение
+function maskValue(unmaskedValue: string, mask: string, replacement: Replacement) {
+  let position = 0;
+
+  return mask.split('').reduce((prev, symbol) => {
+    const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
+
+    if (isReplacementKey && unmaskedValue[position] !== undefined) {
+      return prev + unmaskedValue[position++];
+    }
+
+    return prev + symbol;
+  }, '');
+}
+
 interface GetMaskingDataParams {
-  initialValue: string;
+  initialValue?: string;
   unmaskedValue: string;
   mask: string;
   replacement: Replacement;
@@ -48,27 +62,12 @@ export default function getMaskingData({
   showMask,
   separate,
 }: GetMaskingDataParams): MaskingData {
-  const maskSymbols = mask.split('');
-  // Позиция позволяет не учитывать заменяемые символы при `separate === true`,
-  // в остальных случаях помогает более быстро находить индекс символа
-  let position = 0;
-
-  unmaskedValue.split('').forEach((symbol) => {
-    const replaceableSymbolIndex = getReplaceableSymbolIndex(
-      maskSymbols.join(''),
-      replacement,
-      position
-    );
-    if (replaceableSymbolIndex !== -1) {
-      maskSymbols[replaceableSymbolIndex] = symbol;
-      position = replaceableSymbolIndex + 1;
-    }
-  });
+  let maskedValue = initialValue ?? maskValue(unmaskedValue, mask, replacement);
 
   // Генерируем дерево синтаксического анализа (AST). AST представляет собой массив объектов, где
   // каждый объект содержит в себе всю необходимую информацию о каждом символе значения. AST
   // используется для точечного манипулирования символом или группой символов.
-  const ast = maskSymbols.map((symbol, index) => {
+  const ast = maskedValue.split('').map((symbol, index) => {
     const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
     const own = isReplacementKey
       ? ('replacement' as const)
@@ -79,24 +78,21 @@ export default function getMaskingData({
     return { symbol, index, own };
   });
 
-  let maskedValue = initialValue || maskSymbols.join('');
-
-  // Если пользователь не ввел ниодного символа, присваиваем пустую строку для соответсвия поведения `input`
-  const firstChangedSymbol = ast.find(({ own }) => own === 'change');
-  if (!initialValue && firstChangedSymbol === undefined) {
-    maskedValue = '';
-  }
-
-  // Если `showMask === false`, обрезаем значение по последний пользовательский символ
-  if (!initialValue && !showMask && maskedValue) {
-    const lastChangedSymbol = [...ast].reverse().find(({ own }) => own === 'change');
-    const to = lastChangedSymbol !== undefined ? lastChangedSymbol.index + 1 : 0;
-    maskedValue = maskedValue.slice(0, to);
+  if (initialValue === undefined && !showMask) {
+    // Если пользователь не ввел ниодного символа, присваиваем пустую строку,
+    // в противном случае, обрезаем значение по последний пользовательский символ
+    if (ast.find(({ own }) => own === 'change') === undefined) {
+      maskedValue = '';
+    } else {
+      const lastChangedSymbol = [...ast].reverse().find(({ own }) => own === 'change');
+      const to = lastChangedSymbol !== undefined ? lastChangedSymbol.index + 1 : 0;
+      maskedValue = maskedValue.slice(0, to);
+    }
   }
 
   const pattern = generatePattern(mask, replacement);
   const patternForbiddingReplacement = generatePattern(mask, replacement, true);
   const isValid = new RegExp(patternForbiddingReplacement).test(maskedValue);
 
-  return { maskedValue, isValid, mask, replacement, showMask, separate, pattern, ast };
+  return { maskedValue, ast, isValid, mask, replacement, showMask, separate, pattern };
 }

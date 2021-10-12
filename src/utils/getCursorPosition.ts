@@ -9,7 +9,7 @@ import type { ChangeData, MaskingData } from '../types';
  */
 export default function getCursorPosition(changeData: ChangeData, maskingData: MaskingData) {
   const { added, beforeRange, afterRange, inputType } = changeData;
-  const { maskedValue, replacement, separate, ast } = maskingData;
+  const { maskedValue, ast, replacement, separate } = maskingData;
 
   const unmaskedSymbols = ast.filter(({ own }) => {
     return separate ? own === 'change' || own === 'replacement' : own === 'change';

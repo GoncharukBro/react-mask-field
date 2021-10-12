@@ -38,13 +38,13 @@ export interface ChangeData {
 
 export interface MaskingData {
   maskedValue: string;
+  ast: AST;
   isValid: boolean;
   mask: string;
   replacement: Replacement;
   showMask: boolean;
   separate: boolean;
   pattern: string;
-  ast: AST;
 }
 
 export interface ModifiedData {

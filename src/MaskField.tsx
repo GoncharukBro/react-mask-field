@@ -51,7 +51,7 @@ function MaskFieldComponent(
   let separate = separateProps ?? false;
 
   const initialValue = useMemo(() => {
-    return otherProps.value ?? otherProps.defaultValue ?? '';
+    return otherProps.value ?? otherProps.defaultValue ?? (showMask ? mask || '' : '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -106,7 +106,6 @@ function MaskFieldComponent(
     }
 
     maskingData.current = getMaskingData({
-      initialValue: '',
       unmaskedValue,
       mask,
       replacement,
@@ -138,13 +137,18 @@ function MaskFieldComponent(
     return value instanceof RegExp ? value.toString() : value;
   });
 
-  // При `autoFocus === true` курсор становится в конец инициализированного значения, поэтому заранее
-  // устанавливаем курсор на первый заменяемый символ. Нам не обязательно устанавливть зависимости, так
-  // как `autoFocus` срабатывает только один раз при монтировании компонента
   useLayoutEffect(() => {
-    if (otherProps.autoFocus) {
-      const position = getReplaceableSymbolIndex(initialValue, replacement);
-      if (position !== -1) inputElement.current?.setSelectionRange(position, position);
+    if (inputElement.current) {
+      // При `autoFocus === true` курсор становится в конец инициализированного значения, поэтому заранее
+      // устанавливаем курсор на первый заменяемый символ. Нам не обязательно устанавливть зависимости, так
+      // как `autoFocus` срабатывает только один раз при монтировании компонента
+      if (otherProps.autoFocus) {
+        const position = getReplaceableSymbolIndex(initialValue, replacement);
+        if (position !== -1) inputElement.current.setSelectionRange(position, position);
+      }
+      if (showMask && (otherProps.value ?? otherProps.defaultValue ?? undefined) === undefined) {
+        inputElement.current.value = initialValue;
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

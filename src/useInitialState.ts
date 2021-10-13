@@ -41,7 +41,6 @@ export default function useInitialState({
           return prev + symbol;
         }
       }
-
       return prev;
     }, '');
 

@@ -81,14 +81,6 @@ function MaskFieldComponent(
   const masking = () => {
     let { unmaskedValue } = changeData.current;
 
-    if (!separate) {
-      unmaskedValue = unmaskedValue.split('').reduce((prev, symbol) => {
-        const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
-        if (isReplacementKey) return prev;
-        return prev + symbol;
-      }, '');
-    }
-
     const modifiedData = modify?.({
       unmaskedValue,
       mask,
@@ -103,6 +95,13 @@ function MaskFieldComponent(
       replacement = convertToReplacementObject(modifiedData.replacement ?? replacement);
       showMask = modifiedData.showMask ?? showMask;
       separate = modifiedData.separate ?? separate;
+    }
+
+    if (!separate) {
+      unmaskedValue = unmaskedValue.split('').reduce((prev, symbol) => {
+        const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
+        return isReplacementKey ? prev : prev + symbol;
+      }, '');
     }
 
     maskingData.current = getMaskingData({

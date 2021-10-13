@@ -25,12 +25,8 @@ function maskValue(unmaskedValue: string, mask: string, replacement: Replacement
 
   return mask.split('').reduce((prev, symbol) => {
     const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
-
-    if (isReplacementKey && unmaskedValue[position] !== undefined) {
-      return prev + unmaskedValue[position++];
-    }
-
-    return prev + symbol;
+    const hasUnmaskedSymbol = unmaskedValue[position] !== undefined;
+    return prev + (isReplacementKey && hasUnmaskedSymbol ? unmaskedValue[position++] : symbol);
   }, '');
 }
 

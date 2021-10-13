@@ -55,7 +55,7 @@ You can work with the `MaskField` component in the same way as with the `input` 
 
 ## Replacement
 
-The `replacment` property sets the characters to be replaced in the mask, where `key` is the replaced character, `value` is the regular expression to which the input character must match. You can set one or more replaceable characters with different regexps,
+The `replacement` property sets the characters to be replaced in the mask, where `key` is the replaced character, `value` is the regular expression to which the input character must match. You can set one or more replaceable characters with different regexps,
 
 like this:
 

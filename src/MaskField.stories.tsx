@@ -8,6 +8,16 @@ export default {
   component: MaskFieldComponent,
 } as Meta<MaskFieldProps>;
 
+const initialProps = {
+  mask: '+7 (___) nnn-__-__',
+  replacement: {
+    _: /\d/,
+    // n: /\D/,
+  },
+  showMask: true,
+  separate: true,
+};
+
 /**
  *
  * Неконтролируемый компонент
@@ -20,22 +30,15 @@ export const UncontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = 
     <>
       <MaskFieldComponent
         {...args}
-        autoFocus
-        defaultValue="+7 (___) ___-__-__"
+        // defaultValue="+7 (___) ___-__-__"
         onMasking={(event) => setDetail(event.detail)}
-        // onChange={(event) => console.log(event)}
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>
   );
 };
 
-UncontrolledMaskField.args = {
-  mask: '+7 (___) ___-__-__',
-  replacement: { _: /\d/ },
-  showMask: false,
-  separate: true,
-};
+UncontrolledMaskField.args = initialProps;
 
 /**
  *
@@ -49,7 +52,7 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
     <>
       <MaskFieldComponent
         {...args}
-        value={detail?.maskedValue}
+        value={detail?.maskedValue || ''}
         onMasking={(event) => setDetail(event.detail)}
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
@@ -57,12 +60,7 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
   );
 };
 
-СontrolledMaskField.args = {
-  mask: '+7 (___) ___-__-__',
-  replacement: { _: /\d/ },
-  showMask: true,
-  separate: true,
-};
+СontrolledMaskField.args = initialProps;
 
 /**
  *
@@ -75,7 +73,7 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
   const ruPhoneMask = '+_ (___) ___-__-__';
   const otherPhoneMask = '+_ __________';
 
-  const modify = ({ unmaskedValue }: ModifiedData) => {
+  const modify = ({ unmaskedValue, separate }: ModifiedData) => {
     let newUnmaskedValue = unmaskedValue;
     if (unmaskedValue[0] === '8') {
       newUnmaskedValue = `7${unmaskedValue.slice(1)}`;
@@ -84,7 +82,7 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
       newUnmaskedValue = `7${unmaskedValue}`;
     }
     const newMask = !newUnmaskedValue || newUnmaskedValue[0] === '7' ? ruPhoneMask : otherPhoneMask;
-    return { unmaskedValue: newUnmaskedValue, mask: newMask };
+    return { unmaskedValue: newUnmaskedValue, mask: newMask, separate: false };
   };
 
   return (
@@ -101,11 +99,7 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
   );
 };
 
-СontrolledMaskFieldWithModify.args = {
-  replacement: { _: /\d/ },
-  showMask: true,
-  separate: true,
-};
+СontrolledMaskFieldWithModify.args = initialProps;
 
 /**
  *
@@ -138,12 +132,7 @@ export const MaskFieldWithCustomComponent: ComponentStory<typeof MaskFieldCompon
   );
 };
 
-MaskFieldWithCustomComponent.args = {
-  mask: '+_ (___) ___-__-__',
-  replacement: { _: /\d/ },
-  showMask: true,
-  separate: true,
-};
+MaskFieldWithCustomComponent.args = initialProps;
 
 /**
  *
@@ -152,12 +141,7 @@ MaskFieldWithCustomComponent.args = {
  */
 export const TestProps: ComponentStory<typeof MaskFieldComponent> = (args) => {
   const [detail, setDetail] = useState<Detail | null>(null);
-  const [state, setState] = useState({
-    mask: '+7 (___) ___-__-__',
-    replacement: { _: /\d/ },
-    showMask: true,
-    separate: true,
-  });
+  const [state, setState] = useState(initialProps);
 
   return (
     <>

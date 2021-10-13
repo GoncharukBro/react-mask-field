@@ -137,16 +137,18 @@ function MaskFieldComponent(
   });
 
   useLayoutEffect(() => {
-    if (inputElement.current) {
-      // При `autoFocus === true` курсор становится в конец инициализированного значения, поэтому заранее
-      // устанавливаем курсор на первый заменяемый символ. Нам не обязательно устанавливть зависимости, так
-      // как `autoFocus` срабатывает только один раз при монтировании компонента
+    if (inputElement.current !== null) {
+      // При `showMask === true` мы хоти всегда показывать маску,
+      // поэтому устанавливаем значение, если оно не определено по умолчанию
+      if (showMask) {
+        const defaultValue = otherProps.value ?? otherProps.defaultValue ?? undefined;
+        if (defaultValue === undefined) inputElement.current.value = initialValue;
+      }
+      // При `autoFocus === true` курсор становится в конец инициализированного значения,
+      // поэтому заранее устанавливаем курсор на первый заменяемый символ
       if (otherProps.autoFocus) {
         const position = getReplaceableSymbolIndex(initialValue, replacement);
         if (position !== -1) inputElement.current.setSelectionRange(position, position);
-      }
-      if (showMask && (otherProps.value ?? otherProps.defaultValue ?? undefined) === undefined) {
-        inputElement.current.value = initialValue;
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -169,8 +171,8 @@ function MaskFieldComponent(
 
       selection.current.cachedRequestID = selection.current.requestID;
 
-      const currentValue = inputElement.current?.value || '';
-      const currentPosition = inputElement.current?.selectionStart || 0;
+      const currentValue = event.target.value || '';
+      const currentPosition = event.target.selectionStart || 0;
       let currentInputType = '';
 
       // Определяем тип ввода (ручное определение типа ввода способствует кроссбраузерности)
@@ -241,8 +243,8 @@ function MaskFieldComponent(
 
   const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
     const setSelection = () => {
-      selection.current.start = inputElement.current?.selectionStart || 0;
-      selection.current.end = inputElement.current?.selectionEnd || 0;
+      selection.current.start = event.target.selectionStart || 0;
+      selection.current.end = event.target.selectionEnd || 0;
 
       selection.current.requestID = requestAnimationFrame(setSelection);
     };

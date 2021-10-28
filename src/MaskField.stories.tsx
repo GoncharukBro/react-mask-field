@@ -14,7 +14,7 @@ const initialProps = {
     _: /\d/,
     // n: /\D/,
   },
-  showMask: true,
+  showMask: false,
   separate: false,
 };
 
@@ -55,13 +55,24 @@ UncontrolledMaskField.args = initialProps;
  */
 export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (args) => {
   const [detail, setDetail] = useState<Detail | null>(null);
+  const [value, setValue] = useState('');
 
   return (
     <>
       <MaskFieldComponent
         {...args}
-        value={detail?.maskedValue || ''}
-        onMasking={(event) => setDetail(event.detail)}
+        value={value}
+        onMasking={(event) => {
+          console.log('onMasking', event.target.value);
+          // setDetail(event.detail);
+        }}
+        onChange={(event) => {
+          // setValue(event.target.value);
+          console.log('onChange', event.target.value);
+        }}
+        onInput={(event: any) => {
+          console.log('onInput', event.target.value);
+        }}
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>

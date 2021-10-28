@@ -1,6 +1,7 @@
 import { useLayoutEffect, useEffect, useRef, useMemo, useCallback, forwardRef } from 'react';
 import {
   convertToReplacementObject,
+  generateAST,
   getReplaceableSymbolIndex,
   getChangeData,
   getMaskingData,
@@ -183,6 +184,15 @@ function MaskFieldComponent<C extends Component = undefined>(
 
         selection.current.cachedRequestID = selection.current.requestID;
 
+        if (
+          otherProps.value !== undefined &&
+          otherProps.value !== null &&
+          maskingData.current.maskedValue !== otherProps.value?.toString()
+        ) {
+          maskingData.current.maskedValue = otherProps.value?.toString();
+          maskingData.current.ast = generateAST(maskingData.current.maskedValue, mask, replacement);
+        }
+
         const currentValue = inputElement.current?.value || '';
         const currentPosition = inputElement.current?.selectionStart || 0;
         let currentInputType = '';
@@ -242,7 +252,7 @@ function MaskFieldComponent<C extends Component = undefined>(
         }
 
         // Кэшируем значение обязательно до события `masking`
-        const cachedValue = inputElement.current?.value;
+        const cachedValue = maskingData.current.maskedValue;
 
         masking();
 
@@ -253,7 +263,7 @@ function MaskFieldComponent<C extends Component = undefined>(
         // eslint-disable-next-line no-underscore-dangle
         (inputElement.current as any)?._valueTracker?.setValue?.(cachedValue);
         // При отправке события, React автоматически создаст `SyntheticEvent`
-        inputElement.current?.dispatchEvent(new InputEvent('change', { bubbles: true }));
+        inputElement.current?.dispatchEvent(new Event('change', { bubbles: true }));
       } catch (error) {
         // Поскольку внутреннее состояние элемента `input` изменилось после ввода,
         // его необходимо восстановить

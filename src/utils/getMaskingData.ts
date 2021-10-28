@@ -1,3 +1,4 @@
+import generateAST from './generateAST';
 import type { Replacement, MaskingData } from '../types';
 
 // Формируем регулярное выражение для паттерна в `input`
@@ -60,19 +61,7 @@ export default function getMaskingData({
 }: GetMaskingDataParams): MaskingData {
   let maskedValue = initialValue ?? maskValue(unmaskedValue, mask, replacement);
 
-  // Генерируем дерево синтаксического анализа (AST). AST представляет собой массив объектов, где
-  // каждый объект содержит в себе всю необходимую информацию о каждом символе значения. AST
-  // используется для точечного манипулирования символом или группой символов.
-  const ast = maskedValue.split('').map((symbol, index) => {
-    const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
-    const own = isReplacementKey
-      ? ('replacement' as const)
-      : symbol === mask[index]
-      ? ('mask' as const)
-      : ('change' as const);
-
-    return { symbol, index, own };
-  });
+  const ast = generateAST(maskedValue, mask, replacement);
 
   if (initialValue === undefined && !showMask) {
     // Если пользователь не ввел ниодного символа, присваиваем пустую строку,

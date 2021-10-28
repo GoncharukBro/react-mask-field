@@ -17,32 +17,39 @@ class SyntheticChangeError extends Error {
   }
 }
 
-export interface MaskFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  component?: React.ComponentClass | React.FunctionComponent;
+type Component = React.ComponentClass<any> | React.FunctionComponent<any> | undefined;
+
+type ComponentProps<C extends Component> = C extends React.ComponentClass<any>
+  ? ConstructorParameters<C>[0]
+  : C extends React.FunctionComponent<any>
+  ? Parameters<C>[0]
+  : {};
+
+type OtherProps<C extends Component> = C extends undefined
+  ? React.InputHTMLAttributes<HTMLInputElement>
+  : ComponentProps<C>;
+
+export type MaskFieldProps<C extends Component = undefined> = {
+  component?: C;
   mask?: string;
   replacement?: string | Replacement;
   showMask?: boolean;
   separate?: boolean;
   modify?: Modify;
   onMasking?: MaskingEventHandler;
-  defaultValue?: string;
-  value?: string;
-}
+} & OtherProps<C>;
 
-function MaskFieldComponent(
+function MaskFieldComponent<C extends Component = undefined>(
   {
-    component: Component,
+    component: CustomComponent,
     mask: maskProps,
     replacement: replacementProps,
     showMask: showMaskProps,
     separate: separateProps,
     modify,
     onMasking,
-    onChange,
-    onFocus,
-    onBlur,
     ...otherProps
-  }: MaskFieldProps,
+  }: MaskFieldProps<C>,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ) {
   let mask = maskProps ?? '';
@@ -51,7 +58,11 @@ function MaskFieldComponent(
   let separate = separateProps ?? false;
 
   const initialValue = useMemo(() => {
-    return otherProps.value ?? otherProps.defaultValue ?? (showMask ? mask || '' : '');
+    return (
+      otherProps.value?.toString() ??
+      otherProps.defaultValue?.toString() ??
+      (showMask ? mask || '' : '')
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -161,102 +172,135 @@ function MaskFieldComponent(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mask, stringifiedReplacement, showMask, separate]);
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      // Если событие вызывается слишком часто, смена курсора может не поспеть за новым событием,
-      // поэтому сравниваем `requestID` кэшированный и текущий для избежания некорректного поведения маски
-      if (selection.current.cachedRequestID === selection.current.requestID) {
-        throw new SyntheticChangeError('The input cursor has not been updated.');
-      }
+  useEffect(() => {
+    const handleInput = () => {
+      try {
+        // Если событие вызывается слишком часто, смена курсора может не поспеть за новым событием,
+        // поэтому сравниваем `requestID` кэшированный и текущий для избежания некорректного поведения маски
+        if (selection.current.cachedRequestID === selection.current.requestID) {
+          throw new SyntheticChangeError('The input cursor has not been updated.');
+        }
 
-      selection.current.cachedRequestID = selection.current.requestID;
+        selection.current.cachedRequestID = selection.current.requestID;
 
-      const currentValue = event.target.value || '';
-      const currentPosition = event.target.selectionStart || 0;
-      let currentInputType = '';
+        const currentValue = inputElement.current?.value || '';
+        const currentPosition = inputElement.current?.selectionStart || 0;
+        let currentInputType = '';
 
-      // Определяем тип ввода (ручное определение типа ввода способствует кроссбраузерности)
-      if (currentPosition > selection.current.start) {
-        currentInputType = 'insert';
-      } else if (
-        currentPosition <= selection.current.start &&
-        currentPosition < selection.current.end
-      ) {
-        currentInputType = 'delete';
-      } else if (
-        currentPosition === selection.current.end &&
-        currentValue.length < maskingData.current.maskedValue.length
-      ) {
-        currentInputType = 'deleteForward';
-      }
+        // Определяем тип ввода (ручное определение типа ввода способствует кроссбраузерности)
+        if (currentPosition > selection.current.start) {
+          currentInputType = 'insert';
+        } else if (
+          currentPosition <= selection.current.start &&
+          currentPosition < selection.current.end
+        ) {
+          currentInputType = 'delete';
+        } else if (
+          currentPosition === selection.current.end &&
+          currentValue.length < maskingData.current.maskedValue.length
+        ) {
+          currentInputType = 'deleteForward';
+        }
 
-      switch (currentInputType) {
-        case 'insert': {
-          const addedSymbols = currentValue.slice(selection.current.start, currentPosition);
-          const range = { start: selection.current.start, end: selection.current.end };
+        switch (currentInputType) {
+          case 'insert': {
+            const addedSymbols = currentValue.slice(selection.current.start, currentPosition);
+            const range = { start: selection.current.start, end: selection.current.end };
 
-          changeData.current = getChangeData({
-            maskingData: maskingData.current,
-            inputType: currentInputType,
-            selectionRange: range,
-            added: addedSymbols,
-          });
+            changeData.current = getChangeData({
+              maskingData: maskingData.current,
+              inputType: currentInputType,
+              selectionRange: range,
+              added: addedSymbols,
+            });
 
-          if (!changeData.current.added) {
-            throw new SyntheticChangeError(
-              'The symbol does not match the value of the `replacement` object.'
-            );
+            if (!changeData.current.added) {
+              throw new SyntheticChangeError(
+                'The symbol does not match the value of the `replacement` object.'
+              );
+            }
+
+            break;
           }
+          case 'delete':
+          case 'deleteForward': {
+            const countDeletedSymbols =
+              maskingData.current.maskedValue.length - currentValue.length;
+            const range = { start: currentPosition, end: currentPosition + countDeletedSymbols };
 
-          break;
+            changeData.current = getChangeData({
+              maskingData: maskingData.current,
+              inputType: currentInputType,
+              selectionRange: range,
+              added: '',
+            });
+
+            break;
+          }
+          default:
+            throw new SyntheticChangeError('The input type is undefined.');
         }
-        case 'delete':
-        case 'deleteForward': {
-          const countDeletedSymbols = maskingData.current.maskedValue.length - currentValue.length;
-          const range = { start: currentPosition, end: currentPosition + countDeletedSymbols };
 
-          changeData.current = getChangeData({
-            maskingData: maskingData.current,
-            inputType: currentInputType,
-            selectionRange: range,
-            added: '',
-          });
+        // Кэшируем значение обязательно до события `masking`
+        const cachedValue = inputElement.current?.value;
 
-          break;
+        masking();
+
+        // После изменения значения в `masking` событие `change` срабатывать не будет,
+        // так как предыдущее и текущее состояние внутри `input` совпадают.
+        // Чтобы обойти эту проблему с версии React 16, устанавливаем предыдущее состояние
+        // на отличное от текущего. Это взлом работы React.
+        // eslint-disable-next-line no-underscore-dangle
+        (inputElement.current as any)?._valueTracker?.setValue?.(cachedValue);
+        // При отправке события, React автоматически создаст `SyntheticEvent`
+        inputElement.current?.dispatchEvent(new InputEvent('change', { bubbles: true }));
+      } catch (error) {
+        // Поскольку внутреннее состояние элемента `input` изменилось после ввода,
+        // его необходимо восстановить
+        setInputElementState();
+
+        if ((error as Error).name !== 'SyntheticChangeError') {
+          throw error;
         }
-        default:
-          throw new SyntheticChangeError('The input type is undefined.');
       }
+    };
 
-      masking();
-      onChange?.(event);
-    } catch (error) {
-      // Поскольку внутреннее состояние элемента `input` изменилось после ввода,
-      // его необходимо восстановить
-      setInputElementState();
+    inputElement.current?.addEventListener('input', handleInput);
 
-      if ((error as Error).name !== 'SyntheticChangeError') {
-        throw error;
-      }
-    }
-  };
+    return () => {
+      inputElement.current?.removeEventListener('input', handleInput);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
-    const setSelection = () => {
-      selection.current.start = event.target.selectionStart || 0;
-      selection.current.end = event.target.selectionEnd || 0;
-
+  useEffect(() => {
+    const handleFocus = () => {
+      const setSelection = () => {
+        selection.current.start = inputElement.current?.selectionStart || 0;
+        selection.current.end = inputElement.current?.selectionEnd || 0;
+        selection.current.requestID = requestAnimationFrame(setSelection);
+      };
       selection.current.requestID = requestAnimationFrame(setSelection);
     };
 
-    selection.current.requestID = requestAnimationFrame(setSelection);
-    onFocus?.(event);
-  };
+    inputElement.current?.addEventListener('focus', handleFocus);
 
-  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    cancelAnimationFrame(selection.current.requestID);
-    onBlur?.(event);
-  };
+    return () => {
+      inputElement.current?.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleBlur = () => {
+      cancelAnimationFrame(selection.current.requestID);
+    };
+
+    inputElement.current?.addEventListener('blur', handleBlur);
+
+    return () => {
+      inputElement.current?.removeEventListener('blur', handleBlur);
+    };
+  }, []);
 
   const setRef = useCallback(
     (ref: HTMLInputElement | null) => {
@@ -272,19 +316,15 @@ function MaskFieldComponent(
     [forwardedRef, inputElement]
   );
 
-  const inputProps = {
-    ref: setRef,
-    onChange: handleChange,
-    onFocus: handleFocus,
-    onBlur: handleBlur,
-    ...otherProps,
-  };
+  if (CustomComponent) {
+    return <CustomComponent ref={setRef} {...otherProps} />;
+  }
 
-  return Component ? <Component {...inputProps} /> : <input {...inputProps} />;
+  return <input ref={setRef} {...otherProps} />;
 }
 
-const MaskField = forwardRef(MaskFieldComponent) as React.FunctionComponent<
-  MaskFieldProps & React.RefAttributes<HTMLInputElement>
->;
+const MaskField = forwardRef(MaskFieldComponent) as <C extends Component = undefined>(
+  props: MaskFieldProps<C> & React.RefAttributes<HTMLInputElement>
+) => JSX.Element;
 
 export default MaskField;

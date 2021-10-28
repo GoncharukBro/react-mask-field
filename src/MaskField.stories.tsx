@@ -15,7 +15,7 @@ const initialProps = {
     // n: /\D/,
   },
   showMask: true,
-  separate: true,
+  separate: false,
 };
 
 /**
@@ -30,8 +30,16 @@ export const UncontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = 
     <>
       <MaskFieldComponent
         {...args}
-        // defaultValue="+7 (___) ___-__-__"
+        defaultValue="+7 (___) ___-__-__"
         onMasking={(event) => setDetail(event.detail)}
+        // onChange={(event) => {
+        //   console.log(2, event);
+        // }}
+        // onInput={(event) => {
+        //   console.log(3, event);
+        // }}
+        // onFocus={(event) => console.log(event)}
+        // onBlur={(event) => console.log(event)}
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>
@@ -107,11 +115,13 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
  *
  */
 const CustomComponent = forwardRef(
-  (
-    props: React.InputHTMLAttributes<HTMLInputElement>,
-    ref: React.ForwardedRef<HTMLInputElement>
-  ) => {
-    return <input ref={ref} {...props} />;
+  ({ label }: { label?: string }, ref: React.ForwardedRef<HTMLInputElement>) => {
+    return (
+      <>
+        <label htmlFor="customInput">{label}</label>
+        <input ref={ref} id="customInput" />
+      </>
+    );
   }
 );
 
@@ -121,11 +131,17 @@ export const MaskFieldWithCustomComponent: ComponentStory<typeof MaskFieldCompon
   return (
     <>
       <MaskFieldComponent
-        {...args}
+        // {...args}
         component={CustomComponent}
-        defaultValue="+7 (9__)"
-        value={detail?.maskedValue}
+        mask="+7 (___) nnn-__-__"
+        replacement={{ _: /\d/ }} // n: /\D/,
+        showMask
+        separate={false}
+        // defaultValue="+7 (9__)"
+        // value={detail?.maskedValue}
         onMasking={(event) => setDetail(event.detail)}
+        label="Helper"
+        // value=""
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>

@@ -130,8 +130,8 @@ export const MaskFieldWithCustomComponent: ComponentStory<typeof MaskFieldCompon
 
   return (
     <>
-      <MaskFieldComponent
-        // {...args}
+      <MaskFieldComponent<typeof CustomComponent>
+        {...args}
         component={CustomComponent}
         mask="+7 (___) nnn-__-__"
         replacement={{ _: /\d/ }} // n: /\D/,

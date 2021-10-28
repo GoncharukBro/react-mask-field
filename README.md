@@ -151,6 +151,10 @@ export default function Example() {
 
 The `MaskField` component makes it easy to integrate with custom components allowing you to use your own styled components. To do this, you need to pass the custom component to the `forwardRef` method provided by React. `forwardRef` allows you automatically pass a `ref` value to a child element ([more on `forwardRef`](https://reactjs.org/docs/forwarding-refs.html)).
 
+Then place your own component in the `component` property. The value for the `component` property can be either function components or class components.
+
+With this approach, the `MaskField` component acts as a HOC, adding additional logic to the `input` element.
+
 Here's how to do it:
 
 ```jsx
@@ -158,15 +162,29 @@ import React from 'react';
 import MaskField from 'react-mask-field';
 
 // Custom component
-const CustomComponent = React.forwardRef((props, ref) => {
-  return <input ref={ref} {...props} />;
+const CustomComponent = React.forwardRef(({ label }, ref) => {
+  return (
+    <>
+      <label htmlFor="custom-component">{label}</label>
+      <input ref={ref} id="custom-component" />
+    </>
+  );
 });
 
 // Component with MaskField
 export default function Example() {
-  return <MaskField component={CustomComponent} mask="___-___" replacement="_" />;
+  return (
+    <MaskField
+      component={CustomComponent}
+      mask="___-___"
+      replacement="_"
+      label="Label for custom component"
+    />
+  );
 }
 ```
+
+> The `MaskField` component will not forward properties available only to the `MaskField`, so as not to break the logic of your own component.
 
 ## Integration with Material UI
 
@@ -221,6 +239,62 @@ export default function Example() {
   };
 
   return <MaskField mask="___-___" replacement="_" modify={modify} onMasking={handleMasking} />;
+}
+```
+
+### Property type support
+
+Since the `MaskField` component supports two use cases (as an `input` element and as an HOC for your own component), `MaskField` takes both use cases into account to support property types.
+
+By default, the `MaskField` component is an` input` element and supports all the attributes supported by the `input` element. But if the `component` property was passed, the` MaskField` will only support those properties that are available to the integrated component. This approach allows you to integrate your own component as conveniently as possible, not forcing you to rewrite its logic, but using a mask where necessary.
+
+```tsx
+import React from 'react';
+import MaskField from 'react-mask-field';
+import type { MaskFieldProps } from 'react-mask-field';
+
+export default function Example() {
+  // Here, since no `component` property was passed,
+  // `MaskField` returns an `input` element and takes the type:
+  // `MaskFieldProps & React.InputHTMLAttributes<HTMLInputElement>`
+  return <MaskField mask="___-___" replacement="_" />;
+}
+```
+
+```tsx
+import React from 'react';
+import MaskField from 'react-mask-field';
+import type { MaskFieldProps } from 'react-mask-field';
+
+import CustomComponent from './CustomComponent';
+import type { CustomComponentProps } from './CustomComponent';
+
+export default function Example() {
+  // Here, since the `component` property was passed,
+  // `MaskField` returns the integrated component and takes the type:
+  // `MaskFieldProps<typeof CustomComponent> & CustomComponentProps`
+  return <MaskField component={CustomComponent} mask="___-___" replacement="_" />;
+}
+```
+
+You may run into a situation where you need to pass rest parameters (`...rest`) to the `MaskField` component. If `rest` is of type `any`, the `component` property will not be typed correctly, as well as the properties of the component being integrated. this is typical TypeScript behavior for dynamic type inference.
+
+To remedy this situation and help the `MaskField` type correctly the properties of your component, you can pass the type of your component directly to the `MaskField` component.
+
+```tsx
+import React from 'react';
+import MaskField from 'react-mask-field';
+import CustomComponent from './CustomComponent';
+
+export default function Example(props: any) {
+  return (
+    <MaskField<typeof CustomComponent>
+      component={CustomComponent}
+      mask="___-___"
+      replacement="_"
+      {...props}
+    />
+  );
 }
 ```
 

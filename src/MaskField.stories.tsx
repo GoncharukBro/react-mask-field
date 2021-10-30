@@ -14,8 +14,8 @@ const initialProps = {
     _: /\d/,
     // n: /\D/,
   },
-  showMask: false,
-  separate: false,
+  showMask: true,
+  separate: true,
 };
 
 /**
@@ -61,17 +61,12 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
     <>
       <MaskFieldComponent
         {...args}
+        mask="___-___"
+        replacement={{ _: /\d/ }}
+        onMasking={(event) => {}}
         value={value}
-        onMasking={(event) => {
-          console.log('onMasking', event.target.value);
-          // setDetail(event.detail);
-        }}
         onChange={(event) => {
-          // setValue(event.target.value);
-          console.log('onChange', event.target.value);
-        }}
-        onInput={(event: any) => {
-          console.log('onInput', event.target.value);
+          setValue(event.target.value);
         }}
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
@@ -141,7 +136,7 @@ export const MaskFieldWithCustomComponent: ComponentStory<typeof MaskFieldCompon
 
   return (
     <>
-      <MaskFieldComponent<typeof CustomComponent>
+      <MaskFieldComponent
         {...args}
         component={CustomComponent}
         mask="+7 (___) nnn-__-__"

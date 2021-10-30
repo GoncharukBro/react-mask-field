@@ -1,7 +1,6 @@
 import { useLayoutEffect, useEffect, useRef, useMemo, useCallback, forwardRef } from 'react';
 import {
   convertToReplacementObject,
-  generateAST,
   getReplaceableSymbolIndex,
   getChangeData,
   getMaskingData,
@@ -18,29 +17,41 @@ class SyntheticChangeError extends Error {
   }
 }
 
-type Component = React.ComponentClass<any> | React.FunctionComponent<any> | undefined;
+type Component<P = any> = React.ComponentClass<P> | React.FunctionComponent<P> | undefined;
 
-type ComponentProps<C extends Component> = C extends React.ComponentClass<any>
-  ? ConstructorParameters<C>[0]
-  : C extends React.FunctionComponent<any>
-  ? Parameters<C>[0]
-  : {};
+type ComponentProps<C extends Component = undefined, P = any> = C extends React.ComponentClass<P>
+  ? ConstructorParameters<C>[0] | {}
+  : C extends React.FunctionComponent<P>
+  ? Parameters<C>[0] | {}
+  : never;
 
-type OtherProps<C extends Component> = C extends undefined
-  ? React.InputHTMLAttributes<HTMLInputElement>
-  : ComponentProps<C>;
-
-export type MaskFieldProps<C extends Component = undefined> = {
-  component?: C;
+interface Props {
   mask?: string;
   replacement?: string | Replacement;
   showMask?: boolean;
   separate?: boolean;
   modify?: Modify;
   onMasking?: MaskingEventHandler;
-} & OtherProps<C>;
+}
+
+interface PropsWithComponent<C extends Component = undefined> extends Props {
+  component?: C;
+}
+
+export type MaskFieldProps<C extends Component = undefined> = PropsWithComponent<C> &
+  (C extends undefined ? React.InputHTMLAttributes<HTMLInputElement> : ComponentProps<C>);
 
 function MaskFieldComponent<C extends Component = undefined>(
+  props: Props & { component: C } & ComponentProps<C>,
+  forwardedRef: React.ForwardedRef<HTMLInputElement>
+): JSX.Element;
+// eslint-disable-next-line no-redeclare
+function MaskFieldComponent(
+  props: Props & React.InputHTMLAttributes<HTMLInputElement>,
+  forwardedRef: React.ForwardedRef<HTMLInputElement>
+): JSX.Element;
+// eslint-disable-next-line no-redeclare
+function MaskFieldComponent(
   {
     component: CustomComponent,
     mask: maskProps,
@@ -50,9 +61,9 @@ function MaskFieldComponent<C extends Component = undefined>(
     modify,
     onMasking,
     ...otherProps
-  }: MaskFieldProps<C>,
+  }: PropsWithComponent<Component> & React.InputHTMLAttributes<HTMLInputElement>,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
-) {
+): JSX.Element {
   let mask = maskProps ?? '';
   let replacement = convertToReplacementObject(replacementProps ?? {});
   let showMask = showMaskProps ?? false;
@@ -175,6 +186,23 @@ function MaskFieldComponent<C extends Component = undefined>(
 
   useEffect(() => {
     const handleInput = () => {
+      // При контроле значения, нам важно синхронизировать внешнее значение
+      // с кэшированным значением компонента, если они различаются
+      if (
+        otherProps.value !== undefined &&
+        otherProps.value !== null &&
+        maskingData.current.maskedValue !== otherProps.value?.toString()
+      ) {
+        maskingData.current = getMaskingData({
+          initialValue: otherProps.value?.toString(),
+          unmaskedValue: '',
+          mask,
+          replacement,
+          showMask,
+          separate,
+        });
+      }
+
       try {
         // Если событие вызывается слишком часто, смена курсора может не поспеть за новым событием,
         // поэтому сравниваем `requestID` кэшированный и текущий для избежания некорректного поведения маски
@@ -183,15 +211,6 @@ function MaskFieldComponent<C extends Component = undefined>(
         }
 
         selection.current.cachedRequestID = selection.current.requestID;
-
-        if (
-          otherProps.value !== undefined &&
-          otherProps.value !== null &&
-          maskingData.current.maskedValue !== otherProps.value?.toString()
-        ) {
-          maskingData.current.maskedValue = otherProps.value?.toString();
-          maskingData.current.ast = generateAST(maskingData.current.maskedValue, mask, replacement);
-        }
 
         const currentValue = inputElement.current?.value || '';
         const currentPosition = inputElement.current?.selectionStart || 0;
@@ -281,7 +300,7 @@ function MaskFieldComponent<C extends Component = undefined>(
       inputElement.current?.removeEventListener('input', handleInput);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [otherProps.value]);
 
   useEffect(() => {
     const handleFocus = () => {
@@ -333,8 +352,15 @@ function MaskFieldComponent<C extends Component = undefined>(
   return <input ref={setRef} {...otherProps} />;
 }
 
-const MaskField = forwardRef(MaskFieldComponent) as <C extends Component = undefined>(
-  props: MaskFieldProps<C> & React.RefAttributes<HTMLInputElement>
-) => JSX.Element;
+const MaskField = forwardRef(MaskFieldComponent) as {
+  <C extends Component = undefined>(
+    props: Props & { component: C } & ComponentProps<C> & React.RefAttributes<HTMLInputElement>
+  ): JSX.Element;
+  (
+    props: Props &
+      React.InputHTMLAttributes<HTMLInputElement> &
+      React.RefAttributes<HTMLInputElement>
+  ): JSX.Element;
+};
 
 export default MaskField;

@@ -1,104 +1,52 @@
-import { useState, useRef, forwardRef } from 'react';
+import { useState, forwardRef } from 'react';
 import type { ComponentStory, Meta } from '@storybook/react';
 import MaskFieldComponent from '.';
-import type { MaskFieldProps, ModifiedData } from '.';
-
-function Form({ children, ...other }: React.FormHTMLAttributes<HTMLFormElement>) {
-  return (
-    <form {...other}>
-      {children}
-      <div>
-        <button type="submit">Отправить</button>
-      </div>
-    </form>
-  );
-}
+import type { MaskFieldProps, ModifiedData, Detail } from '.';
 
 export default {
   title: 'Example',
   component: MaskFieldComponent,
-  argTypes: {
-    mask: {
-      description: 'Маска ввода',
-    },
-    replacement: {
-      description: 'Символ для замены',
-    },
-    showMask: {
-      description: 'Атрибут определяющий будет ли отображена маска ввода',
-    },
-  },
 } as Meta<MaskFieldProps>;
+
+const initialProps = {
+  mask: '+7 (___) nnn-__-__',
+  replacement: {
+    _: /\d/,
+    // n: /\D/,
+  },
+  showMask: true,
+  separate: true,
+};
 
 /**
  *
  * Неконтролируемый компонент
  *
  */
-export const UncontrolledMaskFieldAny: ComponentStory<typeof MaskFieldComponent> = (args) => {
-  const [mask, setMask] = useState('+_ (___) ___-__-__');
-  const [value, setValue] = useState('');
+export const UncontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (args) => {
+  const [detail, setDetail] = useState<Detail | null>(null);
 
   return (
     <>
-      <Form>
-        <MaskFieldComponent
-          {...args}
-          mask={mask}
-          replacement={{ _: /\d/ }}
-          showMask
-          break
-          value={value}
-          onChange={(event) => {
-            setValue(event.target.value);
-          }}
-        />
-
-        <button
-          type="button"
-          onClick={() => {
-            setMask('___-___');
-          }}
-        >
-          Поменять ref
-        </button>
-      </Form>
-
-      <pre>{value}</pre>
+      <MaskFieldComponent
+        {...args}
+        defaultValue="+7 (___) ___-__-__"
+        onMasking={(event) => setDetail(event.detail)}
+        // onChange={(event) => {
+        //   console.log(2, event);
+        // }}
+        // onInput={(event) => {
+        //   console.log(3, event);
+        // }}
+        // onFocus={(event) => console.log(event)}
+        // onBlur={(event) => console.log(event)}
+      />
+      <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>
   );
 };
 
-UncontrolledMaskFieldAny.args = {};
-
-export const UncontrolledMaskFieldPhone: ComponentStory<typeof MaskFieldComponent> = (args) => (
-  <Form>
-    <MaskFieldComponent
-      {...args}
-      name="phone"
-      mask="+_ (___) ___-__-__"
-      replacement={{ _: /\d/ }}
-      showMask
-      defaultValue="+7 (a12) 345-67-89"
-    />
-  </Form>
-);
-
-UncontrolledMaskFieldPhone.args = {};
-
-export const UncontrolledMaskFieldDate: ComponentStory<typeof MaskFieldComponent> = (args) => (
-  <Form>
-    <MaskFieldComponent
-      {...args}
-      mask="dd-Dm-yyDy"
-      replacement={{ d: new RegExp('\\d'), m: /\d/, y: /\d/, D: /\D/ }}
-      showMask
-      placeholder="dd-Dm-yyDy"
-    />
-  </Form>
-);
-
-UncontrolledMaskFieldDate.args = {};
+UncontrolledMaskField.args = initialProps;
 
 /**
  *
@@ -106,30 +54,27 @@ UncontrolledMaskFieldDate.args = {};
  *
  */
 export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (args) => {
-  const [data, setData] = useState({ maskedValue: '' });
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setData({ maskedValue: event.target.value });
-  };
+  const [detail, setDetail] = useState<Detail | null>(null);
+  const [value, setValue] = useState('');
 
   return (
     <>
-      <Form>
-        <MaskFieldComponent
-          {...args}
-          mask="+_ (___) ___-__-__"
-          replacement={{ _: /./ }}
-          showMask
-          value={data.maskedValue}
-          onChange={handleChange}
-        />
-      </Form>
-      <pre>{JSON.stringify(data, null, 2)}</pre>
+      <MaskFieldComponent
+        {...args}
+        mask="___-___"
+        replacement={{ _: /\d/ }}
+        onMasking={(event) => {}}
+        value={value}
+        onChange={(event) => {
+          setValue(event.target.value);
+        }}
+      />
+      <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>
   );
 };
 
-СontrolledMaskField.args = {};
+СontrolledMaskField.args = initialProps;
 
 /**
  *
@@ -137,52 +82,38 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
  *
  */
 export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComponent> = (args) => {
-  const [data, setData] = useState({
-    maskedValue: '',
-    selection: { start: 0, end: 0 },
-  });
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setData({
-      maskedValue: event.target.value,
-      selection: { start: event.target.selectionStart, end: event.target.selectionEnd },
-    });
-  };
+  const [detail, setDetail] = useState<Detail | null>(null);
 
   const ruPhoneMask = '+_ (___) ___-__-__';
   const otherPhoneMask = '+_ __________';
 
-  const modify = ({ value }: ModifiedData) => {
-    let newValue = value;
-    if (value[0] === '8') {
-      newValue = `7${value.slice(1)}`;
+  const modify = ({ unmaskedValue, separate }: ModifiedData) => {
+    let newUnmaskedValue = unmaskedValue;
+    if (unmaskedValue[0] === '8') {
+      newUnmaskedValue = `7${unmaskedValue.slice(1)}`;
     }
-    if (value[0] === '9') {
-      newValue = `7${value}`;
+    if (unmaskedValue[0] === '9') {
+      newUnmaskedValue = `7${unmaskedValue}`;
     }
-    const newMask = !newValue || newValue[0] === '7' ? ruPhoneMask : otherPhoneMask;
-    return { value: newValue, mask: newMask };
+    const newMask = !newUnmaskedValue || newUnmaskedValue[0] === '7' ? ruPhoneMask : otherPhoneMask;
+    return { unmaskedValue: newUnmaskedValue, mask: newMask, separate: false };
   };
 
   return (
     <>
-      <Form>
-        <MaskFieldComponent
-          {...args}
-          mask={ruPhoneMask}
-          replacement={{ _: /\d/ }}
-          showMask
-          modify={modify}
-          value={data.maskedValue}
-          onChange={handleChange}
-        />
-      </Form>
-      <pre>{JSON.stringify(data, null, 2)}</pre>
+      <MaskFieldComponent
+        {...args}
+        mask={ruPhoneMask}
+        modify={modify}
+        value={detail?.maskedValue}
+        onMasking={(event) => setDetail(event.detail)}
+      />
+      <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>
   );
 };
 
-СontrolledMaskFieldWithModify.args = {};
+СontrolledMaskFieldWithModify.args = initialProps;
 
 /**
  *
@@ -190,74 +121,103 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
  *
  */
 const CustomComponent = forwardRef(
-  (
-    props: React.InputHTMLAttributes<HTMLInputElement>,
-    ref: React.ForwardedRef<HTMLInputElement>
-  ) => {
-    return <input ref={ref} {...props} />;
+  ({ label }: { label?: string }, ref: React.ForwardedRef<HTMLInputElement>) => {
+    return (
+      <>
+        <label htmlFor="customInput">{label}</label>
+        <input ref={ref} id="customInput" />
+      </>
+    );
   }
 );
 
 export const MaskFieldWithCustomComponent: ComponentStory<typeof MaskFieldComponent> = (args) => {
-  const [data, setData] = useState({ maskedValue: '' });
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setData({ maskedValue: event.target.value });
-  };
+  const [detail, setDetail] = useState<Detail | null>(null);
 
   return (
     <>
-      <Form>
-        <MaskFieldComponent
-          {...args}
-          name="phone"
-          component={CustomComponent}
-          mask="+_ (___) ___-__-__"
-          replacement={{ _: /\d/ }}
-          value={data.maskedValue}
-          onChange={handleChange}
-        />
-      </Form>
-      <pre>{JSON.stringify(data, null, 2)}</pre>
+      <MaskFieldComponent
+        {...args}
+        component={CustomComponent}
+        mask="+7 (___) nnn-__-__"
+        replacement={{ _: /\d/ }} // n: /\D/,
+        showMask
+        separate={false}
+        // defaultValue="+7 (9__)"
+        // value={detail?.maskedValue}
+        onMasking={(event) => setDetail(event.detail)}
+        label="Helper"
+        // value=""
+      />
+      <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>
   );
 };
 
-MaskFieldWithCustomComponent.args = {};
+MaskFieldWithCustomComponent.args = initialProps;
 
 /**
  *
- * Тестируем динамику пропсов
+ * Тестируем динамику `props`
  *
  */
-export const MaskFieldTestProps: ComponentStory<typeof MaskFieldComponent> = (args) => {
-  const [state, setState] = useState({ showMask: true });
+export const TestProps: ComponentStory<typeof MaskFieldComponent> = (args) => {
+  const [detail, setDetail] = useState<Detail | null>(null);
+  const [state, setState] = useState(initialProps);
 
   return (
     <>
-      <Form>
-        <MaskFieldComponent
-          {...args}
-          name="phone"
-          mask="+_ (___) ___-__-__"
-          replacement={{ _: /\d/ }}
-          showMask={state.showMask}
-          defaultValue="+а (___) ___-__"
-        />
-      </Form>
-      <div>
-        <button
-          type="button"
-          onClick={() => setState(({ showMask, ...prev }) => ({ ...prev, showMask: !showMask }))}
-        >
-          {state.showMask ? 'Выключить отображение маски' : 'Включить отображение маски'}
-        </button>
-      </div>
-      <div>
-        <pre>{JSON.stringify(state, null, 2)}</pre>
-      </div>
+      <MaskFieldComponent
+        {...args}
+        mask={state.mask}
+        replacement={state.replacement}
+        showMask={state.showMask}
+        separate={state.separate}
+        defaultValue="fegoj0fwfwe"
+        onMasking={(event) => setDetail(event.detail)}
+      />
+
+      <button
+        type="button"
+        onClick={() =>
+          setState((prev) => ({
+            ...prev,
+            mask: prev.mask === '+7 (___) ___-__-__' ? '___-___' : '+7 (___) ___-__-__',
+          }))
+        }
+      >
+        Изменить mask
+      </button>
+
+      {/* <button
+        type="button"
+        onClick={() =>
+          setState((prev) => ({
+            ...prev,
+            replacement: prev.replacement === { _: /\d/ } ? '0' : '_',
+          }))
+        }
+      >
+        Изменить replacement
+      </button> */}
+
+      <button
+        type="button"
+        onClick={() => setState((prev) => ({ ...prev, showMask: !prev.showMask }))}
+      >
+        Изменить showMask
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setState((prev) => ({ ...prev, separate: !prev.separate }))}
+      >
+        Изменить separate
+      </button>
+
+      <pre>{JSON.stringify({ state, detail }, null, 2)}</pre>
     </>
   );
 };
 
-MaskFieldTestProps.args = {};
+TestProps.args = {};

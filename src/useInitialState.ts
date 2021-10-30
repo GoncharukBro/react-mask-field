@@ -1,51 +1,67 @@
 import { useMemo } from 'react';
-import { getChangeData, getMaskData } from './utils';
-import type { Replacement, SelectionRange } from './types';
+import { getMaskingData } from './utils';
+import type { Replacement, ChangeData, MaskingData } from './types';
 
-interface UseInitialStateParam {
+interface UseInitialStateParams {
   initialValue: string;
   mask: string;
   replacement: Replacement;
   showMask: boolean;
-  break: boolean;
+  separate: boolean;
 }
 
 /**
  * Инициализирует начальное состояние компонента
  * @param param
- * @param param.initialValue
+ * @param param.initialValue инициализированное значение
  * @param param.mask
  * @param param.replacement
  * @param param.showMask
- * @param param.break
- * @returns объект с начальным состоянием `maskData` и `changeData`
+ * @param param.separate
+ * @returns объект с начальным состоянием `maskingData` и `changeData`
  */
 export default function useInitialState({
   initialValue,
   mask,
   replacement,
   showMask,
-  break: breakSymbols,
-}: UseInitialStateParam) {
+  separate,
+}: UseInitialStateParams) {
   return useMemo(() => {
-    const replacementKeys = Object.keys(replacement);
-    // Выбираем из маскированного значения все пользовательские символы
-    // методом определения ключей паттерна и наличием на их месте отличающегося символа
+    // Выбираем из инициализированного значения все символы, не являющиеся символами маски.
+    // Ожидается, что инициализированное значение соответствует маске
     const unmaskedValue = mask.split('').reduce((prev, symbol, index) => {
-      if (replacementKeys.includes(symbol)) {
-        const isChangedSymbol =
-          !!initialValue[index] && !replacementKeys.includes(initialValue[index]);
-        if (isChangedSymbol) return prev + initialValue[index];
+      const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
+
+      if (isReplacementKey) {
+        if (initialValue[index] !== undefined && initialValue[index] !== symbol) {
+          return prev + initialValue[index];
+        }
+        if (separate) {
+          return prev + symbol;
+        }
       }
       return prev;
     }, '');
 
-    const initialMaskData = getMaskData(unmaskedValue, mask, replacement, showMask, breakSymbols);
+    const changeData: ChangeData = {
+      unmaskedValue,
+      beforeRange: '',
+      added: '',
+      afterRange: '',
+      inputType: 'initial',
+    };
 
-    const selectionRange: SelectionRange = [0, initialMaskData.ast.length];
-    const initialChangeData = getChangeData(initialMaskData, selectionRange, unmaskedValue);
+    const maskingData: MaskingData = getMaskingData({
+      initialValue,
+      unmaskedValue,
+      mask,
+      replacement,
+      showMask,
+      separate,
+    });
 
-    return { initialMaskData, initialChangeData };
+    return { changeData, maskingData };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

@@ -30,7 +30,7 @@ yarn add react-mask-field
 | modify      |     function     |         | Function triggered before masking. Allows you conditionally change the properties of the component that affect masking. Valid values ​​for modification are `unmaskedValue` (value without mask characters), `mask`, `replacement`, `showMask` and `separate`. This is useful when you need conditionally tweak the displayed value to improve UX (see «Modify»).                      |
 | onMasking   |     function     |         | Handler for the custom event `masking`. Unlike the `change` event, which fires only on input, the `masking` event fires when masking, for example, if `props` have changed (see «Masking event»).                                                                                                                                                                                      |
 
-> You can also pass other properties available to the `input` element by default.
+> You can also pass other properties available element `input` default or your own components, when integrated across the property` component`.
 
 ## Usage
 

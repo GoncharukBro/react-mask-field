@@ -23,9 +23,10 @@ type ComponentProps<C extends Component = undefined, P = any> = C extends React.
   ? ConstructorParameters<C>[0] | {}
   : C extends React.FunctionComponent<P>
   ? Parameters<C>[0] | {}
-  : never;
+  : {};
 
-interface Props {
+interface Props<C extends Component<P> = undefined, P = any> {
+  component?: C;
   mask?: string;
   replacement?: string | Replacement;
   showMask?: boolean;
@@ -34,15 +35,11 @@ interface Props {
   onMasking?: MaskingEventHandler;
 }
 
-interface PropsWithComponent<C extends Component = undefined> extends Props {
-  component?: C;
-}
+export type MaskFieldProps<C extends Component = undefined, P = any> = Props<C, P> &
+  (C extends undefined ? React.InputHTMLAttributes<HTMLInputElement> : ComponentProps<C, P>);
 
-export type MaskFieldProps<C extends Component = undefined> = PropsWithComponent<C> &
-  (C extends undefined ? React.InputHTMLAttributes<HTMLInputElement> : ComponentProps<C>);
-
-function MaskFieldComponent<C extends Component = undefined>(
-  props: Props & { component: C } & ComponentProps<C>,
+function MaskFieldComponent<C extends Component<P> = undefined, P = any>(
+  props: Props<C, P> & ComponentProps<C, P>,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element;
 // eslint-disable-next-line no-redeclare
@@ -61,7 +58,7 @@ function MaskFieldComponent(
     modify,
     onMasking,
     ...otherProps
-  }: PropsWithComponent<Component> & React.InputHTMLAttributes<HTMLInputElement>,
+  }: Props<Component, any> & React.InputHTMLAttributes<HTMLInputElement>,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element {
   let mask = maskProps ?? '';
@@ -353,8 +350,8 @@ function MaskFieldComponent(
 }
 
 const MaskField = forwardRef(MaskFieldComponent) as {
-  <C extends Component = undefined>(
-    props: Props & { component: C } & ComponentProps<C> & React.RefAttributes<HTMLInputElement>
+  <C extends Component<P> = undefined, P = any>(
+    props: Props<C, P> & ComponentProps<C, P> & React.RefAttributes<HTMLInputElement>
   ): JSX.Element;
   (
     props: Props &

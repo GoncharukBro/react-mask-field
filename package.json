@@ -1,6 +1,6 @@
 {
   "name": "react-mask-field",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "author": "Nikolay Goncharuk <goncharuk.bro@gmail.com>",
   "description": "React input component accepting custom mask.",
   "keywords": [

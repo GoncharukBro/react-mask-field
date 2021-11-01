@@ -1,4 +1,4 @@
-import { useState, forwardRef } from 'react';
+import { useState, useRef, forwardRef } from 'react';
 import type { ComponentStory, Meta } from '@storybook/react';
 import MaskFieldComponent from '.';
 import type { MaskFieldProps, ModifiedData, Detail } from '.';
@@ -54,6 +54,7 @@ UncontrolledMaskField.args = initialProps;
  *
  */
 export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (args) => {
+  const ref = useRef<HTMLInputElement>(null);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [value, setValue] = useState('');
 
@@ -61,12 +62,15 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
     <>
       <MaskFieldComponent
         {...args}
+        ref={ref}
         mask="___-___"
         replacement={{ _: /\d/ }}
-        onMasking={(event) => {}}
+        onMasking={(event) => {
+          setDetail(event.detail);
+        }}
         value={value}
         onChange={(event) => {
-          setValue(event.target.value);
+          // setValue(event.target.value);
         }}
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
@@ -122,10 +126,19 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
  */
 const CustomComponent = forwardRef(
   ({ label }: { label?: string }, ref: React.ForwardedRef<HTMLInputElement>) => {
+    const [value, setValue] = useState('');
+
     return (
       <>
-        <label htmlFor="customInput">{label}</label>
-        <input ref={ref} id="customInput" />
+        <label htmlFor="custom-input">{label}</label>
+        <input
+          ref={ref}
+          id="custom-input"
+          value={value}
+          onChange={(event) => {
+            setValue(event.target.value);
+          }}
+        />
       </>
     );
   }
@@ -145,8 +158,10 @@ export const MaskFieldWithCustomComponent: ComponentStory<typeof MaskFieldCompon
         separate={false}
         // defaultValue="+7 (9__)"
         // value={detail?.maskedValue}
-        onMasking={(event) => setDetail(event.detail)}
-        label="Helper"
+        onMasking={(event) => {
+          setDetail(event.detail);
+        }}
+        label="123"
         // value=""
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>

@@ -8,7 +8,7 @@ import {
 } from './utils';
 import useInitialState from './useInitialState';
 import useError from './useError';
-import type { Replacement, MaskingEvent, MaskingEventHandler, Modify } from './types';
+import type { Props, MaskingEvent } from './types';
 
 class SyntheticChangeError extends Error {
   constructor(message: string) {
@@ -25,26 +25,20 @@ type ComponentProps<C extends Component = undefined, P = any> = C extends React.
   ? Parameters<C>[0] | {}
   : {};
 
-interface Props<C extends Component<P> = undefined, P = any> {
+interface PropsWithComponent<C extends Component<P> = undefined, P = any> extends Props {
   component?: C;
-  mask?: string;
-  replacement?: string | Replacement;
-  showMask?: boolean;
-  separate?: boolean;
-  modify?: Modify;
-  onMasking?: MaskingEventHandler;
 }
 
-export type MaskFieldProps<C extends Component = undefined, P = any> = Props<C, P> &
+export type MaskFieldProps<C extends Component = undefined, P = any> = PropsWithComponent<C, P> &
   (C extends undefined ? React.InputHTMLAttributes<HTMLInputElement> : ComponentProps<C, P>);
 
 function MaskFieldComponent<C extends Component<P> = undefined, P = any>(
-  props: Props<C, P> & ComponentProps<C, P>,
+  props: PropsWithComponent<C, P> & ComponentProps<C, P>,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element;
 // eslint-disable-next-line no-redeclare
 function MaskFieldComponent(
-  props: Props & React.InputHTMLAttributes<HTMLInputElement>,
+  props: PropsWithComponent & React.InputHTMLAttributes<HTMLInputElement>,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element;
 // eslint-disable-next-line no-redeclare
@@ -58,7 +52,7 @@ function MaskFieldComponent(
     modify,
     onMasking,
     ...otherProps
-  }: Props<Component, any> & React.InputHTMLAttributes<HTMLInputElement>,
+  }: PropsWithComponent<Component, any> & React.InputHTMLAttributes<HTMLInputElement>,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element {
   let mask = maskProps ?? '';
@@ -148,7 +142,12 @@ function MaskFieldComponent(
     }) as MaskingEvent;
 
     inputElement.current?.dispatchEvent(customEvent);
-    onMasking?.(customEvent);
+
+    // Нулевая задержка необходима, чтобы компонент выполнялся в асинхронном режиме,
+    // в противном случае возможна ситуация, когда компонент будет повторно отрисован с предыдущим значением
+    setTimeout(() => {
+      onMasking?.(customEvent);
+    });
   };
 
   // Преобразовываем объект `replacement` в строку для сравнения с зависимостью в `useEffect`
@@ -351,10 +350,10 @@ function MaskFieldComponent(
 
 const MaskField = forwardRef(MaskFieldComponent) as {
   <C extends Component<P> = undefined, P = any>(
-    props: Props<C, P> & ComponentProps<C, P> & React.RefAttributes<HTMLInputElement>
+    props: PropsWithComponent<C, P> & ComponentProps<C, P> & React.RefAttributes<HTMLInputElement>
   ): JSX.Element;
   (
-    props: Props &
+    props: PropsWithComponent &
       React.InputHTMLAttributes<HTMLInputElement> &
       React.RefAttributes<HTMLInputElement>
   ): JSX.Element;

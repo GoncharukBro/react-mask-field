@@ -56,3 +56,12 @@ export interface ModifiedData {
 }
 
 export type Modify = (modifiedData: ModifiedData) => Partial<ModifiedData> | undefined;
+
+export interface Props {
+  mask?: string;
+  replacement?: string | Replacement;
+  showMask?: boolean;
+  separate?: boolean;
+  modify?: Modify;
+  onMasking?: MaskingEventHandler;
+}

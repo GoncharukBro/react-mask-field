@@ -1,6 +1,6 @@
 import { useState, useRef, forwardRef } from 'react';
 import type { ComponentStory, Meta } from '@storybook/react';
-import MaskFieldComponent from '.';
+import { MaskField as MaskFieldComponent } from '.';
 import type { MaskFieldProps, ModifiedData, Detail } from '.';
 
 export default {
@@ -32,6 +32,7 @@ export const UncontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = 
         {...args}
         defaultValue="+7 (___) ___-__-__"
         onMasking={(event) => setDetail(event.detail)}
+        autoFocus
         // onChange={(event) => {
         //   console.log(2, event);
         // }}
@@ -70,7 +71,7 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
         }}
         value={value}
         onChange={(event) => {
-          // setValue(event.target.value);
+          setValue(event.target.value);
         }}
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>

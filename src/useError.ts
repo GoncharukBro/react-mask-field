@@ -1,22 +1,20 @@
 import { useEffect } from 'react';
 import type { Replacement } from './types';
 
-interface UseErrorParams {
+interface ErrorParams {
   initialValue: string;
   mask: string;
   replacement: Replacement;
 }
 
 /**
- * Выводит в консоль сообщения об ошибках.
- * Сообщения выводятся один раз при монтировании компонента
- * @param param
- * @param param.initialValue инициализированное значение
- * @param param.mask
- * @param param.replacement
+ * Выводит в консоль сообщения об ошибках. Сообщения выводятся один раз при монтировании компонента
+ * @param callback возвращает данные для валидации значений
  */
-export default function useError({ initialValue, mask, replacement }: UseErrorParams) {
+export default function useError(callback: () => ErrorParams) {
   useEffect(() => {
+    const { initialValue, mask, replacement } = callback();
+
     if (process.env.NODE_ENV !== 'production') {
       const invalidReplacementKeys = Object.keys(replacement).filter((key) => key.length > 1);
       const invalidSymbolIndex = mask

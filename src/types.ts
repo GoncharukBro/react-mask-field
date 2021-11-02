@@ -57,7 +57,7 @@ export interface ModifiedData {
 
 export type Modify = (modifiedData: ModifiedData) => Partial<ModifiedData> | undefined;
 
-export interface Props {
+export interface MaskProps {
   mask?: string;
   replacement?: string | Replacement;
   showMask?: boolean;

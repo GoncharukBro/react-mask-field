@@ -15,7 +15,7 @@ export interface Replacement {
   [key: string]: RegExp;
 }
 
-export type InputType = 'insert' | 'delete' | 'deleteForward' | 'initial';
+export type InputType = 'insert' | 'deleteBackward' | 'deleteForward' | 'initial';
 
 export interface SelectionRange {
   start: number;

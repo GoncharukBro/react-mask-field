@@ -28,7 +28,7 @@ export default function useMask({
   separate: separateProps,
   modify,
   onMasking,
-}: MaskProps) {
+}: MaskProps): React.MutableRefObject<HTMLInputElement | null> {
   let mask = maskProps ?? '';
   let replacement = convertToReplacementObject(replacementProps ?? {});
   let showMask = showMaskProps ?? false;
@@ -45,24 +45,32 @@ export default function useMask({
   const selection = useRef({ cachedRequestID: -1, requestID: -1, start: 0, end: 0 });
   const isFirstRender = useRef(true);
 
-  // Устанавливаем стостояние элемента через ссылку
-  const setInputElementState = () => {
-    if (!(inputElement.current && changeData.current && maskingData.current)) {
-      return; // FIXME: validate
-    }
-
-    const cursorPosition = getCursorPosition(changeData.current, maskingData.current);
-    // Важно установить позицию курсора после установки значения,
-    // так как после установки значения, курсор автоматически уходит в конец значения
-    inputElement.current.value = maskingData.current.maskedValue;
+  // Важно установить позицию курсора после установки значения,
+  // так как после установки значения, курсор автоматически уходит в конец значения
+  const setState = ({ value, cursorPosition }: { value: string; cursorPosition: number }) => {
+    if (inputElement.current === null) return; // FIXME: validate
+    inputElement.current.value = value;
     inputElement.current.setSelectionRange(cursorPosition, cursorPosition);
+  };
+
+  const inputElementState = {
+    setState: () => {
+      if (!(inputElement.current && changeData.current && maskingData.current)) return; // FIXME: validate
+      const value = maskingData.current.maskedValue;
+      const cursorPosition = getCursorPosition(changeData.current, maskingData.current);
+      setState({ value, cursorPosition });
+    },
+    resetState: () => {
+      if (!(inputElement.current && changeData.current && maskingData.current)) return; // FIXME: validate
+      const value = inputElement.current._valueTracker?.getValue?.() || '';
+      const cursorPosition = getReplaceableSymbolIndex(value, replacement) || 0;
+      setState({ value, cursorPosition });
+    },
   };
 
   // Формируем данные маскирования и отправляем событие `masking`
   const masking = () => {
-    if (!(inputElement.current && changeData.current && maskingData.current)) {
-      return; // FIXME: validate
-    }
+    if (!(inputElement.current && changeData.current && maskingData.current)) return; // FIXME: validate
 
     let { unmaskedValue } = changeData.current;
 
@@ -97,10 +105,13 @@ export default function useMask({
       separate,
     });
 
-    setInputElementState();
+    inputElementState.setState();
 
-    // Генерируем и отправляем пользовательское событие `masking`
-    const customEvent = new CustomEvent('masking', {
+    // Генерируем и отправляем пользовательское событие `masking`. Нулевая задержка необходима
+    // для запуска события в асинхронном режиме, в противном случае возможна ситуация, когда
+    // компонент будет повторно отрисован с предыдущим значением
+
+    const maskingEvent = new CustomEvent('masking', {
       bubbles: true,
       cancelable: false,
       composed: true,
@@ -112,19 +123,13 @@ export default function useMask({
       },
     }) as MaskingEvent;
 
-    inputElement.current.dispatchEvent(customEvent);
-
-    // Нулевая задержка необходима для запуска события в асинхронном режиме, в противном случае
-    // возможна ситуация, когда компонент будет повторно отрисован с предыдущим значением
-    setTimeout(() => {
-      onMasking?.(customEvent);
-    });
+    inputElement.current.dispatchEvent(maskingEvent);
+    onMasking?.(maskingEvent);
   };
 
   const resetMaskingData = useCallback(() => {
-    const previousValue = inputElement.current?._valueTracker?.getValue?.() || '';
     maskingData.current = getMaskingData({
-      initialValue: previousValue,
+      initialValue: inputElement.current?._valueTracker?.getValue?.() || '',
       unmaskedValue: '',
       mask,
       replacement,
@@ -140,15 +145,6 @@ export default function useMask({
     // eslint-disable-next-line prefer-const
     let { controlled = false, initialValue = '' } = inputElement.current._wrapperState || {};
     initialValue = controlled ? initialValue : initialValue || (showMask ? mask : '');
-
-    // Поскольку в предыдущем шаге мы изменяем инициализированное значение, мы также должны изменить
-    // значение элемента. Такое поведение необходимо при включенном `showMask`
-    inputElement.current.value = initialValue;
-
-    // При инициализации значения курсор становится в конец значения, поэтому необходимо заранее установить
-    // курсор на первый заменяемый символ. Такое поведение полезно при включенном `autoFocus`
-    const position = getReplaceableSymbolIndex(initialValue, replacement);
-    if (position !== -1) inputElement.current.setSelectionRange(position, position);
 
     // Немаскированное значение необходимо для инициализации состояния. Выбираем из инициализированного значения
     // все символы, не являющиеся символами маски. Ожидается, что инициализированное значение соответствует маске
@@ -181,6 +177,10 @@ export default function useMask({
       showMask,
       separate,
     });
+
+    // Поскольку в предыдущем шаге мы изменяем инициализированное значение,
+    // мы также должны изменить значение элемента
+    inputElementState.setState();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -199,7 +199,7 @@ export default function useMask({
   }, [mask, stringifiedReplacement, showMask, separate]);
 
   useEffect(() => {
-    const handleInput = () => {
+    const handleInput = (event: Event) => {
       try {
         if (!(inputElement.current && changeData.current && maskingData.current)) {
           throw new SyntheticChangeError('The state has not been initialized.'); // FIXME: validate
@@ -225,7 +225,7 @@ export default function useMask({
           currentPosition <= selection.current.start &&
           currentPosition < selection.current.end
         ) {
-          currentInputType = 'delete';
+          currentInputType = 'deleteBackward';
         } else if (
           currentPosition === selection.current.end &&
           currentValue.length < maskingData.current.maskedValue.length
@@ -260,7 +260,7 @@ export default function useMask({
 
             break;
           }
-          case 'delete':
+          case 'deleteBackward':
           case 'deleteForward': {
             const countDeletedSymbols =
               maskingData.current.maskedValue.length - currentValue.length;
@@ -281,17 +281,23 @@ export default function useMask({
 
         masking();
 
-        // После изменения значения в `masking` событие `change` срабатывать не будет,
-        // так как предыдущее и текущее состояние внутри `input` совпадают.
-        // Чтобы обойти эту проблему с версии React 16, устанавливаем предыдущее состояние
-        // на отличное от текущего. Это взлом работы React.
-        inputElement.current._valueTracker?.setValue?.(previousValue);
-        // При отправке события, React автоматически создаст `SyntheticEvent`
-        inputElement.current.dispatchEvent(new Event('change', { bubbles: true }));
+        // После изменения значения в `masking` событие `change` срабатывать не будет, так как предыдущее
+        // и текущее состояние внутри `input` совпадают. Чтобы обойти эту проблему с версии React 16,
+        // устанавливаем предыдущее состояние на отличное от текущего.
+        inputElement.current?._valueTracker?.setValue?.(previousValue);
+        // Нулевая задержка `requestAnimationFrame` необходима, чтобы событие `change` сработало после
+        // завершения `handleInput`. Такое поведение обусловлено тем, что после срабатывания события `change`
+        // состояние `input` элемента обновляется в соответствии с переданным значением `value`.
+        requestAnimationFrame(() => {
+          // При отправке события, React автоматически создаст `SyntheticEvent`
+          inputElement.current?.dispatchEvent(new Event('change', { bubbles: true }));
+        });
       } catch (error) {
         // Поскольку внутреннее состояние элемента `input` изменилось после ввода,
         // его необходимо восстановить
-        setInputElementState();
+        inputElementState.resetState();
+        event.preventDefault();
+        event.stopPropagation();
 
         if ((error as Error).name !== 'SyntheticChangeError') {
           throw error;

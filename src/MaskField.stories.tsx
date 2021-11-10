@@ -14,8 +14,8 @@ const initialProps = {
     _: /\d/,
     // n: /\D/,
   },
-  showMask: true,
-  separate: true,
+  showMask: false,
+  separate: false,
 };
 
 /**
@@ -105,7 +105,7 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
       newUnmaskedValue = `7${unmaskedValue}`;
     }
     const newMask = !newUnmaskedValue || newUnmaskedValue[0] === '7' ? ruPhoneMask : otherPhoneMask;
-    return { unmaskedValue: newUnmaskedValue, mask: newMask, separate: false };
+    return { unmaskedValue: newUnmaskedValue, mask: newMask };
   };
 
   return (
@@ -113,7 +113,7 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
       <MaskFieldComponent
         {...args}
         mask={ruPhoneMask}
-        // modify={modify}
+        modify={modify}
         value={detail?.maskedValue || ''}
         onMasking={(event) => setDetail(event.detail)}
       />

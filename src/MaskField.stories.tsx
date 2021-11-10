@@ -32,7 +32,7 @@ export const HookMask: ComponentStory<any> = (args) => {
 
   return (
     <>
-      <input ref={ref} value={detail?.maskedValue || ''} />
+      <input ref={ref} value={detail?.maskedValue} />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>
   );
@@ -76,7 +76,7 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
       <MaskFieldComponent
         {...args}
         onMasking={(event) => setDetail(event.detail)}
-        value={detail?.maskedValue || ''}
+        value={detail?.maskedValue}
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>
@@ -114,7 +114,7 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
         {...args}
         mask={ruPhoneMask}
         modify={modify}
-        value={detail?.maskedValue || ''}
+        value={detail?.maskedValue}
         onMasking={(event) => setDetail(event.detail)}
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
@@ -155,7 +155,7 @@ export const MaskFieldWithCustomComponentOuterState: ComponentStory<typeof MaskF
         component={CustomComponentOuterState}
         onMasking={(event) => setDetail(event.detail)}
         label="Мой лейбел"
-        value={detail?.maskedValue || ''}
+        value={detail?.maskedValue}
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>

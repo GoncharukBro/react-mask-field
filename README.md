@@ -314,6 +314,12 @@ export default function Example(props: any) {
 }
 ```
 
+## Feedback
+
+If you find a bug or want to make a suggestion for improving the package, [open the issues on GitHub](https://github.com/GoncharukBro/react-mask-field/issues) or email [goncharuk.bro@gmail.com](mailto:goncharuk.bro@gmail.com).
+
+Support the project with a star on [GitHub](https://github.com/GoncharukBro/react-mask-field) ⭐.
+
 ## License
 
 MIT © [Nikolay Goncharuk](https://github.com/GoncharukBro)

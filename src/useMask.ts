@@ -58,15 +58,16 @@ export default function useMask({
       setState: () => {
         if (!(inputElement.current && changeData.current && maskingData.current)) return; // FIXME: validate
         const value = maskingData.current.maskedValue;
-        const position = getCursorPosition(changeData.current, maskingData.current);
-        setState({ value, cursorPosition: position });
+        const cursorPosition = getCursorPosition(changeData.current, maskingData.current);
+        setState({ value, cursorPosition });
       },
       resetState: () => {
         if (!(inputElement.current && changeData.current && maskingData.current)) return; // FIXME: validate
         const value = inputElement.current._valueTracker?.getValue?.() || '';
         const replaceableSymbolIndex = getReplaceableSymbolIndex(
           value,
-          maskingData.current.replacement
+          maskingData.current.replacement,
+          selection.current.start
         );
         const position = replaceableSymbolIndex !== -1 ? replaceableSymbolIndex : value.length;
         setState({ value, cursorPosition: position });
@@ -140,23 +141,11 @@ export default function useMask({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mask, stringifiedReplacement, showMask, separate, inputElementState, modify, onMasking]);
 
-  const resetMaskingData = useCallback(() => {
-    maskingData.current = getMaskingData({
-      initialValue: inputElement.current?._valueTracker?.getValue?.() || '',
-      unmaskedValue: '',
-      mask,
-      replacement,
-      showMask,
-      separate,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mask, stringifiedReplacement, showMask, separate]);
-
   useLayoutEffect(() => {
     if (inputElement.current === null) return;
 
     // eslint-disable-next-line prefer-const
-    let { controlled = false, initialValue = '' } = inputElement.current._wrapperState || {};
+    let { controlled = false, initialValue = '' } = inputElement.current._wrapperState ?? {};
     initialValue = controlled ? initialValue : initialValue || (showMask ? mask : '');
 
     // Немаскированное значение необходимо для инициализации состояния. Выбираем из инициализированного значения
@@ -199,7 +188,7 @@ export default function useMask({
 
   // При наличии ошибок, выводим их в консоль
   useError(() => ({
-    initialValue: inputElement.current?._wrapperState?.initialValue || '',
+    initialValue: inputElement.current?._wrapperState?.initialValue ?? '',
     mask,
     replacement,
   }));
@@ -226,9 +215,9 @@ export default function useMask({
 
         selection.current.cachedRequestID = selection.current.requestID;
 
-        const previousValue = inputElement.current._valueTracker?.getValue?.() || '';
+        const previousValue = inputElement.current._valueTracker?.getValue?.() ?? '';
         const currentValue = inputElement.current.value;
-        const currentPosition = inputElement.current.selectionStart || 0;
+        const currentPosition = inputElement.current.selectionStart ?? 0;
         let currentInputType = '';
 
         // Определяем тип ввода (ручное определение типа ввода способствует кроссбраузерности)
@@ -250,7 +239,14 @@ export default function useMask({
         // возникнуть при контроле значения, если значение не было изменено после ввода. Для предотвращения подобных
         // ситуаций, нам важно синхронизировать предыдущее значение с кэшированным значением, если они различаются
         if (maskingData.current.maskedValue !== previousValue) {
-          resetMaskingData();
+          maskingData.current = getMaskingData({
+            initialValue: previousValue,
+            unmaskedValue: '',
+            mask: maskingData.current.mask,
+            replacement: maskingData.current.replacement,
+            showMask: maskingData.current.showMask,
+            separate: maskingData.current.separate,
+          });
         }
 
         switch (currentInputType) {
@@ -324,13 +320,13 @@ export default function useMask({
     return () => {
       element?.removeEventListener('input', handleInput);
     };
-  }, [inputElementState, masking, resetMaskingData]);
+  }, [inputElementState, masking]);
 
   useEffect(() => {
     const handleFocus = () => {
       const setSelection = () => {
-        selection.current.start = inputElement.current?.selectionStart || 0;
-        selection.current.end = inputElement.current?.selectionEnd || 0;
+        selection.current.start = inputElement.current?.selectionStart ?? 0;
+        selection.current.end = inputElement.current?.selectionEnd ?? 0;
         selection.current.requestID = requestAnimationFrame(setSelection);
       };
       selection.current.requestID = requestAnimationFrame(setSelection);

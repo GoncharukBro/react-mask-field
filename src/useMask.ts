@@ -1,4 +1,4 @@
-import { useLayoutEffect, useEffect, useRef, useCallback } from 'react';
+import { useLayoutEffect, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   convertToReplacementObject,
   getReplaceableSymbolIndex,
@@ -29,10 +29,10 @@ export default function useMask({
   modify,
   onMasking,
 }: MaskProps): React.MutableRefObject<HTMLInputElement | null> {
-  let mask = maskProps ?? '';
-  let replacement = convertToReplacementObject(replacementProps ?? {});
-  let showMask = showMaskProps ?? false;
-  let separate = separateProps ?? false;
+  const mask = maskProps ?? '';
+  const replacement = convertToReplacementObject(replacementProps ?? {});
+  const showMask = showMaskProps ?? false;
+  const separate = separateProps ?? false;
 
   // Преобразовываем объект `replacement` в строку для сравнения с зависимостью в `useEffect`
   const stringifiedReplacement = JSON.stringify(replacement, (key, value) => {
@@ -53,56 +53,68 @@ export default function useMask({
     inputElement.current.setSelectionRange(cursorPosition, cursorPosition);
   };
 
-  const inputElementState = {
-    setState: () => {
-      if (!(inputElement.current && changeData.current && maskingData.current)) return; // FIXME: validate
-      const value = maskingData.current.maskedValue;
-      const cursorPosition = getCursorPosition(changeData.current, maskingData.current);
-      setState({ value, cursorPosition });
-    },
-    resetState: () => {
-      if (!(inputElement.current && changeData.current && maskingData.current)) return; // FIXME: validate
-      const value = inputElement.current._valueTracker?.getValue?.() || '';
-      const cursorPosition = getReplaceableSymbolIndex(value, replacement) || 0;
-      setState({ value, cursorPosition });
-    },
-  };
+  const inputElementState = useMemo(() => {
+    return {
+      setState: () => {
+        if (!(inputElement.current && changeData.current && maskingData.current)) return; // FIXME: validate
+        const value = maskingData.current.maskedValue;
+        const position = getCursorPosition(changeData.current, maskingData.current);
+        setState({ value, cursorPosition: position });
+      },
+      resetState: () => {
+        if (!(inputElement.current && changeData.current && maskingData.current)) return; // FIXME: validate
+        const value = inputElement.current._valueTracker?.getValue?.() || '';
+        const replaceableSymbolIndex = getReplaceableSymbolIndex(
+          value,
+          maskingData.current.replacement
+        );
+        const position = replaceableSymbolIndex !== -1 ? replaceableSymbolIndex : value.length;
+        setState({ value, cursorPosition: position });
+      },
+    };
+  }, []);
 
   // Формируем данные маскирования и отправляем событие `masking`
-  const masking = () => {
+  const masking = useCallback(() => {
     if (!(inputElement.current && changeData.current && maskingData.current)) return; // FIXME: validate
 
-    let { unmaskedValue } = changeData.current;
+    let modifiedUnmaskedValue = changeData.current.unmaskedValue;
+    let modifiedMask = mask;
+    let modifiedReplacement = replacement;
+    let modifiedShowMask = showMask;
+    let modifiedSeparate = separate;
 
     const modifiedData = modify?.({
-      unmaskedValue,
-      mask,
-      replacement,
-      showMask,
-      separate,
+      unmaskedValue: modifiedUnmaskedValue,
+      mask: modifiedMask,
+      replacement: modifiedReplacement,
+      showMask: modifiedShowMask,
+      separate: modifiedSeparate,
     });
 
     if (modifiedData) {
-      unmaskedValue = modifiedData.unmaskedValue ?? unmaskedValue;
-      mask = modifiedData.mask ?? mask;
-      replacement = convertToReplacementObject(modifiedData.replacement ?? replacement);
-      showMask = modifiedData.showMask ?? showMask;
-      separate = modifiedData.separate ?? separate;
+      modifiedUnmaskedValue = modifiedData.unmaskedValue ?? modifiedUnmaskedValue;
+      modifiedMask = modifiedData.mask ?? modifiedMask;
+      modifiedReplacement = convertToReplacementObject(
+        modifiedData.replacement ?? modifiedReplacement
+      );
+      modifiedShowMask = modifiedData.showMask ?? modifiedShowMask;
+      modifiedSeparate = modifiedData.separate ?? modifiedSeparate;
     }
 
     if (!separate) {
-      unmaskedValue = unmaskedValue.split('').reduce((prev, symbol) => {
+      modifiedUnmaskedValue = modifiedUnmaskedValue.split('').reduce((prev, symbol) => {
         const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
         return isReplacementKey ? prev : prev + symbol;
       }, '');
     }
 
     maskingData.current = getMaskingData({
-      unmaskedValue,
-      mask,
-      replacement,
-      showMask,
-      separate,
+      unmaskedValue: modifiedUnmaskedValue,
+      mask: modifiedMask,
+      replacement: modifiedReplacement,
+      showMask: modifiedShowMask,
+      separate: modifiedSeparate,
     });
 
     inputElementState.setState();
@@ -116,7 +128,7 @@ export default function useMask({
       cancelable: false,
       composed: true,
       detail: {
-        unmaskedValue,
+        unmaskedValue: modifiedUnmaskedValue,
         maskedValue: maskingData.current.maskedValue,
         pattern: maskingData.current.pattern,
         isValid: maskingData.current.isValid,
@@ -125,7 +137,8 @@ export default function useMask({
 
     inputElement.current.dispatchEvent(maskingEvent);
     onMasking?.(maskingEvent);
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mask, stringifiedReplacement, showMask, separate, inputElementState, modify, onMasking]);
 
   const resetMaskingData = useCallback(() => {
     maskingData.current = getMaskingData({
@@ -311,8 +324,7 @@ export default function useMask({
     return () => {
       element?.removeEventListener('input', handleInput);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetMaskingData]);
+  }, [inputElementState, masking, resetMaskingData]);
 
   useEffect(() => {
     const handleFocus = () => {

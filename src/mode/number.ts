@@ -1,4 +1,4 @@
-import { ModifiedData } from '../MaskField';
+import { ModifiedData } from '..';
 
 interface Options {
   delimiter?: string;
@@ -13,14 +13,16 @@ interface Options {
  * @returns
  */
 export default function number(
-  { value, mask, replacement, ...otherModifiedData }: ModifiedData,
-  { delimiter = ' ', min = 0, max = -1 }: Options
+  { unmaskedValue, mask, replacement, showMask, separate }: ModifiedData,
+  options?: Options
 ) {
+  const { delimiter = ' ', min = 0, max = -1 } = options ?? {};
+
   const newMask = [] as string[];
   const replacementKeys = Object.keys(replacement);
 
-  if (value !== undefined) {
-    for (let i = value.length - 1; i >= 0; i--) {
+  if (unmaskedValue !== undefined) {
+    for (let i = unmaskedValue.length - 1; i >= 0; i--) {
       if ((i + 1) % 3 === 0 && i !== 0) {
         newMask.unshift(delimiter + replacementKeys[0]);
       } else {
@@ -29,5 +31,11 @@ export default function number(
     }
   }
 
-  return { value, mask: newMask.join(''), replacement, ...otherModifiedData };
+  return {
+    unmaskedValue,
+    mask: newMask.join(''),
+    replacement,
+    showMask: false,
+    separate: false,
+  };
 }

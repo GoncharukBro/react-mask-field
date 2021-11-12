@@ -85,22 +85,22 @@ export default function useMask({
     let modifiedShowMask = showMask;
     let modifiedSeparate = separate;
 
-    const modifiedData = modify?.({
-      unmaskedValue: modifiedUnmaskedValue,
-      mask: modifiedMask,
-      replacement: modifiedReplacement,
-      showMask: modifiedShowMask,
-      separate: modifiedSeparate,
-    });
+    if (modify) {
+      const modifiedData = modify({
+        unmaskedValue: modifiedUnmaskedValue,
+        mask: modifiedMask,
+        replacement: modifiedReplacement,
+        showMask: modifiedShowMask,
+        separate: modifiedSeparate,
+      });
 
-    if (modifiedData) {
-      modifiedUnmaskedValue = modifiedData.unmaskedValue ?? modifiedUnmaskedValue;
-      modifiedMask = modifiedData.mask ?? modifiedMask;
+      modifiedUnmaskedValue = modifiedData?.unmaskedValue ?? modifiedUnmaskedValue;
+      modifiedMask = modifiedData?.mask ?? modifiedMask;
       modifiedReplacement = convertToReplacementObject(
-        modifiedData.replacement ?? modifiedReplacement
+        modifiedData?.replacement ?? modifiedReplacement
       );
-      modifiedShowMask = modifiedData.showMask ?? modifiedShowMask;
-      modifiedSeparate = modifiedData.separate ?? modifiedSeparate;
+      modifiedShowMask = modifiedData?.showMask ?? modifiedShowMask;
+      modifiedSeparate = modifiedData?.separate ?? modifiedSeparate;
     }
 
     if (!separate) {

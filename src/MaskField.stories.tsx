@@ -1,6 +1,7 @@
 import { useState, forwardRef } from 'react';
 import type { ComponentStory, Meta } from '@storybook/react';
 import { MaskField as MaskFieldComponent, useMask } from '.';
+import number from './mode/number';
 import type { MaskFieldProps, ModifiedData, Detail } from '.';
 
 export default {
@@ -93,18 +94,18 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
 export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComponent> = (args) => {
   const [detail, setDetail] = useState<Detail | null>(null);
 
-  const modify = ({ unmaskedValue }: ModifiedData) => {
-    const newMask = unmaskedValue[0] !== '7' ? '+_ __________' : undefined;
-    return { mask: newMask };
-  };
+  // const modify = ({ unmaskedValue }: ModifiedData) => {
+  //   const newMask = unmaskedValue[0] !== '7' ? '+_ __________' : undefined;
+  //   return { mask: newMask };
+  // };
 
   return (
     <>
       <MaskFieldComponent
         {...args}
-        mask="+_ (___) ___-__-__"
+        mask="_"
         replacement={{ _: /\d/ }}
-        modify={modify}
+        modify={number}
         value={detail?.maskedValue}
         onMasking={(event) => setDetail(event.detail)}
       />

@@ -22,7 +22,7 @@ yarn add react-mask-field
 
 | Name        |       Type       | Default | Description                                                                                                                                                                                                                                                                                                                                                                            |
 | ----------- | :--------------: | :-----: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| component   |    Component     |         | Serves to enable the use of custom components, for example, if you want to use your own styled component with the ability to mask the value (see «Integration with custom components»).                                                                                                                                                                                                |
+| component   |    Component     |         | **Not used in the useMask hook**. Serves to enable the use of custom components, for example, if you want to use your own styled component with the ability to mask the value (see «Integration with custom components»).                                                                                                                                                              |
 | mask        |      string      |   ""    | Input mask, `replacement` is used to replace characters.                                                                                                                                                                                                                                                                                                                               |
 | replacement | string \| object |   {}    | Sets the characters replaced in the mask, where `key` is the replaced character, `value` is the regular expression to which the input character must match (see «Replacement»). It is possible to pass the replacement character as a string, then `replacement="_"` will default to `replacement={{ _: /./ }}`. Keys are ignored as you type.                                         |
 | showMask    |     boolean      |  false  | Controls the display of the mask, for example, `+7 (912) ___-__-__` instead of `+7 (912`.                                                                                                                                                                                                                                                                                              |
@@ -30,26 +30,41 @@ yarn add react-mask-field
 | modify      |     function     |         | Function triggered before masking. Allows you conditionally change the properties of the component that affect masking. Valid values ​​for modification are `unmaskedValue` (value without mask characters), `mask`, `replacement`, `showMask` and `separate`. This is useful when you need conditionally tweak the displayed value to improve UX (see «Modify»).                      |
 | onMasking   |     function     |         | Handler for the custom event `masking`. Unlike the `change` event, which fires only on input, the `masking` event fires when masking, for example, if `props` have changed (see «Masking event»).                                                                                                                                                                                      |
 
-> You can also pass other properties available element `input` default or your own components, when integrated across the property` component`.
+> You can also pass other properties available element `input` default or your own components, when integrated across the property `component`.
 
 ## Usage
 
-The default exported `MaskField` component is a standard `input` element with additional input handling logic.
+The `react-mask-field` package provides two options for using a mask. The first is the `MaskField` component, which is a standard input element with additional logic to handle the input. The second is using the `useMask` hook, which needs to be linked to the `input` element through the `ref` property.
 
-For example, here's how you can easily implement a mask for entering a phone number:
+One of the key features of the `react-mask-field` package is that it only relies on user-supplied characters, so you can safely include any character in the mask without fear of the «unexpected behavior».
+
+Let's see how you can easily implement a mask for entering a phone number using the `MaskField` component:
 
 ```jsx
 import React from 'react';
-import MaskField from 'react-mask-field';
+import { MaskField } from 'react-mask-field';
 
 export default function Example() {
   return <MaskField mask="+7 (___) ___-__-__" replacement={{ _: /\d/ }} />;
 }
 ```
 
-One of the key features of the `MaskField` component is that it only relies on user-supplied characters, so you can safely include any character in the mask without fear of the component's «unexpected behavior».
-
 You can work with the `MaskField` component in the same way as with the `input` element, with the difference that the `MaskField` component uses additional logic to process the value.
+
+Now the same thing, but using the `useMask` hook:
+
+```jsx
+import React from 'react';
+import { useMask } from 'react-mask-field';
+
+export default function Example() {
+  const ref = useMask({ mask: '+7 (___) ___-__-__', replacement: { _: /\d/ } });
+
+  return <input ref={ref} />;
+}
+```
+
+The `useMask` hook takes the same properties as the `MaskField` component, except for the `component` properties. Both approaches are equivalent, but the use of the `MaskField` component provides additional capabilities, which will be discussed in the section «Integration with custom components».
 
 > The `MaskField` component does not change the value passed in the `value` or `defaultValue` property, so specify as the initialized value one that can match the masked value at any stage of input. If you make a mistake, you will see a warning about it in the console.
 
@@ -61,7 +76,7 @@ like this:
 
 ```jsx
 import React from 'react';
-import MaskField from 'react-mask-field';
+import { MaskField } from 'react-mask-field';
 
 export default function Example() {
   return (
@@ -93,14 +108,12 @@ Let's consider a possible situation when we need to change the mask depending on
 
 ```jsx
 import React from 'react';
-import MaskField from 'react-mask-field';
+import { MaskField } from 'react-mask-field';
 
 export default function Example() {
-  // Modify the mask
   const modify = ({ unmaskedValue }) => {
-    return {
-      mask: unmaskedValue[0] === '7' ? '+_ (___) ___-__-__' : undefined,
-    };
+    const newMask = unmaskedValue[0] === '7' ? '+_ (___) ___-__-__' : undefined;
+    return { mask: newMask };
   };
 
   return <MaskField mask="+_ __________" replacement={{ _: /\d/ }} modify={modify} />;
@@ -111,7 +124,7 @@ The advantage of this approach is that you do not need to store the state of the
 
 ## Masking event
 
-It can be useful to have additional data about the value at hand or to instantly get a new value when `props` changes, for this you can use the `masking` event provided by the `MaskField` component.
+It can be useful to have additional data about the value at hand or to instantly get a new value when `props` changes, for this you can use the `masking` event.
 
 Unlike the `change` event, which fires only on input, the `masking` event fires every time a value changes, through input, or when `props` changes. In addition, the `masking` event object has a `detail` property that contains additional information about the value:
 
@@ -128,19 +141,22 @@ for example:
 
 ```jsx
 import React from 'react';
-import MaskField from 'react-mask-field';
+import { MaskField } from 'react-mask-field';
 
 export default function Example() {
-  const [value, setValue] = React.useState('');
   const [detail, setDetail] = React.useState(null);
 
   const handleMasking = (event) => {
-    setValue(event.target.value);
     setDetail(event.detail);
   };
 
   return (
-    <MaskField mask="1yyy" replacement={{ y: /\d/ }} value={value} onMasking={handleMasking} />
+    <MaskField
+      mask="1yyy"
+      replacement={{ y: /\d/ }}
+      value={detail?.maskedValue}
+      onMasking={handleMasking}
+    />
   );
 }
 ```
@@ -159,7 +175,7 @@ Here's how to do it:
 
 ```jsx
 import React from 'react';
-import MaskField from 'react-mask-field';
+import { MaskField } from 'react-mask-field';
 
 // Custom component
 const CustomComponent = React.forwardRef(({ label }, ref) => {
@@ -196,8 +212,8 @@ Here's how to do it:
 
 ```jsx
 import React from 'react';
-import TextField from '@material-ui/core/TextField';
-import MaskField from 'react-mask-field';
+import { TextField } from '@material-ui/core';
+import { MaskField } from 'react-mask-field';
 
 // Component with MaskField
 function CustomMaskField({ inputRef, ...otherProps }) {
@@ -216,7 +232,7 @@ The `react-mask-field` package is written in TypeScript, so you have full type s
 
 ```tsx
 import React from 'react';
-import MaskField from 'react-mask-field';
+import { MaskField } from 'react-mask-field';
 import type {
   Detail,
   MaskingEvent,
@@ -246,11 +262,11 @@ export default function Example() {
 
 Since the `MaskField` component supports two use cases (as an `input` element and as an HOC for your own component), `MaskField` takes both use cases into account to support property types.
 
-By default, the `MaskField` component is an` input` element and supports all the attributes supported by the `input` element. But if the `component` property was passed, the` MaskField` will only support those properties that are available to the integrated component. This approach allows you to integrate your own component as conveniently as possible, not forcing you to rewrite its logic, but using a mask where necessary.
+By default, the `MaskField` component is an `input` element and supports all the attributes supported by the `input` element. But if the `component` property was passed, the `MaskField` will only support those properties that are available to the integrated component. This approach allows you to integrate your own component as conveniently as possible, not forcing you to rewrite its logic, but using a mask where necessary.
 
 ```tsx
 import React from 'react';
-import MaskField from 'react-mask-field';
+import { MaskField } from 'react-mask-field';
 import type { MaskFieldProps } from 'react-mask-field';
 
 export default function Example() {
@@ -263,10 +279,10 @@ export default function Example() {
 
 ```tsx
 import React from 'react';
-import MaskField from 'react-mask-field';
+import { MaskField } from 'react-mask-field';
 import type { MaskFieldProps } from 'react-mask-field';
 
-import CustomComponent from './CustomComponent';
+import { CustomComponent } from './CustomComponent';
 import type { CustomComponentProps } from './CustomComponent';
 
 export default function Example() {
@@ -283,8 +299,8 @@ To remedy this situation and help the `MaskField` type correctly the properties 
 
 ```tsx
 import React from 'react';
-import MaskField from 'react-mask-field';
-import CustomComponent from './CustomComponent';
+import { MaskField } from 'react-mask-field';
+import { CustomComponent } from './CustomComponent';
 
 export default function Example(props: any) {
   return (
@@ -297,6 +313,12 @@ export default function Example(props: any) {
   );
 }
 ```
+
+## Feedback
+
+If you find a bug or want to make a suggestion for improving the package, [open the issues on GitHub](https://github.com/GoncharukBro/react-mask-field/issues) or email [goncharuk.bro@gmail.com](mailto:goncharuk.bro@gmail.com).
+
+Support the project with a star on [GitHub](https://github.com/GoncharukBro/react-mask-field) ⭐.
 
 ## License
 

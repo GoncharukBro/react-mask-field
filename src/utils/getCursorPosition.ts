@@ -30,7 +30,7 @@ export default function getCursorPosition(changeData: ChangeData, maskingData: M
       if (afterRangeFirstIndex !== -1) return afterRangeFirstIndex;
       if (beforeRangeLastIndex !== -1) return beforeRangeLastIndex + 1;
       break;
-    case 'delete':
+    case 'deleteBackward':
       if (beforeRangeLastIndex !== -1) return beforeRangeLastIndex + 1;
       if (afterRangeFirstIndex !== -1) return afterRangeFirstIndex;
       break;

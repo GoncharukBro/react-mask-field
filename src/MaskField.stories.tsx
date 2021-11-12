@@ -1,6 +1,6 @@
 import { useState, forwardRef } from 'react';
 import type { ComponentStory, Meta } from '@storybook/react';
-import MaskFieldComponent from '.';
+import { MaskField as MaskFieldComponent, useMask } from '.';
 import type { MaskFieldProps, ModifiedData, Detail } from '.';
 
 export default {
@@ -20,6 +20,28 @@ const initialProps = {
 
 /**
  *
+ * Хук
+ *
+ */
+export const HookMask: ComponentStory<any> = (args) => {
+  const [detail, setDetail] = useState<Detail | null>(null);
+  const ref = useMask({
+    ...args,
+    onMasking: (event) => setDetail(event.detail),
+  });
+
+  return (
+    <>
+      <input ref={ref} value={detail?.maskedValue} />
+      <pre>{JSON.stringify(detail, null, 2)}</pre>
+    </>
+  );
+};
+
+HookMask.args = initialProps;
+
+/**
+ *
  * Неконтролируемый компонент
  *
  */
@@ -32,14 +54,7 @@ export const UncontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = 
         {...args}
         defaultValue="+7 (___) ___-__-__"
         onMasking={(event) => setDetail(event.detail)}
-        // onChange={(event) => {
-        //   console.log(2, event);
-        // }}
-        // onInput={(event) => {
-        //   console.log(3, event);
-        // }}
-        // onFocus={(event) => console.log(event)}
-        // onBlur={(event) => console.log(event)}
+        autoFocus
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>
@@ -55,19 +70,13 @@ UncontrolledMaskField.args = initialProps;
  */
 export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (args) => {
   const [detail, setDetail] = useState<Detail | null>(null);
-  const [value, setValue] = useState('');
 
   return (
     <>
       <MaskFieldComponent
         {...args}
-        mask="___-___"
-        replacement={{ _: /\d/ }}
-        onMasking={(event) => {}}
-        value={value}
-        onChange={(event) => {
-          setValue(event.target.value);
-        }}
+        onMasking={(event) => setDetail(event.detail)}
+        value={detail?.maskedValue}
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>
@@ -84,26 +93,17 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
 export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComponent> = (args) => {
   const [detail, setDetail] = useState<Detail | null>(null);
 
-  const ruPhoneMask = '+_ (___) ___-__-__';
-  const otherPhoneMask = '+_ __________';
-
-  const modify = ({ unmaskedValue, separate }: ModifiedData) => {
-    let newUnmaskedValue = unmaskedValue;
-    if (unmaskedValue[0] === '8') {
-      newUnmaskedValue = `7${unmaskedValue.slice(1)}`;
-    }
-    if (unmaskedValue[0] === '9') {
-      newUnmaskedValue = `7${unmaskedValue}`;
-    }
-    const newMask = !newUnmaskedValue || newUnmaskedValue[0] === '7' ? ruPhoneMask : otherPhoneMask;
-    return { unmaskedValue: newUnmaskedValue, mask: newMask, separate: false };
+  const modify = ({ unmaskedValue }: ModifiedData) => {
+    const newMask = unmaskedValue[0] !== '7' ? '+_ __________' : undefined;
+    return { mask: newMask };
   };
 
   return (
     <>
       <MaskFieldComponent
         {...args}
-        mask={ruPhoneMask}
+        mask="+_ (___) ___-__-__"
+        replacement={{ _: /\d/ }}
         modify={modify}
         value={detail?.maskedValue}
         onMasking={(event) => setDetail(event.detail)}
@@ -117,44 +117,78 @@ export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComp
 
 /**
  *
- * Интеграция с пользовательским компонентом
+ * Интеграция с пользовательским компонентом (внешнее состояние)
  *
  */
-const CustomComponent = forwardRef(
-  ({ label }: { label?: string }, ref: React.ForwardedRef<HTMLInputElement>) => {
+const CustomComponentOuterState = forwardRef(
+  (
+    { label, value }: { label?: string; value: string },
+    ref: React.ForwardedRef<HTMLInputElement>
+  ) => {
     return (
       <>
-        <label htmlFor="customInput">{label}</label>
-        <input ref={ref} id="customInput" />
+        <label htmlFor="custom-input">{label}</label>
+        <input ref={ref} id="custom-input" value={value} />
       </>
     );
   }
 );
 
-export const MaskFieldWithCustomComponent: ComponentStory<typeof MaskFieldComponent> = (args) => {
+export const MaskFieldWithCustomComponentOuterState: ComponentStory<typeof MaskFieldComponent> = (
+  args
+) => {
   const [detail, setDetail] = useState<Detail | null>(null);
 
   return (
     <>
       <MaskFieldComponent
         {...args}
-        component={CustomComponent}
-        mask="+7 (___) nnn-__-__"
-        replacement={{ _: /\d/ }} // n: /\D/,
-        showMask
-        separate={false}
-        // defaultValue="+7 (9__)"
-        // value={detail?.maskedValue}
+        component={CustomComponentOuterState}
         onMasking={(event) => setDetail(event.detail)}
-        label="Helper"
-        // value=""
+        label="Мой лейбел"
+        value={detail?.maskedValue}
       />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>
   );
 };
 
-MaskFieldWithCustomComponent.args = initialProps;
+MaskFieldWithCustomComponentOuterState.args = initialProps;
+
+/**
+ *
+ * Интеграция с пользовательским компонентом (внутреннее состояние)
+ *
+ */
+const CustomComponentInnerState = forwardRef(
+  ({ label }: { label?: string }, ref: React.ForwardedRef<HTMLInputElement>) => {
+    const [value, setValue] = useState('');
+
+    return (
+      <>
+        <label htmlFor="custom-input">{label}</label>
+        <input
+          ref={ref}
+          id="custom-input"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+        />
+      </>
+    );
+  }
+);
+
+export const MaskFieldWithCustomComponentInnerState: ComponentStory<typeof MaskFieldComponent> = (
+  args
+) => {
+  return (
+    <>
+      <MaskFieldComponent {...args} component={CustomComponentInnerState} label="Мой лейбел" />
+    </>
+  );
+};
+
+MaskFieldWithCustomComponentInnerState.args = initialProps;
 
 /**
  *

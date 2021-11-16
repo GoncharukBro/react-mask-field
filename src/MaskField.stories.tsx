@@ -25,14 +25,23 @@ const initialProps = {
  */
 export const HookMask: ComponentStory<any> = (args) => {
   const [detail, setDetail] = useState<Detail | null>(null);
+  const [value, setValue] = useState('');
   const ref = useMask({
     ...args,
-    onMasking: (event) => setDetail(event.detail),
+    onMasking: (event) => {
+      setDetail(event.detail);
+    },
   });
 
   return (
     <>
-      <input ref={ref} value={detail?.maskedValue} />
+      <input
+        ref={ref}
+        value={value}
+        onChange={(event) => {
+          setValue(event.target.value);
+        }}
+      />
       <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>
   );
@@ -197,6 +206,7 @@ MaskFieldWithCustomComponentInnerState.args = initialProps;
  */
 export const TestProps: ComponentStory<typeof MaskFieldComponent> = (args) => {
   const [detail, setDetail] = useState<Detail | null>(null);
+  const [value, setValue] = useState('fegoj0fwfwe');
   const [state, setState] = useState(initialProps);
 
   return (
@@ -207,8 +217,12 @@ export const TestProps: ComponentStory<typeof MaskFieldComponent> = (args) => {
         replacement={state.replacement}
         showMask={state.showMask}
         separate={state.separate}
-        defaultValue="fegoj0fwfwe"
-        onMasking={(event) => setDetail(event.detail)}
+        value={value}
+        // defaultValue="fegoj0fwfwe"
+        onChange={(event) => setValue(event.target.value)}
+        onMasking={(event) => {
+          setDetail(event.detail);
+        }}
       />
 
       <button

@@ -28,7 +28,7 @@ yarn add react-mask-field
 | showMask    |     boolean      |  false  | Controls the display of the mask, for example, `+7 (912) ___-__-__` instead of `+7 (912`.                                                                                                                                                                                                                                                                                              |
 | separate    |     boolean      |  false  | Stores the position of the entered characters. By default, input characters are non-breaking, which means that if you remove characters in the middle of the value, the characters are shifted to the left, forming a non-breaking value, which is the behavior of `input`. For example, with `true`, the possible value is `+7 (912) ___-67-__`, with `false` - `+7 (912) 67_-__-__`. |
 | modify      |     function     |         | Function triggered before masking. Allows you conditionally change the properties of the component that affect masking. Valid values ​​for modification are `unmaskedValue` (value without mask characters), `mask`, `replacement`, `showMask` and `separate`. This is useful when you need conditionally tweak the displayed value to improve UX (see «Modify»).                      |
-| onMasking   |     function     |         | Handler for the custom event `masking`. Unlike the `change` event, which fires only on input, the `masking` event fires when masking, for example, if `props` have changed (see «Masking event»).                                                                                                                                                                                      |
+| onMasking   |     function     |         | Handler for the custom event `masking`. Unlike the `change` event, which fires only on input, the `masking` event fires when masking, for example, if `props` have changed and stores additional data about the masked value (see «Masking event»).                                                                                                                                    |
 
 > You can also pass other properties available element `input` default or your own components, when integrated across the property `component`.
 
@@ -126,7 +126,7 @@ The advantage of this approach is that you do not need to store the state of the
 
 It can be useful to have additional data about the value at hand or to instantly get a new value when `props` changes, for this you can use the `masking` event.
 
-Unlike the `change` event, which fires only on input, the `masking` event fires every time a value changes, through input, or when `props` changes. In addition, the `masking` event object has a `detail` property that contains additional information about the value:
+The `masking` event is fired asynchronously after the` change` event, in addition, the `masking` event object has a` detail` property that contains additional information about the value:
 
 | Name          |  Type   | Description                                                             |
 | ------------- | :-----: | ----------------------------------------------------------------------- |
@@ -135,9 +135,11 @@ Unlike the `change` event, which fires only on input, the `masking` event fires 
 | pattern       | string  | A regular expression of type `string` that the masked value must match. |
 | isValid       | boolean | `true` if the mask is full and matches the pattern value.               |
 
-Otherwise, you can use the `masking` event as well as the `change` event to store the state,
+Unlike the `change` event, which fires only on input, the `masking` event fires every time a value changes, through input, or when `props` changes.
 
-for example:
+> You can use both the `masking` event and the` change` event to save the state, however if you do not need additional parameters in the `detail` property, prefer the` change` event, otherwise it is recommended to use only the `masking` event as it is called asynchronously after the `change` event finishes, which may entail additional rendering of the component.
+
+An example of using the `masking` event:
 
 ```jsx
 import React from 'react';
@@ -318,7 +320,7 @@ export default function Example(props: any) {
 
 If you find a bug or want to make a suggestion for improving the package, [open the issues on GitHub](https://github.com/GoncharukBro/react-mask-field/issues) or email [goncharuk.bro@gmail.com](mailto:goncharuk.bro@gmail.com).
 
-Support the project with a star on [GitHub](https://github.com/GoncharukBro/react-mask-field) ⭐.
+Support the project with a star ⭐ on [GitHub](https://github.com/GoncharukBro/react-mask-field).
 
 ## License
 

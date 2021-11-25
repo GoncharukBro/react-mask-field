@@ -14,6 +14,6 @@ export default function getReplaceableSymbolIndex(
 ) {
   return value.split('').findIndex((symbol, index) => {
     const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
-    return index >= (position || 0) && isReplacementKey;
+    return index >= (position ?? 0) && isReplacementKey;
   });
 }

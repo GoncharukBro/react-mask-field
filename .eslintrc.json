@@ -21,6 +21,7 @@
   "plugins": ["react", "@typescript-eslint", "prettier"],
   "rules": {
     "arrow-body-style": 0,
+    "camelcase": 0,
     "consistent-return": 1,
     "default-case": 0,
     "import/extensions": 0,

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+
 import type { Replacement } from './types';
 
 interface ErrorParams {

@@ -1,4 +1,5 @@
 import getReplaceableSymbolIndex from './getReplaceableSymbolIndex';
+
 import type { ChangeData, MaskingData } from '../types';
 
 /**

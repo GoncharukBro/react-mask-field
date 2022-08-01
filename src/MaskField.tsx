@@ -1,5 +1,7 @@
 import { useCallback, forwardRef } from 'react';
+
 import useMask from './useMask';
+
 import type { MaskProps } from './types';
 
 type Component<P = any> = React.ComponentClass<P> | React.FunctionComponent<P> | undefined;

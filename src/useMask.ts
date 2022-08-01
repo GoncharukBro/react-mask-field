@@ -1,4 +1,5 @@
 import { useLayoutEffect, useEffect, useRef, useCallback } from 'react';
+
 import {
   convertToReplacementObject,
   getReplaceableSymbolIndex,
@@ -6,7 +7,9 @@ import {
   getMaskingData,
   getCursorPosition,
 } from './utils';
+
 import useError from './useError';
+
 import type { MaskProps, MaskingEvent, ChangeData, MaskingData } from './types';
 
 type InputElement = HTMLInputElement & {

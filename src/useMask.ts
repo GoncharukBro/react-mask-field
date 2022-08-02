@@ -43,11 +43,17 @@ export default function useMask({
   });
 
   const isFirstRender = useRef(true);
-  const dispatchedMaskingEvent = useRef(false);
+  const dispatchedMaskingEvent = useRef(true);
   const inputElement = useRef<InputElement | null>(null);
   const changeData = useRef<ChangeData | null>(null);
   const maskingData = useRef<MaskingData | null>(null);
-  const selection = useRef({ cachedRequestID: -1, requestID: -1, start: 0, end: 0 });
+  const selection = useRef({
+    cachedRequestID: -1,
+    fallbackRequestID: -1,
+    requestID: -1,
+    start: 0,
+    end: 0,
+  });
 
   // Устанавливаем состояние `input` элемента
   const setInputState = ({ value, cursorPosition }: { value: string; cursorPosition: number }) => {
@@ -86,6 +92,7 @@ export default function useMask({
       modifiedSeparate = modifiedData.separate ?? modifiedSeparate;
     }
 
+    // В случае `separate === true` убираем все не пользовательские симовлы
     if (!separate) {
       modifiedUnmaskedValue = modifiedUnmaskedValue.split('').reduce((prev, symbol) => {
         const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
@@ -108,7 +115,7 @@ export default function useMask({
 
     const { value, selectionStart } = inputElement.current;
 
-    dispatchedMaskingEvent.current = true;
+    dispatchedMaskingEvent.current = false;
     // Генерируем и отправляем пользовательское событие `masking`. `requestAnimationFrame` необходим для
     // запуска события в асинхронном режиме, в противном случае возможна ситуация, когда компонент
     // будет повторно отрисован с предыдущим значением, из-за обновления состояние после события `change`
@@ -143,7 +150,7 @@ export default function useMask({
         setInputState({ value: attributeValue, cursorPosition: attributeValue.length });
       }
 
-      dispatchedMaskingEvent.current = false;
+      dispatchedMaskingEvent.current = true;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mask, stringifiedReplacement, showMask, separate, modify, onMasking]);
@@ -323,8 +330,11 @@ export default function useMask({
           );
           setInputState({
             value: previousValue,
-            cursorPosition:
-              replaceableSymbolIndex !== -1 ? replaceableSymbolIndex : previousValue.length,
+            cursorPosition: changeData.current
+              ? getCursorPosition(changeData.current, maskingData.current)
+              : replaceableSymbolIndex !== -1
+              ? replaceableSymbolIndex
+              : previousValue.length,
           });
         }
 
@@ -350,11 +360,14 @@ export default function useMask({
       const setSelection = () => {
         // Позиция курсора изменяется после завершения события `change` и к срабатыванию события `masking`
         // позиция курсора может быть некорректной, что может повлеч за собой ошибки
-        if (!dispatchedMaskingEvent.current) {
+        if (dispatchedMaskingEvent.current) {
           selection.current.start = inputElement.current?.selectionStart ?? 0;
           selection.current.end = inputElement.current?.selectionEnd ?? 0;
+
+          selection.current.requestID = requestAnimationFrame(setSelection);
+        } else {
+          selection.current.fallbackRequestID = requestAnimationFrame(setSelection);
         }
-        selection.current.requestID = requestAnimationFrame(setSelection);
       };
       selection.current.requestID = requestAnimationFrame(setSelection);
     };
@@ -375,7 +388,16 @@ export default function useMask({
 
   useEffect(() => {
     const handleBlur = () => {
+      cancelAnimationFrame(selection.current.fallbackRequestID);
       cancelAnimationFrame(selection.current.requestID);
+
+      selection.current = {
+        cachedRequestID: -1,
+        fallbackRequestID: -1,
+        requestID: -1,
+        start: 0,
+        end: 0,
+      };
     };
 
     const element = inputElement.current;

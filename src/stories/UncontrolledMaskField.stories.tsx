@@ -17,8 +17,8 @@ export const UncontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = 
   return (
     <>
       <MaskFieldComponent
-        mask="+7 (___) nnn-__-__"
-        replacement={{ _: /\d/, n: /\D/ }}
+        mask="+7 (___) ___-__-__"
+        replacement={{ _: /\d/ }}
         defaultValue="+7 (___) ___-__-__"
         onMasking={(event) => setDetail(event.detail)}
         autoFocus

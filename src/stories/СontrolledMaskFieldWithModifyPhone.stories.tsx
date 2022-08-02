@@ -11,7 +11,7 @@ export default {
   component: MaskFieldComponent,
 } as Meta<MaskFieldProps>;
 
-export const СontrolledMaskFieldWithModify: ComponentStory<typeof MaskFieldComponent> = () => {
+export const СontrolledMaskFieldWithModifyPhone: ComponentStory<typeof MaskFieldComponent> = () => {
   const [detail, setDetail] = useState<Detail | null>(null);
 
   const modify = ({ unmaskedValue }: ModifiedData) => {

@@ -17,8 +17,8 @@ export const СontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = (
   return (
     <>
       <MaskFieldComponent
-        mask="+7 (___) nnn-__-__"
-        replacement={{ _: /\d/, n: /\D/ }}
+        mask="+7 (___) ___-__-__"
+        replacement={{ _: /\d/ }}
         onMasking={(event) => setDetail(event.detail)}
         value={detail?.maskedValue}
       />

@@ -36,8 +36,8 @@ export const MaskFieldWithCustomComponentInnerState: ComponentStory<typeof MaskF
         <MaskFieldComponent
           component={CustomComponentInnerState}
           label="Мой лейбел"
-          mask="+7 (___) nnn-__-__"
-          replacement={{ _: /\d/, n: /\D/ }}
+          mask="+7 (___) ___-__-__"
+          replacement={{ _: /\d/ }}
         />
       </>
     );

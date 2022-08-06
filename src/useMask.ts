@@ -274,6 +274,13 @@ export default function useMask({
         // устанавливаем предыдущее состояние на отличное от текущего.
         inputRef.current._valueTracker?.setValue?.(previousValue);
       } catch (error) {
+        if (
+          process.env.NODE_ENV !== 'production' &&
+          (error as Error).name === 'SyntheticChangeError'
+        ) {
+          // eslint-disable-next-line no-console
+          console.error(error);
+        }
         // Поскольку внутреннее состояние элемента `input` изменилось после ввода,
         // его необходимо восстановить
         if (inputRef.current !== null && maskingData.current !== null) {

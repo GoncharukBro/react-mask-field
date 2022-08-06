@@ -1,4 +1,4 @@
-import { useState, forwardRef } from 'react';
+import React, { useState, forwardRef } from 'react';
 
 import type { ComponentStory, Meta } from '@storybook/react';
 

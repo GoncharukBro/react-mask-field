@@ -38,15 +38,15 @@ function MaskFieldComponent(
     separate,
     modify,
     onMasking,
-    ...otherProps
+    ...props
   }: PropsWithComponent<Component, any> & React.InputHTMLAttributes<HTMLInputElement>,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element {
-  const inputElement = useMask({ mask, replacement, showMask, separate, modify, onMasking });
+  const inputRef = useMask({ mask, replacement, showMask, separate, modify, onMasking });
 
-  const setRef = useCallback(
+  const setInputRef = useCallback(
     (ref: HTMLInputElement | null) => {
-      inputElement.current = ref;
+      inputRef.current = ref;
       // Добавляем ссылку на элемент для родительских компонентов
       if (typeof forwardedRef === 'function') {
         forwardedRef(ref);
@@ -55,14 +55,14 @@ function MaskFieldComponent(
         forwardedRef.current = ref;
       }
     },
-    [forwardedRef, inputElement]
+    [forwardedRef, inputRef]
   );
 
   if (CustomComponent) {
-    return <CustomComponent ref={setRef} {...otherProps} />;
+    return <CustomComponent ref={setInputRef} {...props} />;
   }
 
-  return <input ref={setRef} {...otherProps} />;
+  return <input ref={setInputRef} {...props} />;
 }
 
 const MaskField = forwardRef(MaskFieldComponent) as {

@@ -44,7 +44,7 @@ Let's see how you can easily implement a mask for entering a phone number using 
 import React from 'react';
 import { MaskField } from 'react-mask-field';
 
-export default function Example() {
+export default function App() {
   return <MaskField mask="+7 (___) ___-__-__" replacement={{ _: /\d/ }} />;
 }
 ```
@@ -57,10 +57,10 @@ Now the same thing, but using the `useMask` hook:
 import React from 'react';
 import { useMask } from 'react-mask-field';
 
-export default function Example() {
-  const ref = useMask({ mask: '+7 (___) ___-__-__', replacement: { _: /\d/ } });
+export default function App() {
+  const inputRef = useMask({ mask: '+7 (___) ___-__-__', replacement: { _: /\d/ } });
 
-  return <input ref={ref} />;
+  return <input ref={inputRef} />;
 }
 ```
 
@@ -78,18 +78,9 @@ like this:
 import React from 'react';
 import { MaskField } from 'react-mask-field';
 
-export default function Example() {
+export default function App() {
   return (
-    <MaskField
-      mask="dd.mm.yyyy"
-      replacement={{
-        d: /\d/,
-        m: /\d/,
-        y: /\d/,
-      }}
-      showMask
-      separate
-    />
+    <MaskField mask="dd.mm.yyyy" replacement={{ d: /\d/, m: /\d/, y: /\d/ }} showMask separate />
   );
 }
 ```
@@ -110,7 +101,7 @@ Let's consider a possible situation when we need to change the mask depending on
 import React from 'react';
 import { MaskField } from 'react-mask-field';
 
-export default function Example() {
+export default function App() {
   const modify = ({ unmaskedValue }) => {
     const newMask = unmaskedValue[0] === '7' ? '+_ (___) ___-__-__' : undefined;
     return { mask: newMask };
@@ -145,7 +136,7 @@ An example of using the `masking` event:
 import React from 'react';
 import { MaskField } from 'react-mask-field';
 
-export default function Example() {
+export default function App() {
   const [detail, setDetail] = React.useState(null);
 
   const handleMasking = (event) => {
@@ -179,18 +170,18 @@ Here's how to do it:
 import React from 'react';
 import { MaskField } from 'react-mask-field';
 
-// Custom component
-const CustomComponent = React.forwardRef(({ label }, ref) => {
+// Custom input component
+const CustomComponent = React.forwardRef(({ label }, forwardedRef) => {
   return (
     <>
       <label htmlFor="custom-component">{label}</label>
-      <input ref={ref} id="custom-component" />
+      <input ref={forwardedRef} id="custom-component" />
     </>
   );
 });
 
 // Component with MaskField
-export default function Example() {
+export default function App() {
   return (
     <MaskField
       component={CustomComponent}
@@ -214,17 +205,23 @@ Here's how to do it:
 
 ```jsx
 import React from 'react';
-import { TextField } from '@material-ui/core';
 import { MaskField } from 'react-mask-field';
+import { TextField } from '@material-ui/core';
 
 // Component with MaskField
-function CustomMaskField({ inputRef, ...otherProps }) {
-  return <MaskField ref={inputRef} mask="___-___" replacement="_" {...otherProps} />;
+function MaskFieldComponent({ inputRef, ...props }) {
+  return <MaskField ref={inputRef} mask="___-___" replacement="_" {...props} />;
 }
 
 // Component with Material UI
-export default function Example() {
-  return <TextField InputProps={{ inputComponent: CustomMaskField }} />;
+export default function App() {
+  return (
+    <TextField
+      InputProps={{
+        inputComponent: CustomMaskFieldComponent,
+      }}
+    />
+  );
 }
 ```
 
@@ -235,6 +232,7 @@ The `react-mask-field` package is written in TypeScript, so you have full type s
 ```tsx
 import React from 'react';
 import { MaskField } from 'react-mask-field';
+
 import type {
   Detail,
   MaskingEvent,
@@ -243,7 +241,7 @@ import type {
   Modify,
 } from 'react-mask-field';
 
-export default function Example() {
+export default function App() {
   const [detail, setDetail] = React.useState<Detail | null>(null);
 
   // Or `event: MaskingEvent`
@@ -268,10 +266,9 @@ By default, the `MaskField` component is an `input` element and supports all the
 
 ```tsx
 import React from 'react';
-import { MaskField } from 'react-mask-field';
-import type { MaskFieldProps } from 'react-mask-field';
+import { MaskField, MaskFieldProps } from 'react-mask-field';
 
-export default function Example() {
+export default function App() {
   // Here, since no `component` property was passed,
   // `MaskField` returns an `input` element and takes the type:
   // `MaskFieldProps & React.InputHTMLAttributes<HTMLInputElement>`
@@ -281,13 +278,11 @@ export default function Example() {
 
 ```tsx
 import React from 'react';
-import { MaskField } from 'react-mask-field';
-import type { MaskFieldProps } from 'react-mask-field';
+import { MaskField, MaskFieldProps } from 'react-mask-field';
 
-import { CustomComponent } from './CustomComponent';
-import type { CustomComponentProps } from './CustomComponent';
+import { CustomComponent, CustomComponentProps } from './CustomComponent';
 
-export default function Example() {
+export default function App() {
   // Here, since the `component` property was passed,
   // `MaskField` returns the integrated component and takes the type:
   // `MaskFieldProps<typeof CustomComponent> & CustomComponentProps`
@@ -302,9 +297,10 @@ To remedy this situation and help the `MaskField` type correctly the properties 
 ```tsx
 import React from 'react';
 import { MaskField } from 'react-mask-field';
+
 import { CustomComponent } from './CustomComponent';
 
-export default function Example(props: any) {
+export default function Component(props: any) {
   return (
     <MaskField<typeof CustomComponent>
       component={CustomComponent}

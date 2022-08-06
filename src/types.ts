@@ -65,3 +65,14 @@ export interface MaskProps {
   modify?: Modify;
   onMasking?: MaskingEventHandler;
 }
+
+export interface InputElement extends HTMLInputElement {
+  _wrapperState?: {
+    controlled?: boolean;
+    initialValue?: string;
+  };
+  _valueTracker?: {
+    getValue?: () => string;
+    setValue?: (value: string) => void;
+  };
+}

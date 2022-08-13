@@ -8,7 +8,7 @@ import type { ChangeData, MaskingData } from '../types';
  * @param maskingData
  * @returns позиция курсора
  */
-export default function getCursorPosition(changeData: ChangeData, maskingData: MaskingData) {
+export default function getCaretPosition(changeData: ChangeData, maskingData: MaskingData) {
   const { added, beforeRange, afterRange, inputType } = changeData;
   const { maskedValue, ast, replacement, separate } = maskingData;
 

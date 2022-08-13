@@ -1,11 +1,11 @@
-import { useLayoutEffect, useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 
 import getModifiedData from './utils/getModifiedData';
 import convertToReplacementObject from './utils/convertToReplacementObject';
 import getReplaceableSymbolIndex from './utils/getReplaceableSymbolIndex';
 import getChangeData from './utils/getChangeData';
 import getMaskingData from './utils/getMaskingData';
-import getCursorPosition from './utils/getCursorPosition';
+import getCaretPosition from './utils/getCaretPosition';
 import setInputAttributes from './utils/setInputAttributes';
 
 import useDispatchMaskingEvent from './useDispatchMaskingEvent';
@@ -95,7 +95,7 @@ export default function useMask({
     // мы также должны изменить значение элемента
     setInputAttributes(inputRef, {
       value: maskingData.current.maskedValue,
-      selectionStart: getCursorPosition(changeData.current, maskingData.current),
+      selectionStart: getCaretPosition(changeData.current, maskingData.current),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -128,7 +128,7 @@ export default function useMask({
 
     setInputAttributes(inputRef, {
       value: maskingData.current.maskedValue,
-      selectionStart: getCursorPosition(changeData.current, maskingData.current),
+      selectionStart: getCaretPosition(changeData.current, maskingData.current),
     });
 
     dispatchMaskingEvent({
@@ -155,15 +155,14 @@ export default function useMask({
         // Если событие вызывается слишком часто, смена курсора может не поспеть за новым событием,
         // поэтому сравниваем `requestID` кэшированный и текущий для избежания некорректного поведения маски
         if (selection.current.cachedRequestID === selection.current.requestID) {
-          throw new SyntheticChangeError('The input cursor has not been updated.');
+          throw new SyntheticChangeError('The input caret has not been updated.');
         }
 
         selection.current.cachedRequestID = selection.current.requestID;
 
         const previousValue = inputRef.current._valueTracker?.getValue?.() ?? '';
         const currentValue = inputRef.current.value;
-        const currentPosition = inputRef.current.selectionStart ?? 0;
-        let currentInputType = '';
+        const currentCaretPosition = inputRef.current.selectionStart ?? 0;
 
         // Предыдущее значение всегда должно соответствовать маскированному значению из кэша. Обратная ситуация может
         // возникнуть при контроле значения, если значение не было изменено после ввода. Для предотвращения подобных
@@ -179,37 +178,39 @@ export default function useMask({
           });
         }
 
+        let inputType = '';
+
         // Определяем тип ввода (ручное определение типа ввода способствует кроссбраузерности)
-        if (currentPosition > selection.current.start) {
-          currentInputType = 'insert';
+        if (currentCaretPosition > selection.current.start) {
+          inputType = 'insert';
         } else if (
-          currentPosition <= selection.current.start &&
-          currentPosition < selection.current.end
+          currentCaretPosition <= selection.current.start &&
+          currentCaretPosition < selection.current.end
         ) {
-          currentInputType = 'deleteBackward';
+          inputType = 'deleteBackward';
         } else if (
-          currentPosition === selection.current.end &&
+          currentCaretPosition === selection.current.end &&
           currentValue.length < maskingData.current.maskedValue.length
         ) {
-          currentInputType = 'deleteForward';
+          inputType = 'deleteForward';
         }
 
         if (
-          (currentInputType === 'deleteBackward' || currentInputType === 'deleteForward') &&
+          (inputType === 'deleteBackward' || inputType === 'deleteForward') &&
           currentValue.length > maskingData.current.maskedValue.length
         ) {
           throw new SyntheticChangeError('Input type detection error.');
         }
 
-        switch (currentInputType) {
+        switch (inputType) {
           case 'insert': {
-            const addedSymbols = currentValue.slice(selection.current.start, currentPosition);
-            const range = { start: selection.current.start, end: selection.current.end };
+            const addedSymbols = currentValue.slice(selection.current.start, currentCaretPosition);
+            const selectionRange = { start: selection.current.start, end: selection.current.end };
 
             changeData.current = getChangeData({
               maskingData: maskingData.current,
-              inputType: currentInputType,
-              selectionRange: range,
+              inputType,
+              selectionRange,
               added: addedSymbols,
             });
 
@@ -225,12 +226,15 @@ export default function useMask({
           case 'deleteForward': {
             const countDeletedSymbols =
               maskingData.current.maskedValue.length - currentValue.length;
-            const range = { start: currentPosition, end: currentPosition + countDeletedSymbols };
+            const selectionRange = {
+              start: currentCaretPosition,
+              end: currentCaretPosition + countDeletedSymbols,
+            };
 
             changeData.current = getChangeData({
               maskingData: maskingData.current,
-              inputType: currentInputType,
-              selectionRange: range,
+              inputType,
+              selectionRange,
               added: '',
             });
 
@@ -259,7 +263,7 @@ export default function useMask({
 
         setInputAttributes(inputRef, {
           value: maskingData.current.maskedValue,
-          selectionStart: getCursorPosition(changeData.current, maskingData.current),
+          selectionStart: getCaretPosition(changeData.current, maskingData.current),
         });
 
         dispatchMaskingEvent({
@@ -293,7 +297,7 @@ export default function useMask({
           setInputAttributes(inputRef, {
             value: previousValue,
             selectionStart: changeData.current
-              ? getCursorPosition(changeData.current, maskingData.current)
+              ? getCaretPosition(changeData.current, maskingData.current)
               : replaceableSymbolIndex !== -1
               ? replaceableSymbolIndex
               : previousValue.length,

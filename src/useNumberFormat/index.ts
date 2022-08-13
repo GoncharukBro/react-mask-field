@@ -175,8 +175,9 @@ export default function useNumberFormat(
             }
             case 'deleteForward': {
               nextCaretPosition = getCaretPosition(currentCaretPosition, 0);
+              const isNextNull = integer === '0' && nextCaretPosition === 0;
               const isNextNotNumber = !/\d/.test(integer[nextCaretPosition]);
-              nextCaretPosition += isNextNotNumber ? 1 : 0;
+              nextCaretPosition += isNextNull ? 2 : isNextNotNumber ? 1 : 0;
               break;
             }
             case 'deleteBackward': {

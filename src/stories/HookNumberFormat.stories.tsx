@@ -9,11 +9,11 @@ export default {
 } as Meta;
 
 export const HookNumberFormat: ComponentStory<any> = () => {
-  const refDefault = useNumberFormat('en-IN', { maximumFractionDigits: 4 });
-  const refIN = useNumberFormat('en-IN', { maximumFractionDigits: 4 });
-  const refRU = useNumberFormat('ru-RU', { maximumFractionDigits: 4 });
-  const refAR = useNumberFormat('ar-EG', { maximumFractionDigits: 4 });
-  const refCN = useNumberFormat('zh-Hans-CN-u-nu-hanidec', { maximumFractionDigits: 4 });
+  const refDefault = useNumberFormat();
+  const refIN = useNumberFormat('en-IN', {});
+  const refRU = useNumberFormat('ru-RU', {});
+  const refAR = useNumberFormat('ar-EG', {});
+  const refCN = useNumberFormat('zh-Hans-CN-u-nu-hanidec', {});
 
   const [value, setValue] = useState('');
 

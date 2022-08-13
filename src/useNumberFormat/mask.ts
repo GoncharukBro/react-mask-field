@@ -1,4 +1,20 @@
-const MAXIMUM_FRACTION_DIGITS = 6;
+interface FilterParams {
+  part: string;
+  added: string;
+  shiftIndex: number;
+  selectionStart: number;
+  selectionEnd: number;
+}
+
+// Очищаем все символы из основной/дробной частей находящиеся в области выделения
+const filter = ({ part, added, shiftIndex, selectionStart, selectionEnd }: FilterParams) => {
+  const sliceEnd = selectionStart >= shiftIndex ? selectionStart - shiftIndex : 0;
+  const sliceStart = selectionEnd >= shiftIndex ? selectionEnd - shiftIndex : 0;
+
+  const filteredValue = part.slice(0, sliceEnd) + added + part.slice(sliceStart);
+
+  return filteredValue.replace(/[\D]/g, '');
+};
 
 interface MaskParams {
   locales: string | string[] | undefined;
@@ -19,41 +35,45 @@ export default function mask({
   selectionStart,
   selectionEnd,
 }: MaskParams) {
-  const getMinimumFractionDigits = (count: number) => {
-    return count <= MAXIMUM_FRACTION_DIGITS ? count : MAXIMUM_FRACTION_DIGITS;
-  };
-
-  const filter = (part: string, conditionallyAdded: string, shiftIndex: number) => {
-    const sliceEnd = selectionStart >= shiftIndex ? selectionStart - shiftIndex : 0;
-    const sliceStart = selectionEnd >= shiftIndex ? selectionEnd - shiftIndex : 0;
-
-    const filteredValue = part.slice(0, sliceEnd) + conditionallyAdded + part.slice(sliceStart);
-
-    return filteredValue.replace(/[\D]/g, '');
-  };
-
   // eslint-disable-next-line prefer-const
   let [integer = '', fraction = ''] = previousValue.split(localDelimiter);
 
   const isIntegerSelect = integer.length >= selectionStart;
-
+  // Если изменения происходят в дробной части, при этом дробная часть равна "0",
+  // очищаем дробную часть для замены значения, чтобы заменить "0" на вводимое значение
   fraction =
     !isIntegerSelect && fraction === '0' && selectionStart === integer.length + 1 ? '' : fraction;
 
-  const filteredInteger = filter(integer, isIntegerSelect ? added : '', 0).slice(0, 9);
+  const filteredInteger = filter({
+    part: integer,
+    added: isIntegerSelect ? added : '',
+    shiftIndex: 0,
+    selectionStart,
+    selectionEnd,
+  });
 
-  const filteredFraction = filter(
-    fraction,
-    !isIntegerSelect ? added : '',
-    integer.length + 1
-  ).slice(0, getMinimumFractionDigits(options?.maximumFractionDigits ?? 0));
+  let filteredFraction = filter({
+    part: fraction,
+    added: !isIntegerSelect ? added : '',
+    shiftIndex: integer.length + 1,
+    selectionStart,
+    selectionEnd,
+  });
 
-  const numericValue = Number(`${filteredInteger}.${filteredFraction}`);
+  // Поскольку состояние ввода хранит последний введенный символ,
+  // при форматировании может произойти округление, поэтому нам важно
+  // заранее обрезать символ не соответствующий максимальному количеству символов
+  const maximumFractionDigits = (
+    new Intl.NumberFormat(locales, options)
+      .format(Number(`0.${'1'.repeat(30)}`))
+      .split(localDelimiter)[1] ?? ''
+  ).length;
 
-  let value = new Intl.NumberFormat(locales, {
-    minimumFractionDigits: getMinimumFractionDigits(filteredFraction.length),
-    maximumFractionDigits: MAXIMUM_FRACTION_DIGITS,
-  }).format(Math.abs(numericValue));
+  filteredFraction = filteredFraction.slice(0, maximumFractionDigits);
+
+  const numericValue = Math.abs(Number(`${filteredInteger}.${filteredFraction}`));
+
+  let value = new Intl.NumberFormat(locales, options).format(numericValue);
 
   value = filteredInteger === '' && Number(filteredFraction) === 0 ? '' : value;
 

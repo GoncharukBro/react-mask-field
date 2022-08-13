@@ -3,34 +3,12 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
 import type { InputElement } from 'types';
 
 import mask from './mask';
+import setInputAttributes from './setInputAttributes';
 
-interface InputAttributes {
-  value: string;
-  selectionStart: number;
-}
-
-const setInputAttributes = (
-  inputRef: React.MutableRefObject<InputElement | null>,
-  { value, selectionStart }: InputAttributes
-) => {
-  if (inputRef.current === null) return;
-  // Важно установить позицию курсора после установки значения,
-  // так как после установки значения, курсор автоматически уходит в конец значения
-  // eslint-disable-next-line no-param-reassign
-  inputRef.current.value = value;
-  inputRef.current.setSelectionRange(selectionStart, selectionStart);
-  // После изменения значения событие `change` срабатывать не будет, так как предыдущее
-  // и текущее состояние внутри `input` совпадают. Чтобы обойти эту проблему с версии
-  // React 16, устанавливаем предыдущее состояние на отличное от текущего.
-  const previousValue = inputRef.current._valueTracker?.getValue?.() ?? '';
-  inputRef.current._valueTracker?.setValue?.(previousValue);
-};
-
-interface UseMaskParams {
-  fractionDigits?: number;
-}
-
-export default function useMask({ fractionDigits = 0 }: UseMaskParams) {
+export default function useNumberFormat(
+  locales?: string | string[] | undefined,
+  options?: Intl.NumberFormatOptions | undefined
+) {
   const inputRef = useRef<InputElement>(null);
 
   const selection = useRef({ requestID: -1, cachedRequestID: -1, start: 0, end: 0 });
@@ -94,19 +72,29 @@ export default function useMask({ fractionDigits = 0 }: UseMaskParams) {
 
         let maskData: ReturnType<typeof mask> | null = null;
 
+        // Получаем разделитель в заданной локали. Если мы получим разделитель,
+        // значит по заданным настройкам разрешена десятичная часть
+        const localDelimiter = new Intl.NumberFormat(locales, options).format(1.1)[1];
+        // Получаем все цыфры в заданной локали (возможны варианты
+        // с китайской десятичной системой и арабскими цифрами)
+        let localNumbers = new Intl.NumberFormat(locales, { useGrouping: false }).format(
+          1234567890
+        );
+        localNumbers = localNumbers[9] + localNumbers.slice(0, -1);
+
         switch (inputType) {
           case 'insert': {
             let added = currentValue.slice(selection.current.start, currentCaretPosition);
 
-            if (fractionDigits > 0 && (added === ',' || added === '.')) {
+            if (localDelimiter && added === localDelimiter) {
               // eslint-disable-next-line prefer-const
-              let [baseAmount, remainingAmount] = previousValue.split(',');
+              let [integer, fraction] = previousValue.split(localDelimiter);
 
-              baseAmount = baseAmount || '0';
+              integer = integer || '0';
 
               setInputAttributes(inputRef, {
-                value: remainingAmount ? previousValue : `${baseAmount},0`,
-                selectionStart: baseAmount.length + 1,
+                value: fraction ? previousValue : `${integer + localDelimiter}0`,
+                selectionStart: integer.length + 1,
               });
 
               return;
@@ -121,7 +109,9 @@ export default function useMask({ fractionDigits = 0 }: UseMaskParams) {
             }
 
             maskData = mask({
-              fractionDigits,
+              locales,
+              options,
+              localDelimiter,
               previousValue,
               added,
               selectionStart: selection.current.start,
@@ -135,7 +125,9 @@ export default function useMask({ fractionDigits = 0 }: UseMaskParams) {
             const countDeletedSymbols = previousValue.length - currentValue.length;
 
             maskData = mask({
-              fractionDigits,
+              locales,
+              options,
+              localDelimiter,
               previousValue,
               added: '',
               selectionStart: currentCaretPosition,
@@ -152,14 +144,16 @@ export default function useMask({ fractionDigits = 0 }: UseMaskParams) {
 
         // Поскольку форматируется только число с лева от запятой нам
         // необходимо для неё вычислить позицию курсора
-        if (maskData.isBaseAmountSelect) {
+        if (maskData.isIntegerSelect) {
           const getCaretPosition = (sliceEnd: number, addedCount: number) => {
             const countBeforeSelection =
-              previousValue.slice(0, sliceEnd).replace(/[^\d,]/g, '').length + addedCount;
+              previousValue
+                .slice(0, sliceEnd)
+                .replace(new RegExp(`[^\\d${localDelimiter}]`, 'g'), '').length + addedCount;
             let count = 0;
 
             const position = maskData?.value.split('').findIndex((symbol) => {
-              if (/[\d,]/.test(symbol)) count += 1;
+              if (new RegExp(`[\\d${localDelimiter}]`).test(symbol)) count += 1;
               return count > countBeforeSelection;
             });
 
@@ -170,24 +164,24 @@ export default function useMask({ fractionDigits = 0 }: UseMaskParams) {
             return maskData?.value.length ?? 0;
           };
 
-          const [baseAmount] = maskData.value.split(',');
+          const [integer] = maskData.value.split(localDelimiter);
 
           switch (inputType) {
             case 'insert': {
               nextCaretPosition = getCaretPosition(selection.current.start, maskData.added.length);
-              const isPrevNotNumber = !/\d/.test(baseAmount[nextCaretPosition - 1]);
+              const isPrevNotNumber = !/\d/.test(integer[nextCaretPosition - 1]);
               nextCaretPosition = isPrevNotNumber ? nextCaretPosition - 1 : nextCaretPosition;
               break;
             }
             case 'deleteForward': {
               nextCaretPosition = getCaretPosition(currentCaretPosition, 0);
-              const isNextNotNumber = !/\d/.test(baseAmount[nextCaretPosition]);
+              const isNextNotNumber = !/\d/.test(integer[nextCaretPosition]);
               nextCaretPosition += isNextNotNumber ? 1 : 0;
               break;
             }
             case 'deleteBackward': {
               nextCaretPosition = getCaretPosition(currentCaretPosition, 0);
-              const isPrevNotNumber = !/\d/.test(baseAmount[nextCaretPosition - 1]);
+              const isPrevNotNumber = !/\d/.test(integer[nextCaretPosition - 1]);
               nextCaretPosition -= isPrevNotNumber && nextCaretPosition > 0 ? 1 : 0;
               break;
             }
@@ -233,7 +227,7 @@ export default function useMask({ fractionDigits = 0 }: UseMaskParams) {
     return () => {
       inputElement?.removeEventListener('input', handleInput);
     };
-  }, [fractionDigits]);
+  }, [locales, options]);
 
   useEffect(() => {
     const handleFocus = () => {

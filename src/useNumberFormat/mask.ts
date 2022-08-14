@@ -1,25 +1,65 @@
 interface FilterParams {
-  part: string;
+  value: string;
   added: string;
   shiftIndex: number;
   selectionStart: number;
   selectionEnd: number;
+  fixed?: boolean;
 }
 
 // Очищаем все символы из основной/дробной частей находящиеся в области выделения
-const filter = ({ part, added, shiftIndex, selectionStart, selectionEnd }: FilterParams) => {
-  const sliceEnd = selectionStart >= shiftIndex ? selectionStart - shiftIndex : 0;
-  const sliceStart = selectionEnd >= shiftIndex ? selectionEnd - shiftIndex : 0;
+const filter = ({
+  value,
+  added,
+  shiftIndex,
+  selectionStart,
+  selectionEnd,
+  fixed,
+}: FilterParams) => {
+  const before = value.slice(0, selectionStart >= shiftIndex ? selectionStart - shiftIndex : 0);
+  let after = value.slice(selectionEnd >= shiftIndex ? selectionEnd - shiftIndex : 0);
 
-  const filteredValue = part.slice(0, sliceEnd) + added + part.slice(sliceStart);
+  if (fixed) {
+    after = after.replace(/0+$/g, '');
+  }
 
-  return filteredValue.replace(/[\D]/g, '');
+  return (before + added + after).replace(/[\D]/g, '');
+};
+
+interface NumberFormatParams {
+  locales: string | string[] | undefined;
+  options: Intl.NumberFormatOptions | undefined;
+  minimumFractionDigits: number;
+  integer: string;
+  fraction: string;
+}
+
+// Форматируем значение
+const numberFormat = ({
+  locales,
+  options,
+  minimumFractionDigits,
+  integer,
+  fraction,
+}: NumberFormatParams) => {
+  const numericValue = Math.abs(Number(`${integer}.${fraction}`));
+
+  const value = new Intl.NumberFormat(locales, {
+    ...options,
+    // Чтобы иметь возможность прописывать "0" устанавливаем значение в длину `fraction`
+    minimumFractionDigits:
+      fraction.length > minimumFractionDigits ? fraction.length : options?.minimumFractionDigits,
+  }).format(numericValue);
+
+  return integer === '' && Number(fraction) === 0 ? '' : value;
 };
 
 interface MaskParams {
   locales: string | string[] | undefined;
   options: Intl.NumberFormatOptions | undefined;
-  localDelimiter: string;
+  separator: string;
+  minimumFractionDigits: number;
+  maximumFractionDigits: number;
   previousValue: string;
   added: string;
   selectionStart: number;
@@ -29,53 +69,55 @@ interface MaskParams {
 export default function mask({
   locales,
   options,
-  localDelimiter,
+  separator,
+  minimumFractionDigits,
+  maximumFractionDigits,
   previousValue,
   added,
   selectionStart,
   selectionEnd,
 }: MaskParams) {
   // eslint-disable-next-line prefer-const
-  let [integer = '', fraction = ''] = previousValue.split(localDelimiter);
+  let [previousInteger = '', previousFraction = ''] = previousValue.split(separator);
 
-  const isIntegerSelect = integer.length >= selectionStart;
-  // Если изменения происходят в дробной части, при этом дробная часть равна "0",
-  // очищаем дробную часть для замены значения, чтобы заменить "0" на вводимое значение
-  fraction =
-    !isIntegerSelect && fraction === '0' && selectionStart === integer.length + 1 ? '' : fraction;
+  const isIntegerSelect = selectionStart <= previousInteger.length;
 
-  const filteredInteger = filter({
-    part: integer,
+  const nextInteger = filter({
+    value: previousInteger,
     added: isIntegerSelect ? added : '',
     shiftIndex: 0,
     selectionStart,
     selectionEnd,
   });
 
-  let filteredFraction = filter({
-    part: fraction,
-    added: !isIntegerSelect ? added : '',
-    shiftIndex: integer.length + 1,
+  // Если изменения происходят в дробной части, очищаем дробную часть
+  // для замены значения, чтобы заменить "0" на вводимое значение
+  const fixed =
+    previousFraction.length === (minimumFractionDigits || 1) &&
+    selectionStart >= previousInteger.length + 1 &&
+    selectionEnd < previousInteger.length + 1 + (minimumFractionDigits || 1);
+
+  let nextFraction = filter({
+    value: previousFraction,
+    added: isIntegerSelect ? '' : added,
+    shiftIndex: previousInteger.length + 1,
     selectionStart,
     selectionEnd,
+    fixed,
   });
 
   // Поскольку состояние ввода хранит последний введенный символ,
   // при форматировании может произойти округление, поэтому нам важно
   // заранее обрезать символ не соответствующий максимальному количеству символов
-  const maximumFractionDigits = (
-    new Intl.NumberFormat(locales, options)
-      .format(Number(`0.${'1'.repeat(30)}`))
-      .split(localDelimiter)[1] ?? ''
-  ).length;
+  nextFraction = nextFraction.slice(0, maximumFractionDigits);
 
-  filteredFraction = filteredFraction.slice(0, maximumFractionDigits);
-
-  const numericValue = Math.abs(Number(`${filteredInteger}.${filteredFraction}`));
-
-  let value = new Intl.NumberFormat(locales, options).format(numericValue);
-
-  value = filteredInteger === '' && Number(filteredFraction) === 0 ? '' : value;
+  const value = numberFormat({
+    locales,
+    options,
+    minimumFractionDigits,
+    integer: nextInteger,
+    fraction: nextFraction,
+  });
 
   return { value, added, isIntegerSelect, selectionStart, selectionEnd };
 }

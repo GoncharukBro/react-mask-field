@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
 import type { InputElement } from 'types';
 
 import mask from './mask';
+import getParams from './getParams';
 import setInputAttributes from './setInputAttributes';
 
 export default function useNumberFormat(
@@ -72,29 +73,26 @@ export default function useNumberFormat(
 
         let maskData: ReturnType<typeof mask> | null = null;
 
-        // Получаем разделитель в заданной локали. Если мы получим разделитель,
-        // значит по заданным настройкам разрешена десятичная часть
-        const localDelimiter = new Intl.NumberFormat(locales, options).format(1.1)[1];
-        // Получаем все цыфры в заданной локали (возможны варианты
-        // с китайской десятичной системой и арабскими цифрами)
-        let localNumbers = new Intl.NumberFormat(locales, { useGrouping: false }).format(
-          1234567890
+        const { separator, numbers, minimumFractionDigits, maximumFractionDigits } = getParams(
+          locales,
+          options
         );
-        localNumbers = localNumbers[9] + localNumbers.slice(0, -1);
 
         switch (inputType) {
           case 'insert': {
             let added = currentValue.slice(selection.current.start, currentCaretPosition);
 
-            if (localDelimiter && added === localDelimiter) {
+            if (maximumFractionDigits > 0 && added === separator) {
               // eslint-disable-next-line prefer-const
-              let [integer, fraction] = previousValue.split(localDelimiter);
+              let [previousInteger, previousFraction] = previousValue.split(separator);
 
-              integer = integer || '0';
+              previousInteger = previousInteger || '0';
 
               setInputAttributes(inputRef, {
-                value: fraction ? previousValue : `${integer + localDelimiter}0`,
-                selectionStart: integer.length + 1,
+                value: previousFraction
+                  ? previousValue
+                  : previousInteger + separator + '0'.repeat(minimumFractionDigits || 1),
+                selectionStart: previousInteger.length + 1,
               });
 
               return;
@@ -111,7 +109,9 @@ export default function useNumberFormat(
             maskData = mask({
               locales,
               options,
-              localDelimiter,
+              separator,
+              minimumFractionDigits,
+              maximumFractionDigits,
               previousValue,
               added,
               selectionStart: selection.current.start,
@@ -127,7 +127,9 @@ export default function useNumberFormat(
             maskData = mask({
               locales,
               options,
-              localDelimiter,
+              separator,
+              minimumFractionDigits,
+              maximumFractionDigits,
               previousValue,
               added: '',
               selectionStart: currentCaretPosition,
@@ -147,13 +149,12 @@ export default function useNumberFormat(
         if (maskData.isIntegerSelect) {
           const getCaretPosition = (sliceEnd: number, addedCount: number) => {
             const countBeforeSelection =
-              previousValue
-                .slice(0, sliceEnd)
-                .replace(new RegExp(`[^\\d${localDelimiter}]`, 'g'), '').length + addedCount;
+              previousValue.slice(0, sliceEnd).replace(new RegExp(`[^\\d${separator}]`, 'g'), '')
+                .length + addedCount;
             let count = 0;
 
             const position = maskData?.value.split('').findIndex((symbol) => {
-              if (new RegExp(`[\\d${localDelimiter}]`).test(symbol)) count += 1;
+              if (new RegExp(`[\\d${separator}]`).test(symbol)) count += 1;
               return count > countBeforeSelection;
             });
 
@@ -164,7 +165,7 @@ export default function useNumberFormat(
             return maskData?.value.length ?? 0;
           };
 
-          const [integer] = maskData.value.split(localDelimiter);
+          const [integer] = maskData.value.split(separator);
 
           switch (inputType) {
             case 'insert': {

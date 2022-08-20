@@ -1,4 +1,4 @@
-import type { InputElement } from 'types';
+import type { InputElement } from '../types';
 
 interface InputAttributes {
   value: string;

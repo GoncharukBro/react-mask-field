@@ -80,11 +80,11 @@ export default function mask({
   // eslint-disable-next-line prefer-const
   let [previousInteger = '', previousFraction = ''] = previousValue.split(separator);
 
-  const isIntegerSelect = selectionStart <= previousInteger.length;
+  const change = selectionStart <= previousInteger.length ? 'integer' : 'fraction';
 
   const nextInteger = filter({
     value: previousInteger,
-    added: isIntegerSelect ? added : '',
+    added: change === 'integer' ? added : '',
     shiftIndex: 0,
     selectionStart,
     selectionEnd,
@@ -99,7 +99,7 @@ export default function mask({
 
   let nextFraction = filter({
     value: previousFraction,
-    added: isIntegerSelect ? '' : added,
+    added: change === 'fraction' ? added : '',
     shiftIndex: previousInteger.length + 1,
     selectionStart,
     selectionEnd,
@@ -119,5 +119,5 @@ export default function mask({
     fraction: nextFraction,
   });
 
-  return { value, added, isIntegerSelect, selectionStart, selectionEnd };
+  return { value, added, change };
 }

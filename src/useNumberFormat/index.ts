@@ -1,10 +1,13 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 
-import type { InputElement } from 'types';
-
 import mask from './mask';
 import getParams from './getParams';
 import setInputAttributes from './setInputAttributes';
+import getCaretPosition from './getCaretPosition';
+
+import SyntheticChangeError from '../SyntheticChangeError';
+
+import type { InputElement } from '../types';
 
 export default function useNumberFormat(
   locales?: string | string[] | undefined,
@@ -48,6 +51,8 @@ export default function useNumberFormat(
         }
 
         let inputType = '';
+        let added = '';
+        let countDeleted = 0;
 
         // Определяем тип ввода (ручное определение типа ввода способствует кроссбраузерности)
         if (currentCaretPosition > selection.current.start) {
@@ -80,7 +85,7 @@ export default function useNumberFormat(
 
         switch (inputType) {
           case 'insert': {
-            let added = currentValue.slice(selection.current.start, currentCaretPosition);
+            added = currentValue.slice(selection.current.start, currentCaretPosition);
 
             if (maximumFractionDigits > 0 && added === separator) {
               // eslint-disable-next-line prefer-const
@@ -122,7 +127,7 @@ export default function useNumberFormat(
           }
           case 'deleteBackward':
           case 'deleteForward': {
-            const countDeletedSymbols = previousValue.length - currentValue.length;
+            countDeleted = previousValue.length - currentValue.length;
 
             maskData = mask({
               locales,
@@ -131,9 +136,9 @@ export default function useNumberFormat(
               minimumFractionDigits,
               maximumFractionDigits,
               previousValue,
-              added: '',
+              added,
               selectionStart: currentCaretPosition,
-              selectionEnd: currentCaretPosition + countDeletedSymbols,
+              selectionEnd: currentCaretPosition + countDeleted,
             });
 
             break;
@@ -142,55 +147,15 @@ export default function useNumberFormat(
             throw new SyntheticChangeError('The input type is undefined.');
         }
 
-        let nextCaretPosition = currentCaretPosition;
-
-        // Поскольку форматируется только число с лева от запятой нам
-        // необходимо для неё вычислить позицию курсора
-        if (maskData.isIntegerSelect) {
-          const getCaretPosition = (sliceEnd: number, addedCount: number) => {
-            const countBeforeSelection =
-              previousValue.slice(0, sliceEnd).replace(new RegExp(`[^\\d${separator}]`, 'g'), '')
-                .length + addedCount;
-            let count = 0;
-
-            const position = maskData?.value.split('').findIndex((symbol) => {
-              if (new RegExp(`[\\d${separator}]`).test(symbol)) count += 1;
-              return count > countBeforeSelection;
-            });
-
-            if (position !== undefined && position !== -1) {
-              return position;
-            }
-
-            return maskData?.value.length ?? 0;
-          };
-
-          const [integer] = maskData.value.split(separator);
-
-          switch (inputType) {
-            case 'insert': {
-              nextCaretPosition = getCaretPosition(selection.current.start, maskData.added.length);
-              const isPrevNotNumber = !/\d/.test(integer[nextCaretPosition - 1]);
-              nextCaretPosition = isPrevNotNumber ? nextCaretPosition - 1 : nextCaretPosition;
-              break;
-            }
-            case 'deleteForward': {
-              nextCaretPosition = getCaretPosition(currentCaretPosition, 0);
-              const isNextNull = integer === '0' && nextCaretPosition === 0;
-              const isNextNotNumber = !/\d/.test(integer[nextCaretPosition]);
-              nextCaretPosition += isNextNull ? 2 : isNextNotNumber ? 1 : 0;
-              break;
-            }
-            case 'deleteBackward': {
-              nextCaretPosition = getCaretPosition(currentCaretPosition, 0);
-              const isPrevNotNumber = !/\d/.test(integer[nextCaretPosition - 1]);
-              nextCaretPosition -= isPrevNotNumber && nextCaretPosition > 0 ? 1 : 0;
-              break;
-            }
-            default:
-              throw new SyntheticChangeError('The input type is undefined.');
-          }
-        }
+        const nextCaretPosition = getCaretPosition({
+          previousValue,
+          maskData,
+          separator,
+          currentCaretPosition,
+          inputType,
+          countDeleted,
+          selection,
+        });
 
         setInputAttributes(inputRef, { value: maskData.value, selectionStart: nextCaretPosition });
 
@@ -272,11 +237,4 @@ export default function useNumberFormat(
   }, []);
 
   return inputRef;
-}
-
-class SyntheticChangeError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'SyntheticChangeError';
-  }
 }

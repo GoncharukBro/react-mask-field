@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 
+import SyntheticChangeError from './SyntheticChangeError';
+
 import getModifiedData from './utils/getModifiedData';
 import convertToReplacementObject from './utils/convertToReplacementObject';
 import getReplaceableSymbolIndex from './utils/getReplaceableSymbolIndex';
@@ -372,11 +374,4 @@ export default function useMask({
   }, []);
 
   return inputRef;
-}
-
-class SyntheticChangeError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'SyntheticChangeError';
-  }
 }

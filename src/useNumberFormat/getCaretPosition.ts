@@ -54,8 +54,8 @@ export default function getCaretPosition({
   const shiftCaretPosition = (shiftIndex: number) => {
     const index = nextCaretPosition + shiftIndex;
 
-    if (index >= 0 && index < nextValue.length && !/\d/.test(nextValue[index])) {
-      nextCaretPosition += shiftIndex;
+    if (index >= 0 && index < nextInteger.length && !/\d/.test(nextInteger[index])) {
+      nextCaretPosition += shiftIndex < 0 ? -1 : 1;
       shiftCaretPosition(shiftIndex);
     }
   };
@@ -76,7 +76,7 @@ export default function getCaretPosition({
       }
 
       // Если следующее значение не является числом
-      shiftCaretPosition(1);
+      shiftCaretPosition(0);
       break;
     }
     default:

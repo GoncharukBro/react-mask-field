@@ -84,14 +84,16 @@ export default function useNumberFormat(
             let added = currentValue.slice(selection.current.start, currentCaretPosition);
 
             if (maximumFractionDigits > 0 && added === separator) {
-              nextValue = new Intl.NumberFormat(locales, options).format(0);
+              const [previousInteger, previousFraction] = previousValue.split(separator);
+              const [nextInteger, nextFraction = '0'] = new Intl.NumberFormat(locales, options)
+                .format(0)
+                .split(separator);
 
-              const [previousInteger] = previousValue.split(separator);
-              const [nextInteger] = nextValue.split(separator);
+              const integer = previousInteger || nextInteger;
 
               setInputAttributes(inputRef, {
-                value: previousValue || nextValue,
-                selectionStart: (previousInteger || nextInteger).length + 1,
+                value: previousFraction ? previousValue : integer + separator + nextFraction,
+                selectionStart: integer.length + 1,
               });
 
               return;

@@ -84,7 +84,10 @@ export default function mask({
   // заранее обрезать символ не соответствующий максимальному количеству символов
   nextFraction = nextFraction.slice(0, maximumFractionDigits);
 
-  if (Number(nextInteger) === 0 && !nextFraction) {
+  if (
+    (!nextInteger && Number(nextFraction) === 0) ||
+    (Number(nextInteger) === 0 && !nextFraction)
+  ) {
     return '';
   }
 

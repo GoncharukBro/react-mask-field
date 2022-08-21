@@ -4,7 +4,7 @@
  * @param numbers
  * @returns
  */
-export default function mapNumbers(value: string, numbers: string) {
+export default function convertToNumber(value: string, numbers: string) {
   return value
     .split('')
     .map((symbol) => {

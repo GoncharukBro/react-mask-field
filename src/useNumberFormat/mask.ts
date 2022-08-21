@@ -1,4 +1,4 @@
-import mapNumbers from './mapNumbers';
+import convertToNumber from './convertToNumber';
 
 interface FilterParams {
   value: string;
@@ -56,8 +56,8 @@ export default function mask({
   // eslint-disable-next-line prefer-const
   let [previousInteger = '', previousFraction = ''] = previousValue.split(separator);
 
-  previousInteger = mapNumbers(previousInteger, numbers);
-  previousFraction = mapNumbers(previousFraction, numbers);
+  previousInteger = convertToNumber(previousInteger, numbers);
+  previousFraction = convertToNumber(previousFraction, numbers);
 
   const change = selectionStart <= previousInteger.length ? 'integer' : 'fraction';
 

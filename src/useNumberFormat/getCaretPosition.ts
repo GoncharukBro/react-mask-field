@@ -1,4 +1,4 @@
-import mapNumbers from './mapNumbers';
+import convertToNumber from './convertToNumber';
 
 import SyntheticChangeError from '../SyntheticChangeError';
 
@@ -30,8 +30,8 @@ export default function getCaretPosition({
   let [previousInteger] = previousValue.split(separator);
   let [nextInteger] = nextValue.split(separator);
 
-  previousInteger = mapNumbers(previousInteger, numbers);
-  nextInteger = mapNumbers(nextInteger, numbers);
+  previousInteger = convertToNumber(previousInteger, numbers);
+  nextInteger = convertToNumber(nextInteger, numbers);
 
   const change = selectionStart <= previousInteger.length ? 'integer' : 'fraction';
 

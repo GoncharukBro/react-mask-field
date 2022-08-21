@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 
 import mask from './mask';
+import convertToNumber from './convertToNumber';
 import getOptionValues from './getOptionValues';
 import getCaretPosition from './getCaretPosition';
 import setInputAttributes from './setInputAttributes';
@@ -76,33 +77,33 @@ export default function useNumberFormat(
 
         let nextValue = '';
 
-        const { separator, numbers, minimumFractionDigits, maximumFractionDigits } =
+        const { localSeparator, localSymbols, minimumFractionDigits, maximumFractionDigits } =
           getOptionValues(locales, options);
 
         switch (inputType) {
           case 'insert': {
             let added = currentValue.slice(selection.current.start, currentCaretPosition);
 
-            if (maximumFractionDigits > 0 && added === separator) {
-              const [previousInteger, previousFraction] = previousValue.split(separator);
-              const [nextInteger, nextFraction = numbers[0]] = new Intl.NumberFormat(
+            if (maximumFractionDigits > 0 && added === localSeparator) {
+              const [previousInteger, previousFraction] = previousValue.split(localSeparator);
+              const [nextInteger, nextFraction = localSymbols[0]] = new Intl.NumberFormat(
                 locales,
                 options
               )
                 .format(0)
-                .split(separator);
+                .split(localSeparator);
 
               const integer = previousInteger || nextInteger;
 
               setInputAttributes(inputRef, {
-                value: previousFraction ? previousValue : integer + separator + nextFraction,
+                value: previousFraction ? previousValue : integer + localSeparator + nextFraction,
                 selectionStart: integer.length + 1,
               });
 
               return;
             }
 
-            added = added.replace(/\D/g, '');
+            added = added.replace(new RegExp(`[^${localSymbols}\\d]`, 'g'), '');
 
             if (!added) {
               throw new SyntheticChangeError(
@@ -110,11 +111,13 @@ export default function useNumberFormat(
               );
             }
 
+            added = convertToNumber(added, localSymbols);
+
             nextValue = mask({
               locales,
               options,
-              separator,
-              numbers,
+              localSeparator,
+              localSymbols,
               minimumFractionDigits,
               maximumFractionDigits,
               previousValue,
@@ -132,8 +135,8 @@ export default function useNumberFormat(
             nextValue = mask({
               locales,
               options,
-              separator,
-              numbers,
+              localSeparator,
+              localSymbols,
               minimumFractionDigits,
               maximumFractionDigits,
               previousValue,
@@ -152,8 +155,8 @@ export default function useNumberFormat(
           currentCaretPosition,
           previousValue,
           nextValue,
-          separator,
-          numbers,
+          localSeparator,
+          localSymbols,
           inputType,
           selectionStart: selection.current.start,
           selectionEnd: selection.current.end,

@@ -8,8 +8,8 @@ interface GetCaretPositionParams {
   currentCaretPosition: number;
   previousValue: string;
   nextValue: string;
-  separator: string;
-  numbers: string;
+  localSeparator: string;
+  localSymbols: string;
   inputType: InputType;
   selectionStart: number;
   selectionEnd: number;
@@ -19,19 +19,19 @@ export default function getCaretPosition({
   currentCaretPosition,
   previousValue,
   nextValue,
-  separator,
-  numbers,
+  localSeparator,
+  localSymbols,
   inputType,
   selectionStart,
   selectionEnd,
 }: GetCaretPositionParams) {
   let nextCaretPosition = -1;
 
-  let [previousInteger] = previousValue.split(separator);
-  let [nextInteger] = nextValue.split(separator);
+  let [previousInteger] = previousValue.split(localSeparator);
+  let [nextInteger] = nextValue.split(localSeparator);
 
-  previousInteger = convertToNumber(previousInteger, numbers);
-  nextInteger = convertToNumber(nextInteger, numbers);
+  previousInteger = convertToNumber(previousInteger, localSymbols);
+  nextInteger = convertToNumber(nextInteger, localSymbols);
 
   const change = selectionStart <= previousInteger.length ? 'integer' : 'fraction';
 
@@ -42,13 +42,13 @@ export default function getCaretPosition({
   // Считаем количество чисел после `selectionEnd`
   const countAfterSelectionEnd = previousInteger
     .slice(selectionEnd)
-    .replace(new RegExp(`[^\\d${separator}]`, 'g'), '').length;
+    .replace(new RegExp(`[^\\d${localSeparator}]`, 'g'), '').length;
 
   // Нахоим индекс символа для установки позиции каретки
   let count = 0;
 
   for (let i = nextInteger.length; i >= 0; i--) {
-    if (new RegExp(`[\\d${separator}]`).test(nextInteger[i])) {
+    if (new RegExp(`[\\d${localSeparator}]`).test(nextInteger[i])) {
       count += 1;
     }
     if (count === countAfterSelectionEnd) {

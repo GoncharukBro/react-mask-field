@@ -1,14 +1,14 @@
 /**
  *
  * @param value
- * @param numbers
+ * @param localSymbols
  * @returns
  */
-export default function convertToNumber(value: string, numbers: string) {
+export default function convertToNumber(value: string, localSymbols: string) {
   return value
     .split('')
     .map((symbol) => {
-      const index = numbers.indexOf(symbol);
+      const index = localSymbols.indexOf(symbol);
       return index === -1 ? symbol : index;
     })
     .join('');

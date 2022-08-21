@@ -26,6 +26,8 @@ export default function getOptionValues(
     useGrouping: false,
     minimumFractionDigits: options?.minimumFractionDigits,
     maximumFractionDigits: options?.maximumFractionDigits,
+    minimumSignificantDigits: options?.minimumSignificantDigits,
+    maximumSignificantDigits: options?.maximumSignificantDigits,
   });
 
   const minimumFractionDigits = (numberFormatter.format(0).split(separator)[1] ?? '').length;
@@ -34,5 +36,10 @@ export default function getOptionValues(
     numberFormatter.format(Number(`0.${'1'.repeat(30)}`)).split(separator)[1] ?? ''
   ).length;
 
-  return { separator, numbers, minimumFractionDigits, maximumFractionDigits };
+  return {
+    separator,
+    numbers,
+    minimumFractionDigits,
+    maximumFractionDigits,
+  };
 }

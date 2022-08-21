@@ -11,7 +11,7 @@ export default {
 export const HookNumberFormat: ComponentStory<any> = () => {
   const refDefault = useNumberFormat();
   const refIN = useNumberFormat('en-IN', { minimumIntegerDigits: 4 });
-  const refRU = useNumberFormat('ru-RU', { minimumIntegerDigits: 10 });
+  const refRU = useNumberFormat('ru-RU', { maximumSignificantDigits: 6 });
   const refRU2 = useNumberFormat('ru-RU');
   const refAR = useNumberFormat('ar-EG', {});
   const refCN = useNumberFormat('zh-Hans-CN-u-nu-hanidec', {});

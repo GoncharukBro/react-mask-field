@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 
 import mask from './mask';
-import getParams from './getParams';
-import setInputAttributes from './setInputAttributes';
+import getOptionValues from './getOptionValues';
 import getCaretPosition from './getCaretPosition';
+import setInputAttributes from './setInputAttributes';
 
 import SyntheticChangeError from '../SyntheticChangeError';
 
@@ -51,8 +51,6 @@ export default function useNumberFormat(
         }
 
         let inputType = '';
-        let added = '';
-        let countDeleted = 0;
 
         // Определяем тип ввода (ручное определение типа ввода способствует кроссбраузерности)
         if (currentCaretPosition > selection.current.start) {
@@ -76,28 +74,24 @@ export default function useNumberFormat(
           throw new SyntheticChangeError('Input type detection error.');
         }
 
-        let maskData: ReturnType<typeof mask> | null = null;
+        let nextValue = '';
 
-        const { separator, numbers, minimumFractionDigits, maximumFractionDigits } = getParams(
-          locales,
-          options
-        );
+        const { separator, numbers, minimumFractionDigits, maximumFractionDigits } =
+          getOptionValues(locales, options);
 
         switch (inputType) {
           case 'insert': {
-            added = currentValue.slice(selection.current.start, currentCaretPosition);
+            let added = currentValue.slice(selection.current.start, currentCaretPosition);
 
             if (maximumFractionDigits > 0 && added === separator) {
-              // eslint-disable-next-line prefer-const
-              let [previousInteger, previousFraction] = previousValue.split(separator);
+              nextValue = new Intl.NumberFormat(locales, options).format(0);
 
-              previousInteger = previousInteger || '0';
+              const [previousInteger] = previousValue.split(separator);
+              const [nextInteger] = nextValue.split(separator);
 
               setInputAttributes(inputRef, {
-                value: previousFraction
-                  ? previousValue
-                  : previousInteger + separator + '0'.repeat(minimumFractionDigits || 1),
-                selectionStart: previousInteger.length + 1,
+                value: previousValue || nextValue,
+                selectionStart: (previousInteger || nextInteger).length + 1,
               });
 
               return;
@@ -111,7 +105,7 @@ export default function useNumberFormat(
               );
             }
 
-            maskData = mask({
+            nextValue = mask({
               locales,
               options,
               separator,
@@ -127,16 +121,16 @@ export default function useNumberFormat(
           }
           case 'deleteBackward':
           case 'deleteForward': {
-            countDeleted = previousValue.length - currentValue.length;
+            const countDeleted = previousValue.length - currentValue.length;
 
-            maskData = mask({
+            nextValue = mask({
               locales,
               options,
               separator,
               minimumFractionDigits,
               maximumFractionDigits,
               previousValue,
-              added,
+              added: '',
               selectionStart: currentCaretPosition,
               selectionEnd: currentCaretPosition + countDeleted,
             });
@@ -148,16 +142,16 @@ export default function useNumberFormat(
         }
 
         const nextCaretPosition = getCaretPosition({
-          previousValue,
-          maskData,
-          separator,
           currentCaretPosition,
+          previousValue,
+          nextValue,
+          separator,
           inputType,
-          countDeleted,
-          selection,
+          selectionStart: selection.current.start,
+          selectionEnd: selection.current.end,
         });
 
-        setInputAttributes(inputRef, { value: maskData.value, selectionStart: nextCaretPosition });
+        setInputAttributes(inputRef, { value: nextValue, selectionStart: nextCaretPosition });
 
         selection.current.start = nextCaretPosition;
         selection.current.end = nextCaretPosition;

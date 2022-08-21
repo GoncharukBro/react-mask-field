@@ -4,7 +4,7 @@ interface FilterParams {
   shiftIndex: number;
   selectionStart: number;
   selectionEnd: number;
-  fixed?: boolean;
+  fixed: boolean;
 }
 
 // Очищаем все символы из основной/дробной частей находящиеся в области выделения
@@ -24,34 +24,6 @@ const filter = ({
   }
 
   return (before + added + after).replace(/[\D]/g, '');
-};
-
-interface NumberFormatParams {
-  locales: string | string[] | undefined;
-  options: Intl.NumberFormatOptions | undefined;
-  minimumFractionDigits: number;
-  integer: string;
-  fraction: string;
-}
-
-// Форматируем значение
-const numberFormat = ({
-  locales,
-  options,
-  minimumFractionDigits,
-  integer,
-  fraction,
-}: NumberFormatParams) => {
-  const numericValue = Math.abs(Number(`${integer}.${fraction}`));
-
-  const value = new Intl.NumberFormat(locales, {
-    ...options,
-    // Чтобы иметь возможность прописывать "0" устанавливаем значение в длину `fraction`
-    minimumFractionDigits:
-      fraction.length > minimumFractionDigits ? fraction.length : options?.minimumFractionDigits,
-  }).format(numericValue);
-
-  return integer === '' && Number(fraction) === 0 ? '' : value;
 };
 
 interface MaskParams {
@@ -88,6 +60,7 @@ export default function mask({
     shiftIndex: 0,
     selectionStart,
     selectionEnd,
+    fixed: false,
   });
 
   // Если изменения происходят в дробной части, очищаем дробную часть
@@ -111,13 +84,18 @@ export default function mask({
   // заранее обрезать символ не соответствующий максимальному количеству символов
   nextFraction = nextFraction.slice(0, maximumFractionDigits);
 
-  const value = numberFormat({
-    locales,
-    options,
-    minimumFractionDigits,
-    integer: nextInteger,
-    fraction: nextFraction,
-  });
+  if (Number(nextInteger) === 0 && !nextFraction) {
+    return '';
+  }
 
-  return { value, added, change };
+  const numericValue = Math.abs(Number(`${nextInteger}.${nextFraction}`));
+
+  return new Intl.NumberFormat(locales, {
+    ...options,
+    // Чтобы иметь возможность прописывать "0" устанавливаем значение в длину `nextFraction`
+    minimumFractionDigits:
+      nextFraction.length > minimumFractionDigits
+        ? nextFraction.length
+        : options?.minimumFractionDigits,
+  }).format(numericValue);
 }

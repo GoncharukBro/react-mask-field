@@ -1,3 +1,5 @@
+import mapNumbers from './mapNumbers';
+
 interface FilterParams {
   value: string;
   added: string;
@@ -30,6 +32,7 @@ interface MaskParams {
   locales: string | string[] | undefined;
   options: Intl.NumberFormatOptions | undefined;
   separator: string;
+  numbers: string;
   minimumFractionDigits: number;
   maximumFractionDigits: number;
   previousValue: string;
@@ -42,6 +45,7 @@ export default function mask({
   locales,
   options,
   separator,
+  numbers,
   minimumFractionDigits,
   maximumFractionDigits,
   previousValue,
@@ -51,6 +55,9 @@ export default function mask({
 }: MaskParams) {
   // eslint-disable-next-line prefer-const
   let [previousInteger = '', previousFraction = ''] = previousValue.split(separator);
+
+  previousInteger = mapNumbers(previousInteger, numbers);
+  previousFraction = mapNumbers(previousFraction, numbers);
 
   const change = selectionStart <= previousInteger.length ? 'integer' : 'fraction';
 

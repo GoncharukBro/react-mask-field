@@ -1,3 +1,5 @@
+import mapNumbers from './mapNumbers';
+
 import SyntheticChangeError from '../SyntheticChangeError';
 
 import type { InputType } from '../types';
@@ -7,6 +9,7 @@ interface GetCaretPositionParams {
   previousValue: string;
   nextValue: string;
   separator: string;
+  numbers: string;
   inputType: InputType;
   selectionStart: number;
   selectionEnd: number;
@@ -17,14 +20,18 @@ export default function getCaretPosition({
   previousValue,
   nextValue,
   separator,
+  numbers,
   inputType,
   selectionStart,
   selectionEnd,
 }: GetCaretPositionParams) {
   let nextCaretPosition = -1;
 
-  const [previousInteger] = previousValue.split(separator);
-  const [nextInteger] = nextValue.split(separator);
+  let [previousInteger] = previousValue.split(separator);
+  let [nextInteger] = nextValue.split(separator);
+
+  previousInteger = mapNumbers(previousInteger, numbers);
+  nextInteger = mapNumbers(nextInteger, numbers);
 
   const change = selectionStart <= previousInteger.length ? 'integer' : 'fraction';
 

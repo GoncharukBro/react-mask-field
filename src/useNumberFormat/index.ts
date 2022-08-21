@@ -85,7 +85,10 @@ export default function useNumberFormat(
 
             if (maximumFractionDigits > 0 && added === separator) {
               const [previousInteger, previousFraction] = previousValue.split(separator);
-              const [nextInteger, nextFraction = '0'] = new Intl.NumberFormat(locales, options)
+              const [nextInteger, nextFraction = numbers[0]] = new Intl.NumberFormat(
+                locales,
+                options
+              )
                 .format(0)
                 .split(separator);
 
@@ -111,6 +114,7 @@ export default function useNumberFormat(
               locales,
               options,
               separator,
+              numbers,
               minimumFractionDigits,
               maximumFractionDigits,
               previousValue,
@@ -129,6 +133,7 @@ export default function useNumberFormat(
               locales,
               options,
               separator,
+              numbers,
               minimumFractionDigits,
               maximumFractionDigits,
               previousValue,
@@ -148,6 +153,7 @@ export default function useNumberFormat(
           previousValue,
           nextValue,
           separator,
+          numbers,
           inputType,
           selectionStart: selection.current.start,
           selectionEnd: selection.current.end,

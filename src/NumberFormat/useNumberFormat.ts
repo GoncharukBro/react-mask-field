@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 
-import mask from './mask';
-import convertToNumber from './convertToNumber';
-import getOptionValues from './getOptionValues';
-import getCaretPosition from './getCaretPosition';
-import setInputAttributes from './setInputAttributes';
+import mask from './utils/mask';
+import convertToNumber from './utils/convertToNumber';
+import getOptionValues from './utils/getOptionValues';
+import getCaretPosition from './utils/getCaretPosition';
+import setInputAttributes from './utils/setInputAttributes';
 
 import SyntheticChangeError from '../SyntheticChangeError';
 
@@ -14,7 +14,7 @@ export default function useNumberFormat(
   locales?: string | string[] | undefined,
   options?: Intl.NumberFormatOptions | undefined
 ) {
-  const inputRef = useRef<InputElement>(null);
+  const inputRef = useRef<InputElement | null>(null);
 
   const selection = useRef({ requestID: -1, cachedRequestID: -1, start: 0, end: 0 });
 

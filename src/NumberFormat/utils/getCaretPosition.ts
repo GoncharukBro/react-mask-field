@@ -1,8 +1,8 @@
 import convertToNumber from './convertToNumber';
 
-import SyntheticChangeError from '../SyntheticChangeError';
+import SyntheticChangeError from '../../SyntheticChangeError';
 
-import type { InputType } from '../types';
+import type { InputType } from '../../types';
 
 interface GetCaretPositionParams {
   currentCaretPosition: number;
@@ -15,6 +15,11 @@ interface GetCaretPositionParams {
   selectionEnd: number;
 }
 
+/**
+ * Определяет позицию каретки для последующей установки
+ * @param param0
+ * @returns
+ */
 export default function getCaretPosition({
   currentCaretPosition,
   previousValue,

@@ -1,4 +1,4 @@
-import type { Replacement, InputType, SelectionRange, ChangeData, MaskingData } from '../types';
+import type { Replacement, InputType, ChangeData, MaskingData } from '../types';
 
 interface FilterSymbolsParams {
   value: string;
@@ -27,8 +27,9 @@ function filterSymbols({ value, replaceableSymbols, replacement, separate }: Fil
 interface GetChangeDataParams {
   maskingData: MaskingData;
   inputType: InputType;
-  selectionRange: SelectionRange;
   added: string;
+  selectionStart: number;
+  selectionEnd: number;
 }
 
 /**
@@ -37,15 +38,17 @@ interface GetChangeDataParams {
  * пользовательского ввода (при событии `insert`) или пустой строкой (при событии `delete`).
  * @param maskingData
  * @param inputType тип ввода
- * @param selectionRange диапозон изменяемых символов
+ * @param selectionStart
+ * @param selectionEnd
  * @param added добавленные символы в строку (при событии `insert`)
  * @returns объект содержащий информацию о пользовательском значении
  */
 export default function getChangeData({
   maskingData,
   inputType,
-  selectionRange,
   added,
+  selectionStart,
+  selectionEnd,
 }: GetChangeDataParams): ChangeData {
   const { ast, mask, replacement, separate } = maskingData;
 
@@ -56,8 +59,8 @@ export default function getChangeData({
   // Определяем символы до и после диапозона изменяемых символов
   ast.forEach(({ symbol, own }, index) => {
     if (separate ? own === 'change' || own === 'replacement' : own === 'change') {
-      if (index < selectionRange.start) beforeRange += symbol;
-      else if (index >= selectionRange.end) afterRange += symbol;
+      if (index < selectionStart) beforeRange += symbol;
+      else if (index >= selectionEnd) afterRange += symbol;
     }
   });
 
@@ -93,7 +96,7 @@ export default function getChangeData({
   if (separate) {
     // Находим заменяемые символы в диапозоне изменяемых символов
     const separateSymbols = mask.split('').reduce((prev, symbol, index) => {
-      const isSelectionRange = index >= selectionRange.start && index < selectionRange.end;
+      const isSelectionRange = index >= selectionStart && index < selectionEnd;
       const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
       return isSelectionRange && isReplacementKey ? prev + symbol : prev;
     }, '');

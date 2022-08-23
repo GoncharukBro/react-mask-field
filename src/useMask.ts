@@ -190,14 +190,14 @@ export default function useMask({
           inputType = 'deleteBackward';
         } else if (
           currentCaretPosition === selection.current.end &&
-          currentValue.length < maskingData.current.maskedValue.length
+          currentValue.length < previousValue.length
         ) {
           inputType = 'deleteForward';
         }
 
         if (
           (inputType === 'deleteBackward' || inputType === 'deleteForward') &&
-          currentValue.length > maskingData.current.maskedValue.length
+          currentValue.length > previousValue.length
         ) {
           throw new SyntheticChangeError('Input type detection error.');
         }
@@ -205,13 +205,13 @@ export default function useMask({
         switch (inputType) {
           case 'insert': {
             const addedSymbols = currentValue.slice(selection.current.start, currentCaretPosition);
-            const selectionRange = { start: selection.current.start, end: selection.current.end };
 
             changeData.current = getChangeData({
               maskingData: maskingData.current,
               inputType,
-              selectionRange,
               added: addedSymbols,
+              selectionStart: selection.current.start,
+              selectionEnd: selection.current.end,
             });
 
             if (changeData.current.added === '') {
@@ -224,18 +224,14 @@ export default function useMask({
           }
           case 'deleteBackward':
           case 'deleteForward': {
-            const countDeletedSymbols =
-              maskingData.current.maskedValue.length - currentValue.length;
-            const selectionRange = {
-              start: currentCaretPosition,
-              end: currentCaretPosition + countDeletedSymbols,
-            };
+            const countDeletedSymbols = previousValue.length - currentValue.length;
 
             changeData.current = getChangeData({
               maskingData: maskingData.current,
               inputType,
-              selectionRange,
               added: '',
+              selectionStart: currentCaretPosition,
+              selectionEnd: currentCaretPosition + countDeletedSymbols,
             });
 
             break;

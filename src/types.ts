@@ -21,11 +21,6 @@ export interface Replacement {
 
 export type InputType = 'insert' | 'deleteBackward' | 'deleteForward' | 'initial';
 
-export interface SelectionRange {
-  start: number;
-  end: number;
-}
-
 export type AST = {
   symbol: string;
   index: number;

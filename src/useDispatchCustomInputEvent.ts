@@ -6,19 +6,19 @@ import type { InputElement, CustomInputEvent, CustomInputEventHandler } from './
 
 export default function useDispatchCustomInputEvent<D = any>(
   inputRef: React.MutableRefObject<InputElement | null>,
-  customEventType: string,
-  customEventHandler: CustomInputEventHandler<D> | undefined
+  customEventType: string | undefined,
+  customInputEventHandler: CustomInputEventHandler<D> | undefined
 ) {
   const dispatched = useRef(true);
 
   const dispatch = useCallback(
     (customEventDetail: D) => {
-      if (inputRef.current === null || !customEventHandler) return;
+      if (inputRef.current === null || !customEventType || !customInputEventHandler) return;
 
       const { value, selectionStart } = inputRef.current;
 
       dispatched.current = false;
-      // Генерируем и отправляем пользовательское событие `masking`. `requestAnimationFrame` необходим для
+      // Генерируем и отправляем пользовательское событие. `requestAnimationFrame` необходим для
       // запуска события в асинхронном режиме, в противном случае возможна ситуация, когда компонент
       // будет повторно отрисован с предыдущим значением, из-за обновления состояние после события `change`
       requestAnimationFrame(() => {
@@ -28,16 +28,16 @@ export default function useDispatchCustomInputEvent<D = any>(
         // на данных передаваемых `event.target`. Поэтому устанавливаем предыдущее значение
         setInputAttributes(inputRef, { value, selectionStart: selectionStart ?? value.length });
 
-        const customEvent = new CustomEvent(customEventType, {
+        const customInputEvent = new CustomEvent(customEventType, {
           bubbles: true,
           cancelable: false,
           composed: true,
           detail: customEventDetail,
         }) as CustomInputEvent<D>;
 
-        inputRef.current.dispatchEvent(customEvent);
+        inputRef.current.dispatchEvent(customInputEvent);
 
-        customEventHandler(customEvent);
+        customInputEventHandler(customInputEvent);
         // Так как ранее мы меняли значения `input` элемента напрямую, важно убедиться, что значение
         // атрибута `value` совпадает со значением `input` элемента
         const controlled = inputRef.current._wrapperState?.controlled;
@@ -53,7 +53,7 @@ export default function useDispatchCustomInputEvent<D = any>(
         dispatched.current = true;
       });
     },
-    [inputRef, customEventType, customEventHandler]
+    [inputRef, customEventType, customInputEventHandler]
   );
 
   return [dispatched, dispatch] as [typeof dispatched, typeof dispatch];

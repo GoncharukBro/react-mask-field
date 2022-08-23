@@ -6,6 +6,8 @@ import getOptionValues from './utils/getOptionValues';
 import getCaretPosition from './utils/getCaretPosition';
 import setInputAttributes from './utils/setInputAttributes';
 
+import useError from './useError';
+
 import SyntheticChangeError from '../SyntheticChangeError';
 
 import type { InputElement } from '../types';
@@ -16,7 +18,15 @@ export default function useNumberFormat(
 ) {
   const inputRef = useRef<InputElement | null>(null);
 
-  const selection = useRef({ requestID: -1, cachedRequestID: -1, start: 0, end: 0 });
+  const selection = useRef({
+    requestID: -1,
+    fallbackRequestID: -1,
+    cachedRequestID: -1,
+    start: 0,
+    end: 0,
+  });
+
+  useError({ inputRef });
 
   useLayoutEffect(() => {
     if (inputRef.current === null) return;
@@ -228,8 +238,10 @@ export default function useNumberFormat(
   useEffect(() => {
     const handleBlur = () => {
       cancelAnimationFrame(selection.current.requestID);
+      cancelAnimationFrame(selection.current.fallbackRequestID);
 
       selection.current.requestID = -1;
+      selection.current.fallbackRequestID = -1;
       selection.current.cachedRequestID = -1;
     };
 

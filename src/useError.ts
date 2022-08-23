@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 
 import type { InputElement, Replacement } from './types';
 
-interface ErrorParams {
+interface UseErrorParams {
   inputRef: React.MutableRefObject<InputElement | null>;
   mask: string;
   replacement: Replacement;
@@ -13,7 +13,7 @@ interface ErrorParams {
  * выводятся один раз при монтировании компонента
  * @param param
  */
-export default function useError({ inputRef, mask, replacement }: ErrorParams) {
+export default function useError({ inputRef, mask, replacement }: UseErrorParams) {
   useEffect(() => {
     if (process.env.NODE_ENV === 'production') return;
 

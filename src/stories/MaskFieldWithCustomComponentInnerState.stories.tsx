@@ -29,16 +29,17 @@ const CustomComponentInnerState = forwardRef(
   }
 );
 
-export const MaskFieldWithCustomComponentInnerState: ComponentStory<typeof MaskFieldComponent> =
-  () => {
-    return (
-      <>
-        <MaskFieldComponent
-          component={CustomComponentInnerState}
-          label="Мой лейбел"
-          mask="+7 (___) ___-__-__"
-          replacement={{ _: /\d/ }}
-        />
-      </>
-    );
-  };
+export const MaskFieldWithCustomComponentInnerState: ComponentStory<
+  typeof MaskFieldComponent
+> = () => {
+  return (
+    <>
+      <MaskFieldComponent
+        component={CustomComponentInnerState}
+        label="Мой лейбел"
+        mask="+7 (___) ___-__-__"
+        replacement={{ _: /\d/ }}
+      />
+    </>
+  );
+};

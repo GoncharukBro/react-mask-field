@@ -13,7 +13,7 @@ export default function useDispatchCustomInputEvent<D = any>(
 
   const dispatch = useCallback(
     (customEventDetail: D) => {
-      if (inputRef.current === null) return;
+      if (inputRef.current === null || !customEventHandler) return;
 
       const { value, selectionStart } = inputRef.current;
 
@@ -37,7 +37,7 @@ export default function useDispatchCustomInputEvent<D = any>(
 
         inputRef.current.dispatchEvent(customEvent);
 
-        customEventHandler?.(customEvent);
+        customEventHandler(customEvent);
         // Так как ранее мы меняли значения `input` элемента напрямую, важно убедиться, что значение
         // атрибута `value` совпадает со значением `input` элемента
         const controlled = inputRef.current._wrapperState?.controlled;

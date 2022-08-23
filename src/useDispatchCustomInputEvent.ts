@@ -2,16 +2,17 @@ import { useRef, useCallback } from 'react';
 
 import setInputAttributes from './utils/setInputAttributes';
 
-import type { InputElement, MaskingEventHandler, MaskingEvent, Detail } from './types';
+import type { InputElement, CustomInputEvent, CustomInputEventHandler } from './types';
 
-export default function useDispatchMaskingEvent(
+export default function useDispatchCustomInputEvent<D = any>(
   inputRef: React.MutableRefObject<InputElement | null>,
-  onMasking: MaskingEventHandler<HTMLInputElement> | undefined
+  customEventType: string,
+  customEventHandler: CustomInputEventHandler<D> | undefined
 ) {
   const dispatched = useRef(true);
 
   const dispatch = useCallback(
-    (detail: Detail) => {
+    (customEventDetail: D) => {
       if (inputRef.current === null) return;
 
       const { value, selectionStart } = inputRef.current;
@@ -27,16 +28,16 @@ export default function useDispatchMaskingEvent(
         // на данных передаваемых `event.target`. Поэтому устанавливаем предыдущее значение
         setInputAttributes(inputRef, { value, selectionStart: selectionStart ?? value.length });
 
-        const maskingEvent = new CustomEvent('masking', {
+        const customEvent = new CustomEvent(customEventType, {
           bubbles: true,
           cancelable: false,
           composed: true,
-          detail,
-        }) as MaskingEvent;
+          detail: customEventDetail,
+        }) as CustomInputEvent<D>;
 
-        inputRef.current.dispatchEvent(maskingEvent);
+        inputRef.current.dispatchEvent(customEvent);
 
-        onMasking?.(maskingEvent);
+        customEventHandler?.(customEvent);
         // Так как ранее мы меняли значения `input` элемента напрямую, важно убедиться, что значение
         // атрибута `value` совпадает со значением `input` элемента
         const controlled = inputRef.current._wrapperState?.controlled;
@@ -52,7 +53,7 @@ export default function useDispatchMaskingEvent(
         dispatched.current = true;
       });
     },
-    [inputRef, onMasking]
+    [inputRef, customEventType, customEventHandler]
   );
 
   return [dispatched, dispatch] as [typeof dispatched, typeof dispatch];

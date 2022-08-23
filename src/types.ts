@@ -1,15 +1,19 @@
-export interface Detail {
+export interface CustomInputEvent<D = any> extends CustomEvent<D> {
+  target: EventTarget & HTMLInputElement;
+}
+
+export type CustomInputEventHandler<D = any> = (event: CustomInputEvent<D>) => void;
+
+export interface MaskingEventDetail {
   unmaskedValue: string;
   maskedValue: string;
   pattern: string;
   isValid: boolean;
 }
 
-export interface MaskingEvent<T = HTMLInputElement, D = Detail> extends CustomEvent<D> {
-  target: EventTarget & T;
-}
+export type MaskingEvent = CustomInputEvent<MaskingEventDetail>;
 
-export type MaskingEventHandler<T = HTMLInputElement> = (event: MaskingEvent<T>) => void;
+export type MaskingEventHandler = (event: MaskingEvent) => void;
 
 export interface Replacement {
   [key: string]: RegExp;

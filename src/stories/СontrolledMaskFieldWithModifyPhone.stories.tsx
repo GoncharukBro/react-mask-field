@@ -4,7 +4,7 @@ import type { ComponentStory, Meta } from '@storybook/react';
 
 import { MaskField as MaskFieldComponent } from '..';
 
-import type { MaskFieldProps, ModifiedData, Detail } from '..';
+import type { MaskFieldProps, ModifiedData, MaskingEventDetail } from '..';
 
 export default {
   title: 'Example',
@@ -12,7 +12,7 @@ export default {
 } as Meta<MaskFieldProps>;
 
 export const СontrolledMaskFieldWithModifyPhone: ComponentStory<typeof MaskFieldComponent> = () => {
-  const [detail, setDetail] = useState<Detail | null>(null);
+  const [detail, setDetail] = useState<MaskingEventDetail | null>(null);
 
   const modify = ({ unmaskedValue }: ModifiedData) => {
     const newMask =

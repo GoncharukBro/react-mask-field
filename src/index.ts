@@ -6,9 +6,9 @@ export type { MaskFieldProps } from './MaskField';
 export type {
   MaskProps,
   Replacement,
-  Detail,
-  MaskingEvent,
-  MaskingEventHandler,
   ModifiedData,
   Modify,
+  MaskingEvent,
+  MaskingEventDetail,
+  MaskingEventHandler,
 } from './types';

@@ -10,10 +10,10 @@ import getMaskingData from './utils/getMaskingData';
 import getCaretPosition from './utils/getCaretPosition';
 import setInputAttributes from './utils/setInputAttributes';
 
-import useDispatchMaskingEvent from './useDispatchMaskingEvent';
+import useDispatchCustomInputEvent from './useDispatchCustomInputEvent';
 import useError from './useError';
 
-import type { InputElement, MaskProps, ChangeData, MaskingData } from './types';
+import type { InputElement, MaskProps, ChangeData, MaskingData, MaskingEventDetail } from './types';
 
 export default function useMask({
   mask: maskProps,
@@ -47,10 +47,8 @@ export default function useMask({
     end: 0,
   });
 
-  const [dispatchedMaskingEvent, dispatchMaskingEvent] = useDispatchMaskingEvent(
-    inputRef,
-    onMasking
-  );
+  const [dispatchedMaskingEvent, dispatchMaskingEvent] =
+    useDispatchCustomInputEvent<MaskingEventDetail>(inputRef, 'masking', onMasking);
 
   useError({ inputRef, mask, replacement });
 

@@ -4,7 +4,7 @@ import type { ComponentStory, Meta } from '@storybook/react';
 
 import { MaskField as MaskFieldComponent, useMask } from '..';
 
-import type { MaskFieldProps, Detail } from '..';
+import type { MaskFieldProps, MaskingEventDetail } from '..';
 
 export default {
   title: 'Example',
@@ -12,7 +12,7 @@ export default {
 } as Meta<MaskFieldProps>;
 
 export const HookMask: ComponentStory<any> = () => {
-  const [detail, setDetail] = useState<Detail | null>(null);
+  const [detail, setDetail] = useState<MaskingEventDetail | null>(null);
   const [value, setValue] = useState('');
 
   const ref = useMask({

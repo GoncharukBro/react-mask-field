@@ -234,15 +234,15 @@ import React from 'react';
 import { MaskField } from 'react-mask-field';
 
 import type {
-  Detail,
-  MaskingEvent,
-  MaskingEventHandler,
   ModifiedData,
   Modify,
+  MaskingEvent,
+  MaskingEventDetail,
+  MaskingEventHandler,
 } from 'react-mask-field';
 
 export default function App() {
-  const [detail, setDetail] = React.useState<Detail | null>(null);
+  const [detail, setDetail] = React.useState<MaskingEventDetail, null>(null);
 
   // Or `event: MaskingEvent`
   const handleMasking: MaskingEventHandler = (event) => {

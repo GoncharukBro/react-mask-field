@@ -1,4 +1,4 @@
-import { useLayoutEffect, useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 import SyntheticChangeError from './SyntheticChangeError';
 
@@ -37,6 +37,58 @@ export default function useMask({
   const stringifiedReplacement = JSON.stringify(replacement, (key, value) => {
     return value instanceof RegExp ? value.toString() : value;
   });
+
+  /**
+   *
+   * Init
+   *
+   */
+
+  const init = useCallback(({ initialValue, controlled }) => {
+    // eslint-disable-next-line no-param-reassign
+    initialValue = controlled ? initialValue : initialValue || (showMask ? mask : '');
+
+    // Немаскированное значение необходимо для инициализации состояния. Выбираем из инициализированного значения
+    // все символы, не являющиеся символами маски. Ожидается, что инициализированное значение соответствует паттерну маски
+    const unmaskedValue = mask.split('').reduce((prev, symbol, index) => {
+      const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
+
+      if (isReplacementKey) {
+        const hasReplaceableSymbol =
+          initialValue[index] !== undefined && initialValue[index] !== symbol;
+        if (hasReplaceableSymbol) return prev + initialValue[index];
+        if (separate) return prev + symbol;
+      }
+
+      return prev;
+    }, '');
+
+    changeData.current = {
+      unmaskedValue,
+      beforeRange: '',
+      added: '',
+      afterRange: '',
+      inputType: 'initial',
+    };
+
+    maskingData.current = getMaskingData({
+      initialValue,
+      unmaskedValue,
+      mask,
+      replacement,
+      showMask,
+      separate,
+    });
+
+    const curetPosition = getCaretPosition(changeData.current, maskingData.current);
+
+    return {
+      value: maskingData.current.maskedValue,
+      selectionStart: curetPosition,
+      selectionEnd: curetPosition,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /**
    *
@@ -150,59 +202,12 @@ export default function useMask({
   const { inputRef, dispatchCustomInputEvent } = useInput<MaskingEventDetail>({
     customEventType: 'masking',
     customInputEventHandler: onMasking,
+    init,
     tracking,
     fallback,
   });
 
   useError({ inputRef, mask, replacement });
-
-  useLayoutEffect(() => {
-    if (inputRef.current === null) return;
-
-    // eslint-disable-next-line prefer-const
-    let { controlled = false, initialValue = '' } = inputRef.current._wrapperState ?? {};
-    initialValue = controlled ? initialValue : initialValue || (showMask ? mask : '');
-
-    // Немаскированное значение необходимо для инициализации состояния. Выбираем из инициализированного значения
-    // все символы, не являющиеся символами маски. Ожидается, что инициализированное значение соответствует паттерну маски
-    const unmaskedValue = mask.split('').reduce((prev, symbol, index) => {
-      const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
-
-      if (isReplacementKey) {
-        const hasReplaceableSymbol =
-          initialValue[index] !== undefined && initialValue[index] !== symbol;
-        if (hasReplaceableSymbol) return prev + initialValue[index];
-        if (separate) return prev + symbol;
-      }
-
-      return prev;
-    }, '');
-
-    changeData.current = {
-      unmaskedValue,
-      beforeRange: '',
-      added: '',
-      afterRange: '',
-      inputType: 'initial',
-    };
-
-    maskingData.current = getMaskingData({
-      initialValue,
-      unmaskedValue,
-      mask,
-      replacement,
-      showMask,
-      separate,
-    });
-
-    // Поскольку в предыдущем шаге мы изменяем инициализированное значение,
-    // мы также должны изменить значение элемента
-    setInputAttributes(inputRef, {
-      value: maskingData.current.maskedValue,
-      selectionStart: getCaretPosition(changeData.current, maskingData.current),
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Позволяет маскировать значение не только при событии `change`, но и сразу после изменения `props`
   useEffect(() => {

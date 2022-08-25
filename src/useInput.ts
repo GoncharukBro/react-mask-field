@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useEffect, useRef } from 'react';
 
 import SyntheticChangeError from './SyntheticChangeError';
 
@@ -11,13 +11,18 @@ import type { InputElement, InputType, CustomInputEventHandler } from './types';
 interface UseInputParams<D> {
   customEventType?: string;
   customInputEventHandler?: CustomInputEventHandler<D>;
+  init: ({ initialValue, controlled }: any) => {
+    value: string;
+    selectionStart: number;
+    selectionEnd: number;
+  };
   tracking: ({ previousValue, inputType, added, selectionStart, selectionEnd }: any) => {
     value: string;
     selectionStart: number;
     selectionEnd: number;
     customInputEventDetail: D;
   };
-  fallback: ({ previousValue, selectionStart }: any) => {
+  fallback: ({ previousValue, selectionStart, selectionEnd }: any) => {
     value: any;
     selectionStart: any;
     selectionEnd: any;
@@ -27,6 +32,7 @@ interface UseInputParams<D> {
 export default function useInput<D = any>({
   customEventType,
   customInputEventHandler,
+  init,
   tracking,
   fallback,
 }: UseInputParams<D>) {
@@ -57,6 +63,28 @@ export default function useInput<D = any>({
       // eslint-disable-next-line no-console
       console.error(new Error('Input element does not exist.'));
     }
+  }, []);
+
+  /**
+   *
+   * Init input state
+   *
+   */
+
+  useLayoutEffect(() => {
+    if (inputRef.current === null) return;
+
+    const { initialValue = '', controlled = false } = inputRef.current._wrapperState ?? {};
+
+    const initResult = init({ initialValue, controlled });
+
+    // Поскольку в предыдущем шаге мы изменяем инициализированное
+    // значение, мы также должны изменить значение элемента
+    setInputAttributes(inputRef, {
+      value: initResult.value,
+      selectionStart: initResult.selectionStart,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**

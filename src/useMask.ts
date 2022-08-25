@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useEffect, useRef, useCallback } from 'react';
 
 import SyntheticChangeError from './SyntheticChangeError';
 
@@ -13,7 +13,7 @@ import setInputAttributes from './utils/setInputAttributes';
 import useInput from './useInput';
 import useError from './useError';
 
-import type { InputType, MaskProps, ChangeData, MaskingData, MaskingEventDetail } from './types';
+import type { MaskProps, ChangeData, MaskingData, MaskingEventDetail } from './types';
 
 export default function useMask({
   mask: maskProps,
@@ -28,20 +28,131 @@ export default function useMask({
   const showMask = showMaskProps ?? false;
   const separate = separateProps ?? false;
 
+  const isFirstRender = useRef(true);
+
+  const changeData = useRef<ChangeData | null>(null);
+  const maskingData = useRef<MaskingData | null>(null);
+
   // Преобразовываем объект `replacement` в строку для сравнения с зависимостью в `useEffect`
   const stringifiedReplacement = JSON.stringify(replacement, (key, value) => {
     return value instanceof RegExp ? value.toString() : value;
   });
 
-  const { inputRef, selection, dispatchCustomInputEvent } = useInput<MaskingEventDetail>({
+  /**
+   *
+   * Tracking
+   *
+   */
+
+  const tracking = useCallback(
+    ({ previousValue, inputType, added, selectionStart, selectionEnd }) => {
+      if (changeData.current === null || maskingData.current === null) {
+        throw new SyntheticChangeError('The state has not been initialized.');
+      }
+
+      // Предыдущее значение всегда должно соответствовать маскированному значению из кэша. Обратная ситуация может
+      // возникнуть при контроле значения, если значение не было изменено после ввода. Для предотвращения подобных
+      // ситуаций, нам важно синхронизировать предыдущее значение с кэшированным значением, если они различаются
+      if (maskingData.current.maskedValue !== previousValue) {
+        maskingData.current = getMaskingData({
+          initialValue: previousValue,
+          unmaskedValue: '',
+          mask: maskingData.current.mask,
+          replacement: maskingData.current.replacement,
+          showMask: maskingData.current.showMask,
+          separate: maskingData.current.separate,
+        });
+      }
+
+      changeData.current = getChangeData({
+        maskingData: maskingData.current,
+        inputType,
+        added,
+        selectionStart,
+        selectionEnd,
+      });
+
+      if (inputType === 'insert' && changeData.current.added === '') {
+        throw new SyntheticChangeError(
+          'The symbol does not match the value of the `replacement` object.'
+        );
+      }
+
+      const modifiedData = getModifiedData({
+        unmaskedValue: changeData.current.unmaskedValue,
+        mask,
+        replacement,
+        showMask,
+        separate,
+        modify,
+      });
+
+      maskingData.current = getMaskingData({
+        unmaskedValue: modifiedData.unmaskedValue,
+        mask: modifiedData.mask,
+        replacement: modifiedData.replacement,
+        showMask: modifiedData.showMask,
+        separate: modifiedData.separate,
+      });
+
+      const curetPosition = getCaretPosition(changeData.current, maskingData.current);
+
+      const maskingEventDetail = {
+        unmaskedValue: modifiedData.unmaskedValue,
+        maskedValue: maskingData.current.maskedValue,
+        pattern: maskingData.current.pattern,
+        isValid: maskingData.current.isValid,
+      };
+
+      return {
+        value: maskingData.current.maskedValue,
+        selectionStart: curetPosition,
+        selectionEnd: curetPosition,
+        customInputEventDetail: maskingEventDetail,
+      };
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [mask, stringifiedReplacement, showMask, separate, modify]
+  );
+
+  /**
+   *
+   * Fallback
+   *
+   */
+
+  const fallback = useCallback(({ previousValue, selectionStart }) => {
+    const replaceableSymbolIndex =
+      maskingData.current !== null
+        ? getReplaceableSymbolIndex(previousValue, maskingData.current.replacement, selectionStart)
+        : -1;
+
+    const curetPosition =
+      changeData.current !== null && maskingData.current !== null
+        ? getCaretPosition(changeData.current, maskingData.current)
+        : replaceableSymbolIndex !== -1
+        ? replaceableSymbolIndex
+        : previousValue.length;
+
+    return {
+      value: previousValue,
+      selectionStart: curetPosition,
+      selectionEnd: curetPosition,
+    };
+  }, []);
+
+  /**
+   *
+   * Use input
+   *
+   */
+
+  const { inputRef, dispatchCustomInputEvent } = useInput<MaskingEventDetail>({
     customEventType: 'masking',
     customInputEventHandler: onMasking,
+    tracking,
+    fallback,
   });
-
-  const isFirstRender = useRef(true);
-
-  const changeData = useRef<ChangeData | null>(null);
-  const maskingData = useRef<MaskingData | null>(null);
 
   useError({ inputRef, mask, replacement });
 
@@ -133,179 +244,6 @@ export default function useMask({
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mask, stringifiedReplacement, showMask, separate]);
-
-  useEffect(() => {
-    const handleInput = (event: Event) => {
-      try {
-        if (inputRef.current === null) {
-          throw new SyntheticChangeError('Reference to input element is not initialized.');
-        }
-
-        // Если событие вызывается слишком часто, смена курсора может не поспеть за новым событием,
-        // поэтому сравниваем `requestID` кэшированный и текущий для избежания некорректного поведения маски
-        if (selection.current.cachedRequestID === selection.current.requestID) {
-          throw new SyntheticChangeError('The input caret has not been updated.');
-        }
-
-        selection.current.cachedRequestID = selection.current.requestID;
-
-        const previousValue = inputRef.current._valueTracker?.getValue?.() ?? '';
-        const currentValue = inputRef.current.value;
-        const currentCaretPosition = inputRef.current.selectionStart ?? 0;
-
-        let inputType: InputType = 'initial';
-        let added = '';
-        let selectionStart = selection.current.start;
-        let selectionEnd = selection.current.end;
-
-        // Определяем тип ввода (ручное определение типа ввода способствует кроссбраузерности)
-        if (currentCaretPosition > selection.current.start) {
-          inputType = 'insert';
-        } else if (
-          currentCaretPosition <= selection.current.start &&
-          currentCaretPosition < selection.current.end
-        ) {
-          inputType = 'deleteBackward';
-        } else if (
-          currentCaretPosition === selection.current.end &&
-          currentValue.length < previousValue.length
-        ) {
-          inputType = 'deleteForward';
-        }
-
-        if (
-          (inputType === 'deleteBackward' || inputType === 'deleteForward') &&
-          currentValue.length > previousValue.length
-        ) {
-          throw new SyntheticChangeError('Input type detection error.');
-        }
-
-        switch (inputType) {
-          case 'insert': {
-            added = currentValue.slice(selection.current.start, currentCaretPosition);
-            break;
-          }
-          case 'deleteBackward':
-          case 'deleteForward': {
-            const countDeleted = previousValue.length - currentValue.length;
-            selectionStart = currentCaretPosition;
-            selectionEnd = currentCaretPosition + countDeleted;
-            break;
-          }
-          default: {
-            throw new SyntheticChangeError('The input type is undefined.');
-          }
-        }
-
-        if (changeData.current === null || maskingData.current === null) {
-          throw new SyntheticChangeError('The state has not been initialized.');
-        }
-
-        // Предыдущее значение всегда должно соответствовать маскированному значению из кэша. Обратная ситуация может
-        // возникнуть при контроле значения, если значение не было изменено после ввода. Для предотвращения подобных
-        // ситуаций, нам важно синхронизировать предыдущее значение с кэшированным значением, если они различаются
-        if (maskingData.current.maskedValue !== previousValue) {
-          maskingData.current = getMaskingData({
-            initialValue: previousValue,
-            unmaskedValue: '',
-            mask: maskingData.current.mask,
-            replacement: maskingData.current.replacement,
-            showMask: maskingData.current.showMask,
-            separate: maskingData.current.separate,
-          });
-        }
-
-        changeData.current = getChangeData({
-          maskingData: maskingData.current,
-          inputType,
-          added,
-          selectionStart,
-          selectionEnd,
-        });
-
-        if (inputType === 'insert' && changeData.current.added === '') {
-          throw new SyntheticChangeError(
-            'The symbol does not match the value of the `replacement` object.'
-          );
-        }
-
-        const modifiedData = getModifiedData({
-          unmaskedValue: changeData.current.unmaskedValue,
-          mask,
-          replacement,
-          showMask,
-          separate,
-          modify,
-        });
-
-        maskingData.current = getMaskingData({
-          unmaskedValue: modifiedData.unmaskedValue,
-          mask: modifiedData.mask,
-          replacement: modifiedData.replacement,
-          showMask: modifiedData.showMask,
-          separate: modifiedData.separate,
-        });
-
-        setInputAttributes(inputRef, {
-          value: maskingData.current.maskedValue,
-          selectionStart: getCaretPosition(changeData.current, maskingData.current),
-        });
-
-        dispatchCustomInputEvent({
-          unmaskedValue: modifiedData.unmaskedValue,
-          maskedValue: maskingData.current.maskedValue,
-          pattern: maskingData.current.pattern,
-          isValid: maskingData.current.isValid,
-        });
-
-        // После изменения значения в `masking` событие `change` срабатывать не будет, так как предыдущее
-        // и текущее состояние внутри `input` совпадают. Чтобы обойти эту проблему с версии React 16,
-        // устанавливаем предыдущее состояние на отличное от текущего.
-        inputRef.current._valueTracker?.setValue?.(previousValue);
-      } catch (error) {
-        if (
-          process.env.NODE_ENV !== 'production' &&
-          (error as Error).name === 'SyntheticChangeError'
-        ) {
-          // eslint-disable-next-line no-console
-          console.error(error);
-        }
-        // Поскольку внутреннее состояние элемента `input` изменилось после ввода,
-        // его необходимо восстановить
-        if (inputRef.current !== null && maskingData.current !== null) {
-          const previousValue = inputRef.current._valueTracker?.getValue?.() ?? '';
-          const replaceableSymbolIndex = getReplaceableSymbolIndex(
-            previousValue,
-            maskingData.current.replacement,
-            selection.current.start
-          );
-          setInputAttributes(inputRef, {
-            value: previousValue,
-            selectionStart: changeData.current
-              ? getCaretPosition(changeData.current, maskingData.current)
-              : replaceableSymbolIndex !== -1
-              ? replaceableSymbolIndex
-              : previousValue.length,
-          });
-        }
-
-        event.preventDefault();
-        event.stopPropagation();
-
-        if ((error as Error).name !== 'SyntheticChangeError') {
-          throw error;
-        }
-      }
-    };
-
-    const inputElement = inputRef.current;
-    inputElement?.addEventListener('input', handleInput);
-
-    return () => {
-      inputElement?.removeEventListener('input', handleInput);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mask, stringifiedReplacement, showMask, separate, modify, dispatchCustomInputEvent]);
 
   return inputRef;
 }

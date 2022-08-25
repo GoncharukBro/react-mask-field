@@ -1,17 +1,34 @@
 import { useEffect, useRef } from 'react';
 
+import SyntheticChangeError from './SyntheticChangeError';
+
+import setInputAttributes from './utils/setInputAttributes';
+
 import useDispatchCustomInputEvent from './useDispatchCustomInputEvent';
 
-import type { InputElement, CustomInputEventHandler } from './types';
+import type { InputElement, InputType, CustomInputEventHandler } from './types';
 
 interface UseInputParams<D> {
   customEventType?: string;
   customInputEventHandler?: CustomInputEventHandler<D>;
+  tracking: ({ previousValue, inputType, added, selectionStart, selectionEnd }: any) => {
+    value: string;
+    selectionStart: number;
+    selectionEnd: number;
+    customInputEventDetail: D;
+  };
+  fallback: ({ previousValue, selectionStart }: any) => {
+    value: any;
+    selectionStart: any;
+    selectionEnd: any;
+  };
 }
 
 export default function useInput<D = any>({
   customEventType,
   customInputEventHandler,
+  tracking,
+  fallback,
 }: UseInputParams<D>) {
   const inputRef = useRef<InputElement | null>(null);
 
@@ -41,6 +58,134 @@ export default function useInput<D = any>({
       console.error(new Error('Input element does not exist.'));
     }
   }, []);
+
+  /**
+   *
+   * Handle input
+   *
+   */
+
+  useEffect(() => {
+    const handleInput = (event: Event) => {
+      try {
+        if (inputRef.current === null) {
+          throw new SyntheticChangeError('Reference to input element is not initialized.');
+        }
+
+        // Если событие вызывается слишком часто, смена курсора может не поспеть за новым событием,
+        // поэтому сравниваем `requestID` кэшированный и текущий для избежания некорректного поведения маски
+        if (selection.current.cachedRequestID === selection.current.requestID) {
+          throw new SyntheticChangeError('The input caret has not been updated.');
+        }
+
+        selection.current.cachedRequestID = selection.current.requestID;
+
+        const previousValue = inputRef.current._valueTracker?.getValue?.() ?? '';
+        const currentValue = inputRef.current.value;
+        const currentCaretPosition = inputRef.current.selectionStart ?? 0;
+
+        let inputType: InputType = 'initial';
+        let added = '';
+        let selectionStart = selection.current.start;
+        let selectionEnd = selection.current.end;
+
+        // Определяем тип ввода (ручное определение типа ввода способствует кроссбраузерности)
+        if (currentCaretPosition > selection.current.start) {
+          inputType = 'insert';
+        } else if (
+          currentCaretPosition <= selection.current.start &&
+          currentCaretPosition < selection.current.end
+        ) {
+          inputType = 'deleteBackward';
+        } else if (
+          currentCaretPosition === selection.current.end &&
+          currentValue.length < previousValue.length
+        ) {
+          inputType = 'deleteForward';
+        }
+
+        if (
+          (inputType === 'deleteBackward' || inputType === 'deleteForward') &&
+          currentValue.length > previousValue.length
+        ) {
+          throw new SyntheticChangeError('Input type detection error.');
+        }
+
+        switch (inputType) {
+          case 'insert': {
+            added = currentValue.slice(selection.current.start, currentCaretPosition);
+            break;
+          }
+          case 'deleteBackward':
+          case 'deleteForward': {
+            const countDeleted = previousValue.length - currentValue.length;
+            selectionStart = currentCaretPosition;
+            selectionEnd = currentCaretPosition + countDeleted;
+            break;
+          }
+          default: {
+            throw new SyntheticChangeError('The input type is undefined.');
+          }
+        }
+
+        const trackingResult = tracking({
+          previousValue,
+          inputType,
+          added,
+          selectionStart,
+          selectionEnd,
+        });
+
+        setInputAttributes(inputRef, {
+          value: trackingResult.value,
+          selectionStart: trackingResult.selectionStart,
+        });
+
+        dispatchCustomInputEvent(trackingResult.customInputEventDetail);
+
+        // После изменения значения в кастомном событии событие `change` срабатывать не будет,
+        // так как предыдущее и текущее состояние внутри `input` совпадают. Чтобы обойти эту
+        // проблему с версии React 16, устанавливаем предыдущее состояние на отличное от текущего.
+        inputRef.current._valueTracker?.setValue?.(previousValue);
+      } catch (error) {
+        if (
+          process.env.NODE_ENV !== 'production' &&
+          (error as Error).name === 'SyntheticChangeError'
+        ) {
+          // eslint-disable-next-line no-console
+          console.error(error);
+        }
+        // Поскольку внутреннее состояние элемента `input`,
+        // изменилось после ввода его необходимо восстановить
+        const previousValue = inputRef.current?._valueTracker?.getValue?.() ?? '';
+
+        const fallbackResult = fallback({
+          previousValue,
+          selectionStart: selection.current.start,
+          selectionEnd: selection.current.end,
+        });
+
+        setInputAttributes(inputRef, {
+          value: fallbackResult.value,
+          selectionStart: fallbackResult.selectionStart,
+        });
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        if ((error as Error).name !== 'SyntheticChangeError') {
+          throw error;
+        }
+      }
+    };
+
+    const inputElement = inputRef.current;
+    inputElement?.addEventListener('input', handleInput);
+
+    return () => {
+      inputElement?.removeEventListener('input', handleInput);
+    };
+  }, [tracking, fallback, dispatchCustomInputEvent]);
 
   /**
    *
@@ -103,5 +248,5 @@ export default function useInput<D = any>({
     };
   }, []);
 
-  return { inputRef, selection, dispatchCustomInputEvent };
+  return { inputRef, dispatchCustomInputEvent };
 }

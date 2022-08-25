@@ -10,7 +10,7 @@ import useError from './useError';
 
 import SyntheticChangeError from '../SyntheticChangeError';
 
-import type { InputElement } from '../types';
+import type { InputElement, InputType } from '../types';
 
 export default function useNumberFormat(
   locales?: string | string[] | undefined,
@@ -30,9 +30,8 @@ export default function useNumberFormat(
 
   useLayoutEffect(() => {
     if (inputRef.current === null) return;
-    // eslint-disable-next-line prefer-const
-    let { controlled = false, initialValue = '' } = inputRef.current._wrapperState ?? {};
-    initialValue = controlled ? initialValue : '';
+
+    const { initialValue = '' } = inputRef.current._wrapperState ?? {};
     // Поскольку в предыдущем шаге мы изменяем инициализированное значение,
     // мы также должны изменить значение элемента
     setInputAttributes(inputRef, { value: initialValue, selectionStart: selection.current.start });
@@ -42,7 +41,7 @@ export default function useNumberFormat(
     const handleInput = (event: Event) => {
       try {
         if (inputRef.current === null) {
-          throw new SyntheticChangeError('The state has not been initialized.');
+          throw new SyntheticChangeError('Reference to input element is not initialized.');
         }
 
         // Если событие вызывается слишком часто, смена курсора может не поспеть за новым событием,
@@ -57,11 +56,10 @@ export default function useNumberFormat(
         const currentValue = inputRef.current.value;
         const currentCaretPosition = inputRef.current.selectionStart ?? 0;
 
-        if (currentValue === '') {
-          return;
-        }
-
-        let inputType = '';
+        let inputType: InputType = 'initial';
+        let added = '';
+        let selectionStart = selection.current.start;
+        let selectionEnd = selection.current.end;
 
         // Определяем тип ввода (ручное определение типа ввода способствует кроссбраузерности)
         if (currentCaretPosition > selection.current.start) {
@@ -85,81 +83,71 @@ export default function useNumberFormat(
           throw new SyntheticChangeError('Input type detection error.');
         }
 
-        let nextValue = '';
-
-        const { localSeparator, localSymbols, minimumFractionDigits, maximumFractionDigits } =
-          getOptionValues(locales, options);
-
         switch (inputType) {
           case 'insert': {
-            let added = currentValue.slice(selection.current.start, currentCaretPosition);
-
-            if (maximumFractionDigits > 0 && added === localSeparator) {
-              const [previousInteger, previousFraction] = previousValue.split(localSeparator);
-              const [nextInteger, nextFraction = localSymbols[0]] = new Intl.NumberFormat(
-                locales,
-                options
-              )
-                .format(0)
-                .split(localSeparator);
-
-              const integer = previousInteger || nextInteger;
-
-              setInputAttributes(inputRef, {
-                value: previousFraction ? previousValue : integer + localSeparator + nextFraction,
-                selectionStart: integer.length + 1,
-              });
-
-              return;
-            }
-
-            added = added.replace(new RegExp(`[^${localSymbols}\\d]`, 'g'), '');
-
-            if (!added) {
-              throw new SyntheticChangeError(
-                'The symbol does not match the value of the resolved symbols.'
-              );
-            }
-
-            added = convertToNumber(added, localSymbols);
-
-            nextValue = mask({
-              locales,
-              options,
-              localSeparator,
-              localSymbols,
-              minimumFractionDigits,
-              maximumFractionDigits,
-              previousValue,
-              added,
-              selectionStart: selection.current.start,
-              selectionEnd: selection.current.end,
-            });
-
+            added = currentValue.slice(selection.current.start, currentCaretPosition);
             break;
           }
           case 'deleteBackward':
           case 'deleteForward': {
             const countDeleted = previousValue.length - currentValue.length;
-
-            nextValue = mask({
-              locales,
-              options,
-              localSeparator,
-              localSymbols,
-              minimumFractionDigits,
-              maximumFractionDigits,
-              previousValue,
-              added: '',
-              selectionStart: currentCaretPosition,
-              selectionEnd: currentCaretPosition + countDeleted,
-            });
-
+            selectionStart = currentCaretPosition;
+            selectionEnd = currentCaretPosition + countDeleted;
             break;
           }
-          default:
+          default: {
             throw new SyntheticChangeError('The input type is undefined.');
+          }
         }
+
+        if (currentValue === '') {
+          return;
+        }
+
+        const { localSeparator, localSymbols, minimumFractionDigits, maximumFractionDigits } =
+          getOptionValues(locales, options);
+
+        if (maximumFractionDigits > 0 && added === localSeparator) {
+          const [previousInteger, previousFraction] = previousValue.split(localSeparator);
+          const [nextInteger, nextFraction = localSymbols[0]] = new Intl.NumberFormat(
+            locales,
+            options
+          )
+            .format(0)
+            .split(localSeparator);
+
+          const integer = previousInteger || nextInteger;
+
+          setInputAttributes(inputRef, {
+            value: previousFraction ? previousValue : integer + localSeparator + nextFraction,
+            selectionStart: integer.length + 1,
+          });
+
+          return;
+        }
+
+        added = added.replace(new RegExp(`[^${localSymbols}\\d]`, 'g'), '');
+
+        if (inputType === 'insert' && !added) {
+          throw new SyntheticChangeError(
+            'The symbol does not match the value of the resolved symbols.'
+          );
+        }
+
+        added = convertToNumber(added, localSymbols);
+
+        const nextValue = mask({
+          locales,
+          options,
+          localSeparator,
+          localSymbols,
+          minimumFractionDigits,
+          maximumFractionDigits,
+          previousValue,
+          added,
+          selectionStart,
+          selectionEnd,
+        });
 
         const nextCaretPosition = getCaretPosition({
           currentCaretPosition,

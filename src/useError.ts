@@ -17,14 +17,6 @@ export default function useError({ inputRef, mask, replacement }: UseErrorParams
   useEffect(() => {
     if (process.env.NODE_ENV === 'production') return;
 
-    // Валидируем наличие элемента
-    if (inputRef.current === null) {
-      const message = 'Input element does not exist.';
-      // eslint-disable-next-line no-console
-      console.error(new Error(message));
-      return;
-    }
-
     const findInvalidSymbolIndex = (array: string[]) => {
       return array.findIndex((symbol, index) => {
         const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
@@ -38,7 +30,7 @@ export default function useError({ inputRef, mask, replacement }: UseErrorParams
       });
     };
 
-    const initialValue = inputRef.current._wrapperState?.initialValue ?? '';
+    const initialValue = inputRef.current?._wrapperState?.initialValue ?? '';
     const invalidReplacementKeys = Object.keys(replacement).filter((key) => key.length > 1);
     const invalidSymbolIndex = findInvalidSymbolIndex(mask.slice(0, initialValue.length).split(''));
 

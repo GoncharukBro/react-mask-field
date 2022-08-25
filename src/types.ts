@@ -1,8 +1,27 @@
+export interface InputElement extends HTMLInputElement {
+  _wrapperState?: {
+    controlled?: boolean;
+    initialValue?: string;
+  };
+  _valueTracker?: {
+    getValue?: () => string;
+    setValue?: (value: string) => void;
+  };
+}
+
 export interface CustomInputEvent<D = any> extends CustomEvent<D> {
   target: EventTarget & HTMLInputElement;
 }
 
 export type CustomInputEventHandler<D = any> = (event: CustomInputEvent<D>) => void;
+
+export type InputType = 'insert' | 'deleteBackward' | 'deleteForward' | 'initial';
+
+/**
+ *
+ * Mask types
+ *
+ */
 
 export interface MaskingEventDetail {
   unmaskedValue: string;
@@ -18,8 +37,6 @@ export type MaskingEventHandler = (event: MaskingEvent) => void;
 export interface Replacement {
   [key: string]: RegExp;
 }
-
-export type InputType = 'insert' | 'deleteBackward' | 'deleteForward' | 'initial';
 
 export type AST = {
   symbol: string;
@@ -63,15 +80,4 @@ export interface MaskProps {
   separate?: boolean;
   modify?: Modify;
   onMasking?: MaskingEventHandler;
-}
-
-export interface InputElement extends HTMLInputElement {
-  _wrapperState?: {
-    controlled?: boolean;
-    initialValue?: string;
-  };
-  _valueTracker?: {
-    getValue?: () => string;
-    setValue?: (value: string) => void;
-  };
 }

@@ -10,10 +10,10 @@ import getMaskingData from './utils/getMaskingData';
 import getCaretPosition from './utils/getCaretPosition';
 import setInputAttributes from './utils/setInputAttributes';
 
-import useDispatchCustomInputEvent from './useDispatchCustomInputEvent';
+import useInput from './useInput';
 import useError from './useError';
 
-import type { InputElement, MaskProps, ChangeData, MaskingData, MaskingEventDetail } from './types';
+import type { InputType, MaskProps, ChangeData, MaskingData, MaskingEventDetail } from './types';
 
 export default function useMask({
   mask: maskProps,
@@ -33,22 +33,15 @@ export default function useMask({
     return value instanceof RegExp ? value.toString() : value;
   });
 
-  const inputRef = useRef<InputElement | null>(null);
+  const { inputRef, selection, dispatchCustomInputEvent } = useInput<MaskingEventDetail>({
+    customEventType: 'masking',
+    customInputEventHandler: onMasking,
+  });
 
   const isFirstRender = useRef(true);
 
   const changeData = useRef<ChangeData | null>(null);
   const maskingData = useRef<MaskingData | null>(null);
-  const selection = useRef({
-    requestID: -1,
-    fallbackRequestID: -1,
-    cachedRequestID: -1,
-    start: 0,
-    end: 0,
-  });
-
-  const [dispatchedMaskingEvent, dispatchMaskingEvent] =
-    useDispatchCustomInputEvent<MaskingEventDetail>(inputRef, 'masking', onMasking);
 
   useError({ inputRef, mask, replacement });
 
@@ -131,7 +124,7 @@ export default function useMask({
       selectionStart: getCaretPosition(changeData.current, maskingData.current),
     });
 
-    dispatchMaskingEvent({
+    dispatchCustomInputEvent({
       unmaskedValue: modifiedData.unmaskedValue,
       maskedValue: maskingData.current.maskedValue,
       pattern: maskingData.current.pattern,
@@ -144,12 +137,8 @@ export default function useMask({
   useEffect(() => {
     const handleInput = (event: Event) => {
       try {
-        if (
-          inputRef.current === null ||
-          changeData.current === null ||
-          maskingData.current === null
-        ) {
-          throw new SyntheticChangeError('The state has not been initialized.');
+        if (inputRef.current === null) {
+          throw new SyntheticChangeError('Reference to input element is not initialized.');
         }
 
         // Если событие вызывается слишком часто, смена курсора может не поспеть за новым событием,
@@ -164,21 +153,10 @@ export default function useMask({
         const currentValue = inputRef.current.value;
         const currentCaretPosition = inputRef.current.selectionStart ?? 0;
 
-        // Предыдущее значение всегда должно соответствовать маскированному значению из кэша. Обратная ситуация может
-        // возникнуть при контроле значения, если значение не было изменено после ввода. Для предотвращения подобных
-        // ситуаций, нам важно синхронизировать предыдущее значение с кэшированным значением, если они различаются
-        if (maskingData.current.maskedValue !== previousValue) {
-          maskingData.current = getMaskingData({
-            initialValue: previousValue,
-            unmaskedValue: '',
-            mask: maskingData.current.mask,
-            replacement: maskingData.current.replacement,
-            showMask: maskingData.current.showMask,
-            separate: maskingData.current.separate,
-          });
-        }
-
-        let inputType = '';
+        let inputType: InputType = 'initial';
+        let added = '';
+        let selectionStart = selection.current.start;
+        let selectionEnd = selection.current.end;
 
         // Определяем тип ввода (ручное определение типа ввода способствует кроссбраузерности)
         if (currentCaretPosition > selection.current.start) {
@@ -204,40 +182,51 @@ export default function useMask({
 
         switch (inputType) {
           case 'insert': {
-            const addedSymbols = currentValue.slice(selection.current.start, currentCaretPosition);
-
-            changeData.current = getChangeData({
-              maskingData: maskingData.current,
-              inputType,
-              added: addedSymbols,
-              selectionStart: selection.current.start,
-              selectionEnd: selection.current.end,
-            });
-
-            if (changeData.current.added === '') {
-              throw new SyntheticChangeError(
-                'The symbol does not match the value of the `replacement` object.'
-              );
-            }
-
+            added = currentValue.slice(selection.current.start, currentCaretPosition);
             break;
           }
           case 'deleteBackward':
           case 'deleteForward': {
-            const countDeletedSymbols = previousValue.length - currentValue.length;
-
-            changeData.current = getChangeData({
-              maskingData: maskingData.current,
-              inputType,
-              added: '',
-              selectionStart: currentCaretPosition,
-              selectionEnd: currentCaretPosition + countDeletedSymbols,
-            });
-
+            const countDeleted = previousValue.length - currentValue.length;
+            selectionStart = currentCaretPosition;
+            selectionEnd = currentCaretPosition + countDeleted;
             break;
           }
-          default:
+          default: {
             throw new SyntheticChangeError('The input type is undefined.');
+          }
+        }
+
+        if (changeData.current === null || maskingData.current === null) {
+          throw new SyntheticChangeError('The state has not been initialized.');
+        }
+
+        // Предыдущее значение всегда должно соответствовать маскированному значению из кэша. Обратная ситуация может
+        // возникнуть при контроле значения, если значение не было изменено после ввода. Для предотвращения подобных
+        // ситуаций, нам важно синхронизировать предыдущее значение с кэшированным значением, если они различаются
+        if (maskingData.current.maskedValue !== previousValue) {
+          maskingData.current = getMaskingData({
+            initialValue: previousValue,
+            unmaskedValue: '',
+            mask: maskingData.current.mask,
+            replacement: maskingData.current.replacement,
+            showMask: maskingData.current.showMask,
+            separate: maskingData.current.separate,
+          });
+        }
+
+        changeData.current = getChangeData({
+          maskingData: maskingData.current,
+          inputType,
+          added,
+          selectionStart,
+          selectionEnd,
+        });
+
+        if (inputType === 'insert' && changeData.current.added === '') {
+          throw new SyntheticChangeError(
+            'The symbol does not match the value of the `replacement` object.'
+          );
         }
 
         const modifiedData = getModifiedData({
@@ -262,7 +251,7 @@ export default function useMask({
           selectionStart: getCaretPosition(changeData.current, maskingData.current),
         });
 
-        dispatchMaskingEvent({
+        dispatchCustomInputEvent({
           unmaskedValue: modifiedData.unmaskedValue,
           maskedValue: maskingData.current.maskedValue,
           pattern: maskingData.current.pattern,
@@ -316,56 +305,7 @@ export default function useMask({
       inputElement?.removeEventListener('input', handleInput);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mask, stringifiedReplacement, showMask, separate, modify, dispatchMaskingEvent]);
-
-  useEffect(() => {
-    const handleFocus = () => {
-      const setSelection = () => {
-        // Позиция курсора изменяется после завершения события `change` и к срабатыванию события `masking`
-        // позиция курсора может быть некорректной, что может повлеч за собой ошибки
-        if (dispatchedMaskingEvent.current) {
-          selection.current.start = inputRef.current?.selectionStart ?? 0;
-          selection.current.end = inputRef.current?.selectionEnd ?? 0;
-
-          selection.current.requestID = requestAnimationFrame(setSelection);
-        } else {
-          selection.current.fallbackRequestID = requestAnimationFrame(setSelection);
-        }
-      };
-      selection.current.requestID = requestAnimationFrame(setSelection);
-    };
-
-    // Событие `focus` не сработает, при рендере даже если включено свойство `autoFocus`,
-    // поэтому нам необходимо запустить определение позиции курсора вручную при автофокусе
-    if (inputRef.current !== null && document.activeElement === inputRef.current) {
-      handleFocus();
-    }
-
-    const inputElement = inputRef.current;
-    inputElement?.addEventListener('focus', handleFocus);
-
-    return () => {
-      inputElement?.removeEventListener('focus', handleFocus);
-    };
-  }, [dispatchedMaskingEvent]);
-
-  useEffect(() => {
-    const handleBlur = () => {
-      cancelAnimationFrame(selection.current.requestID);
-      cancelAnimationFrame(selection.current.fallbackRequestID);
-
-      selection.current.requestID = -1;
-      selection.current.fallbackRequestID = -1;
-      selection.current.cachedRequestID = -1;
-    };
-
-    const inputElement = inputRef.current;
-    inputElement?.addEventListener('blur', handleBlur);
-
-    return () => {
-      inputElement?.removeEventListener('blur', handleBlur);
-    };
-  }, []);
+  }, [mask, stringifiedReplacement, showMask, separate, modify, dispatchCustomInputEvent]);
 
   return inputRef;
 }

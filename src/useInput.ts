@@ -9,13 +9,19 @@ import useDispatchCustomInputEvent from './useDispatchCustomInputEvent';
 import type { InputElement, InputType, CustomInputEventHandler } from './types';
 
 interface UseInputParams<D> {
-  customEventType?: string;
-  customInputEventHandler?: CustomInputEventHandler<D>;
   init: ({ initialValue, controlled }: any) => {
     value: string;
     selectionStart: number;
     selectionEnd: number;
   };
+  update: () =>
+    | {
+        value: string;
+        selectionStart: number;
+        selectionEnd: number;
+        customInputEventDetail: D;
+      }
+    | undefined;
   tracking: ({ previousValue, inputType, added, selectionStart, selectionEnd }: any) => {
     value: string;
     selectionStart: number;
@@ -27,16 +33,21 @@ interface UseInputParams<D> {
     selectionStart: any;
     selectionEnd: any;
   };
+  customInputEventType?: string;
+  customInputEventHandler?: CustomInputEventHandler<D>;
 }
 
 export default function useInput<D = any>({
-  customEventType,
-  customInputEventHandler,
   init,
+  update,
   tracking,
   fallback,
+  customInputEventType,
+  customInputEventHandler,
 }: UseInputParams<D>) {
   const inputRef = useRef<InputElement | null>(null);
+
+  const isFirstRender = useRef(true);
 
   const selection = useRef({
     requestID: -1,
@@ -48,7 +59,7 @@ export default function useInput<D = any>({
 
   const [dispatchedCustomInputEvent, dispatchCustomInputEvent] = useDispatchCustomInputEvent<D>(
     inputRef,
-    customEventType,
+    customInputEventType,
     customInputEventHandler
   );
 
@@ -86,6 +97,31 @@ export default function useInput<D = any>({
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /**
+   *
+   * Update when changing props
+   *
+   */
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    const updateResult = update();
+
+    if (updateResult !== undefined) {
+      setInputAttributes(inputRef, {
+        value: updateResult.value,
+        selectionStart: updateResult.selectionStart,
+      });
+
+      dispatchCustomInputEvent(updateResult.customInputEventDetail);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [update]);
 
   /**
    *
@@ -250,7 +286,8 @@ export default function useInput<D = any>({
     return () => {
       inputElement?.removeEventListener('focus', handleFocus);
     };
-  }, [dispatchedCustomInputEvent]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /**
    *
@@ -276,5 +313,5 @@ export default function useInput<D = any>({
     };
   }, []);
 
-  return { inputRef, dispatchCustomInputEvent };
+  return inputRef;
 }

@@ -6,14 +6,14 @@ import type { InputElement, CustomInputEvent, CustomInputEventHandler } from './
 
 export default function useDispatchCustomInputEvent<D = any>(
   inputRef: React.MutableRefObject<InputElement | null>,
-  customEventType: string | undefined,
+  customInputEventType: string | undefined,
   customInputEventHandler: CustomInputEventHandler<D> | undefined
 ) {
   const dispatched = useRef(true);
 
   const dispatch = useCallback(
     (customEventDetail: D) => {
-      if (inputRef.current === null || !customEventType || !customInputEventHandler) return;
+      if (inputRef.current === null || !customInputEventType || !customInputEventHandler) return;
 
       const { value, selectionStart } = inputRef.current;
 
@@ -28,7 +28,7 @@ export default function useDispatchCustomInputEvent<D = any>(
         // на данных передаваемых `event.target`. Поэтому устанавливаем предыдущее значение
         setInputAttributes(inputRef, { value, selectionStart: selectionStart ?? value.length });
 
-        const customInputEvent = new CustomEvent(customEventType, {
+        const customInputEvent = new CustomEvent(customInputEventType, {
           bubbles: true,
           cancelable: false,
           composed: true,
@@ -38,8 +38,8 @@ export default function useDispatchCustomInputEvent<D = any>(
         inputRef.current.dispatchEvent(customInputEvent);
 
         customInputEventHandler(customInputEvent);
-        // Так как ранее мы меняли значения `input` элемента напрямую, важно убедиться, что значение
-        // атрибута `value` совпадает со значением `input` элемента
+        // Так как ранее мы меняли значения `input` элемента напрямую, важно убедиться,
+        // что значение атрибута `value` совпадает со значением `input` элемента
         const controlled = inputRef.current._wrapperState?.controlled;
         const attributeValue = inputRef.current.getAttribute('value');
 
@@ -53,7 +53,7 @@ export default function useDispatchCustomInputEvent<D = any>(
         dispatched.current = true;
       });
     },
-    [inputRef, customEventType, customInputEventHandler]
+    [inputRef, customInputEventType, customInputEventHandler]
   );
 
   return [dispatched, dispatch] as [typeof dispatched, typeof dispatch];

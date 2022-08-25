@@ -1,14 +1,13 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useRef, useCallback } from 'react';
 
 import SyntheticChangeError from './SyntheticChangeError';
 
-import getModifiedData from './utils/getModifiedData';
 import convertToReplacementObject from './utils/convertToReplacementObject';
+import getModifiedData from './utils/getModifiedData';
 import getReplaceableSymbolIndex from './utils/getReplaceableSymbolIndex';
 import getChangeData from './utils/getChangeData';
 import getMaskingData from './utils/getMaskingData';
 import getCaretPosition from './utils/getCaretPosition';
-import setInputAttributes from './utils/setInputAttributes';
 
 import useInput from './useInput';
 import useError from './useError';
@@ -27,8 +26,6 @@ export default function useMask({
   const replacement = convertToReplacementObject(replacementProps ?? {});
   const showMask = showMaskProps ?? false;
   const separate = separateProps ?? false;
-
-  const isFirstRender = useRef(true);
 
   const changeData = useRef<ChangeData | null>(null);
   const maskingData = useRef<MaskingData | null>(null);
@@ -89,6 +86,52 @@ export default function useMask({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /**
+   *
+   * Update
+   *
+   */
+
+  const update = useCallback(() => {
+    if (changeData.current === null) {
+      return undefined;
+    }
+
+    const modifiedData = getModifiedData({
+      unmaskedValue: changeData.current.unmaskedValue,
+      mask,
+      replacement,
+      showMask,
+      separate,
+      modify,
+    });
+
+    maskingData.current = getMaskingData({
+      unmaskedValue: modifiedData.unmaskedValue,
+      mask: modifiedData.mask,
+      replacement: modifiedData.replacement,
+      showMask: modifiedData.showMask,
+      separate: modifiedData.separate,
+    });
+
+    const curetPosition = getCaretPosition(changeData.current, maskingData.current);
+
+    const maskingEventDetail = {
+      unmaskedValue: modifiedData.unmaskedValue,
+      maskedValue: maskingData.current.maskedValue,
+      pattern: maskingData.current.pattern,
+      isValid: maskingData.current.isValid,
+    };
+
+    return {
+      value: maskingData.current.maskedValue,
+      selectionStart: curetPosition,
+      selectionEnd: curetPosition,
+      customInputEventDetail: maskingEventDetail,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mask, stringifiedReplacement, showMask, separate]);
 
   /**
    *
@@ -199,56 +242,16 @@ export default function useMask({
    *
    */
 
-  const { inputRef, dispatchCustomInputEvent } = useInput<MaskingEventDetail>({
-    customEventType: 'masking',
-    customInputEventHandler: onMasking,
+  const inputRef = useInput<MaskingEventDetail>({
     init,
+    update,
     tracking,
     fallback,
+    customInputEventType: 'masking',
+    customInputEventHandler: onMasking,
   });
 
   useError({ inputRef, mask, replacement });
-
-  // Позволяет маскировать значение не только при событии `change`, но и сразу после изменения `props`
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-
-    if (changeData.current === null) return;
-
-    const modifiedData = getModifiedData({
-      unmaskedValue: changeData.current.unmaskedValue,
-      mask,
-      replacement,
-      showMask,
-      separate,
-      modify,
-    });
-
-    maskingData.current = getMaskingData({
-      unmaskedValue: modifiedData.unmaskedValue,
-      mask: modifiedData.mask,
-      replacement: modifiedData.replacement,
-      showMask: modifiedData.showMask,
-      separate: modifiedData.separate,
-    });
-
-    setInputAttributes(inputRef, {
-      value: maskingData.current.maskedValue,
-      selectionStart: getCaretPosition(changeData.current, maskingData.current),
-    });
-
-    dispatchCustomInputEvent({
-      unmaskedValue: modifiedData.unmaskedValue,
-      maskedValue: maskingData.current.maskedValue,
-      pattern: maskingData.current.pattern,
-      isValid: maskingData.current.isValid,
-    });
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mask, stringifiedReplacement, showMask, separate]);
 
   return inputRef;
 }

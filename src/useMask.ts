@@ -12,7 +12,16 @@ import getCaretPosition from './utils/getCaretPosition';
 import useInput from './useInput';
 import useError from './useError';
 
-import type { MaskProps, ChangeData, MaskingData, MaskingEventDetail } from './types';
+import type {
+  Init,
+  Update,
+  Tracking,
+  Fallback,
+  MaskProps,
+  ChangeData,
+  MaskingData,
+  MaskingEventDetail,
+} from './types';
 
 export default function useMask({
   mask: maskProps,
@@ -41,7 +50,7 @@ export default function useMask({
    *
    */
 
-  const init = useCallback(({ initialValue, controlled }) => {
+  const init: Init = useCallback(({ initialValue, controlled }) => {
     // eslint-disable-next-line no-param-reassign
     initialValue = controlled ? initialValue : initialValue || (showMask ? mask : '');
 
@@ -93,7 +102,7 @@ export default function useMask({
    *
    */
 
-  const update = useCallback(() => {
+  const update: Update<MaskingEventDetail> = useCallback(() => {
     if (changeData.current === null) {
       return undefined;
     }
@@ -139,7 +148,7 @@ export default function useMask({
    *
    */
 
-  const tracking = useCallback(
+  const tracking: Tracking<MaskingEventDetail> = useCallback(
     ({ previousValue, inputType, added, selectionStart, selectionEnd }) => {
       if (changeData.current === null || maskingData.current === null) {
         throw new SyntheticChangeError('The state has not been initialized.');
@@ -216,7 +225,7 @@ export default function useMask({
    *
    */
 
-  const fallback = useCallback(({ previousValue, selectionStart }) => {
+  const fallback: Fallback = useCallback(({ previousValue, selectionStart }) => {
     const replaceableSymbolIndex =
       maskingData.current !== null
         ? getReplaceableSymbolIndex(previousValue, maskingData.current.replacement, selectionStart)

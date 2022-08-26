@@ -17,6 +17,49 @@ export type CustomInputEventHandler<D = any> = (event: CustomInputEvent<D>) => v
 
 export type InputType = 'insert' | 'deleteBackward' | 'deleteForward' | 'initial';
 
+interface MethodReturn {
+  value: string;
+  selectionStart: number;
+  selectionEnd: number;
+}
+
+interface InitParams {
+  initialValue: string;
+  controlled: boolean;
+}
+
+export type Init = ({ initialValue, controlled }: InitParams) => MethodReturn;
+
+export type Update<D> = () => (MethodReturn & { customInputEventDetail: D }) | undefined;
+
+interface TrackingParams {
+  previousValue: string;
+  inputType: InputType;
+  added: string;
+  selectionStart: number;
+  selectionEnd: number;
+}
+
+export type Tracking<D> = ({
+  previousValue,
+  inputType,
+  added,
+  selectionStart,
+  selectionEnd,
+}: TrackingParams) => MethodReturn & { customInputEventDetail: D };
+
+interface FallbackParams {
+  previousValue: string;
+  selectionStart: number;
+  selectionEnd: number;
+}
+
+export type Fallback = ({
+  previousValue,
+  selectionStart,
+  selectionEnd,
+}: FallbackParams) => MethodReturn;
+
 /**
  *
  * Mask types

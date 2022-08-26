@@ -6,33 +6,21 @@ import setInputAttributes from './utils/setInputAttributes';
 
 import useDispatchCustomInputEvent from './useDispatchCustomInputEvent';
 
-import type { InputElement, InputType, CustomInputEventHandler } from './types';
+import type {
+  InputElement,
+  InputType,
+  Init,
+  Update,
+  Tracking,
+  Fallback,
+  CustomInputEventHandler,
+} from './types';
 
 interface UseInputParams<D> {
-  init: ({ initialValue, controlled }: any) => {
-    value: string;
-    selectionStart: number;
-    selectionEnd: number;
-  };
-  update: () =>
-    | {
-        value: string;
-        selectionStart: number;
-        selectionEnd: number;
-        customInputEventDetail: D;
-      }
-    | undefined;
-  tracking: ({ previousValue, inputType, added, selectionStart, selectionEnd }: any) => {
-    value: string;
-    selectionStart: number;
-    selectionEnd: number;
-    customInputEventDetail: D;
-  };
-  fallback: ({ previousValue, selectionStart, selectionEnd }: any) => {
-    value: any;
-    selectionStart: any;
-    selectionEnd: any;
-  };
+  init: Init;
+  update: Update<D>;
+  tracking: Tracking<D>;
+  fallback: Fallback;
   customInputEventType?: string;
   customInputEventHandler?: CustomInputEventHandler<D>;
 }
@@ -70,7 +58,7 @@ export default function useInput<D = any>({
    */
 
   useEffect(() => {
-    if (inputRef.current === null) {
+    if (process.env.NODE_ENV !== 'production' && inputRef.current === null) {
       // eslint-disable-next-line no-console
       console.error(new Error('Input element does not exist.'));
     }

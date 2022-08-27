@@ -38,5 +38,6 @@ export default function getCaretPosition(changeData: ChangeData, maskingData: Ma
   }
 
   const replaceableSymbolIndex = getReplaceableSymbolIndex(maskedValue, replacement);
+
   return replaceableSymbolIndex !== -1 ? replaceableSymbolIndex : maskedValue.length;
 }

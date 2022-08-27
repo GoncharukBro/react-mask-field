@@ -39,7 +39,7 @@ export default function useMask({
   const changeData = useRef<ChangeData | null>(null);
   const maskingData = useRef<MaskingData | null>(null);
 
-  // Преобразовываем объект `replacement` в строку для сравнения с зависимостью в `useEffect`
+  // Преобразовываем объект `replacement` в строку для сравнения с зависимостью в `useCallback`
   const stringifiedReplacement = JSON.stringify(replacement, (key, value) => {
     return value instanceof RegExp ? value.toString() : value;
   });
@@ -50,7 +50,7 @@ export default function useMask({
    *
    */
 
-  const init: Init = useCallback(({ initialValue, controlled }) => {
+  const init: Init = useCallback(({ controlled, initialValue }) => {
     // eslint-disable-next-line no-param-reassign
     initialValue = controlled ? initialValue : initialValue || (showMask ? mask : '');
 
@@ -149,7 +149,7 @@ export default function useMask({
    */
 
   const tracking: Tracking<MaskingEventDetail> = useCallback(
-    ({ previousValue, inputType, added, selectionStart, selectionEnd }) => {
+    ({ inputType, added, previousValue, selectionStart, selectionEnd }) => {
       if (changeData.current === null || maskingData.current === null) {
         throw new SyntheticChangeError('The state has not been initialized.');
       }

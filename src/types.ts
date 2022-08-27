@@ -15,7 +15,7 @@ export interface CustomInputEvent<D = any> extends CustomEvent<D> {
 
 export type CustomInputEventHandler<D = any> = (event: CustomInputEvent<D>) => void;
 
-export type InputType = 'insert' | 'deleteBackward' | 'deleteForward' | 'initial';
+export type InputType = 'initial' | 'insert' | 'deleteBackward' | 'deleteForward';
 
 interface MethodReturn {
   value: string;
@@ -23,42 +23,23 @@ interface MethodReturn {
   selectionEnd: number;
 }
 
-interface InitParams {
-  initialValue: string;
-  controlled: boolean;
-}
-
-export type Init = ({ initialValue, controlled }: InitParams) => MethodReturn;
+export type Init = (params: { controlled: boolean; initialValue: string }) => MethodReturn;
 
 export type Update<D> = () => (MethodReturn & { customInputEventDetail: D }) | undefined;
 
-interface TrackingParams {
-  previousValue: string;
+export type Tracking<D> = (params: {
   inputType: InputType;
   added: string;
-  selectionStart: number;
-  selectionEnd: number;
-}
-
-export type Tracking<D> = ({
-  previousValue,
-  inputType,
-  added,
-  selectionStart,
-  selectionEnd,
-}: TrackingParams) => MethodReturn & { customInputEventDetail: D };
-
-interface FallbackParams {
   previousValue: string;
   selectionStart: number;
   selectionEnd: number;
-}
+}) => MethodReturn & { customInputEventDetail: D };
 
-export type Fallback = ({
-  previousValue,
-  selectionStart,
-  selectionEnd,
-}: FallbackParams) => MethodReturn;
+export type Fallback = (params: {
+  previousValue: string;
+  selectionStart: number;
+  selectionEnd: number;
+}) => MethodReturn;
 
 /**
  *

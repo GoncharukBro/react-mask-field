@@ -73,15 +73,16 @@ export default function useInput<D = any>({
   useLayoutEffect(() => {
     if (inputRef.current === null) return;
 
-    const { initialValue = '', controlled = false } = inputRef.current._wrapperState ?? {};
+    const { controlled = false, initialValue = '' } = inputRef.current._wrapperState ?? {};
 
-    const initResult = init({ initialValue, controlled });
+    const initResult = init({ controlled, initialValue });
 
     // Поскольку в предыдущем шаге мы изменяем инициализированное
     // значение, мы также должны изменить значение элемента
     setInputAttributes(inputRef, {
       value: initResult.value,
       selectionStart: initResult.selectionStart,
+      selectionEnd: initResult.selectionEnd,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -104,6 +105,7 @@ export default function useInput<D = any>({
       setInputAttributes(inputRef, {
         value: updateResult.value,
         selectionStart: updateResult.selectionStart,
+        selectionEnd: updateResult.selectionEnd,
       });
 
       dispatchCustomInputEvent(updateResult.customInputEventDetail);
@@ -127,52 +129,58 @@ export default function useInput<D = any>({
         // Если событие вызывается слишком часто, смена курсора может не поспеть за новым событием,
         // поэтому сравниваем `requestID` кэшированный и текущий для избежания некорректного поведения маски
         if (selection.current.cachedRequestID === selection.current.requestID) {
-          throw new SyntheticChangeError('The input caret has not been updated.');
+          throw new SyntheticChangeError('The input selection has not been updated.');
         }
 
         selection.current.cachedRequestID = selection.current.requestID;
 
         const previousValue = inputRef.current._valueTracker?.getValue?.() ?? '';
-        const currentValue = inputRef.current.value;
-        const currentCaretPosition = inputRef.current.selectionStart ?? 0;
+        const { value, selectionStart, selectionEnd } = inputRef.current;
+
+        if (selectionStart === null || selectionEnd === null) {
+          throw new SyntheticChangeError('The selection attributes have not been initialized.');
+        }
 
         let inputType: InputType = 'initial';
-        let added = '';
-        let selectionStart = selection.current.start;
-        let selectionEnd = selection.current.end;
 
         // Определяем тип ввода (ручное определение типа ввода способствует кроссбраузерности)
-        if (currentCaretPosition > selection.current.start) {
+        if (selectionStart > selection.current.start) {
           inputType = 'insert';
         } else if (
-          currentCaretPosition <= selection.current.start &&
-          currentCaretPosition < selection.current.end
+          selectionStart <= selection.current.start &&
+          selectionStart < selection.current.end
         ) {
           inputType = 'deleteBackward';
         } else if (
-          currentCaretPosition === selection.current.end &&
-          currentValue.length < previousValue.length
+          selectionStart === selection.current.end &&
+          value.length < previousValue.length
         ) {
           inputType = 'deleteForward';
         }
 
         if (
           (inputType === 'deleteBackward' || inputType === 'deleteForward') &&
-          currentValue.length > previousValue.length
+          value.length > previousValue.length
         ) {
           throw new SyntheticChangeError('Input type detection error.');
         }
 
+        let added = '';
+        let selectionRangeStart = selection.current.start;
+        let selectionRangeEnd = selection.current.end;
+
         switch (inputType) {
           case 'insert': {
-            added = currentValue.slice(selection.current.start, currentCaretPosition);
+            added = value.slice(selection.current.start, selectionStart);
             break;
           }
           case 'deleteBackward':
           case 'deleteForward': {
-            const countDeleted = previousValue.length - currentValue.length;
-            selectionStart = currentCaretPosition;
-            selectionEnd = currentCaretPosition + countDeleted;
+            // Для `delete` нам необходимо определить диапазон удаленных символов, так как
+            // при удалении без выделения позиция каретки "до" и "после" будут совпадать
+            const countDeleted = previousValue.length - value.length;
+            selectionRangeStart = selectionStart;
+            selectionRangeEnd = selectionStart + countDeleted;
             break;
           }
           default: {
@@ -181,20 +189,28 @@ export default function useInput<D = any>({
         }
 
         const trackingResult = tracking({
-          previousValue,
           inputType,
           added,
-          selectionStart,
-          selectionEnd,
+          previousValue,
+          selectionStart: selectionRangeStart,
+          selectionEnd: selectionRangeEnd,
         });
 
         setInputAttributes(inputRef, {
           value: trackingResult.value,
           selectionStart: trackingResult.selectionStart,
+          selectionEnd: trackingResult.selectionEnd,
         });
+
+        // TODO: до или после dispatchCustomInputEvent?
+        // Чтобы гарантировать правильное позиционирование каретки, обновляем
+        // значения `selection` перед последующим вызовом функции обработчика `input`
+        selection.current.start = trackingResult.selectionStart;
+        selection.current.end = trackingResult.selectionStart;
 
         dispatchCustomInputEvent(trackingResult.customInputEventDetail);
 
+        // TODO: после изменения значения в кастомном событии или в принципе после изменения значение? Может кастомное событие не влияет?
         // После изменения значения в кастомном событии событие `change` срабатывать не будет,
         // так как предыдущее и текущее состояние внутри `input` совпадают. Чтобы обойти эту
         // проблему с версии React 16, устанавливаем предыдущее состояние на отличное от текущего.
@@ -220,6 +236,7 @@ export default function useInput<D = any>({
         setInputAttributes(inputRef, {
           value: fallbackResult.value,
           selectionStart: fallbackResult.selectionStart,
+          selectionEnd: fallbackResult.selectionEnd,
         });
 
         event.preventDefault();

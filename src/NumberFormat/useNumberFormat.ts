@@ -49,21 +49,31 @@ export default function useNumberFormat(
    */
 
   const tracking: Tracking<any> = useCallback(
-    ({ inputType, added, previousValue, selectionStart, selectionEnd }) => {
-      // if (value === '') {
-      //   return {
-      //     value: '',
-      //     selectionStart: 0,
-      //     selectionEnd: 0,
-      //     customInputEventDetail: {},
-      //   };
-      // }
+    ({
+      inputType,
+      added,
+      deleted,
+      previousValue,
+      selectionRangeStart,
+      selectionRangeEnd,
+      value,
+      selectionStart,
+      selectionEnd,
+    }) => {
+      if (value === '') {
+        return {
+          value: '',
+          selectionStart: 0,
+          selectionEnd: 0,
+          customInputEventDetail: {},
+        };
+      }
 
       const { localeSeparator, localeSymbols, minimumFractionDigits, maximumFractionDigits } =
         getOptionValues(locales, options);
 
       if (maximumFractionDigits > 0 && added === localeSeparator) {
-        const [previousInteger, previousFraction] = previousValue.split(localeSeparator);
+        const [previousInteger = '', previousFraction = ''] = previousValue.split(localeSeparator);
         const [nextInteger, nextFraction = localeSymbols[0]] = new Intl.NumberFormat(
           locales,
           options
@@ -77,6 +87,18 @@ export default function useNumberFormat(
           value: previousFraction ? previousValue : integer + localeSeparator + nextFraction,
           selectionStart: integer.length + 1,
           selectionEnd: integer.length + 1,
+          customInputEventDetail: {},
+        };
+      }
+
+      if (deleted === localeSeparator) {
+        const caretPosition =
+          inputType === 'deleteForward' ? selectionRangeEnd : selectionRangeStart;
+
+        return {
+          value: previousValue,
+          selectionStart: caretPosition,
+          selectionEnd: caretPosition,
           customInputEventDetail: {},
         };
       }
@@ -99,8 +121,8 @@ export default function useNumberFormat(
         maximumFractionDigits,
         added,
         previousValue,
-        selectionStart,
-        selectionEnd,
+        selectionRangeStart,
+        selectionRangeEnd,
       });
 
       const caretPosition = getCaretPosition({
@@ -109,6 +131,8 @@ export default function useNumberFormat(
         inputType,
         previousValue,
         nextValue,
+        selectionRangeStart,
+        selectionRangeEnd,
         selectionStart,
         selectionEnd,
       });

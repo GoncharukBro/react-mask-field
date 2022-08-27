@@ -4,8 +4,8 @@ interface FilterParams {
   value: string;
   added: string;
   shiftIndex: number;
-  selectionStart: number;
-  selectionEnd: number;
+  selectionRangeStart: number;
+  selectionRangeEnd: number;
   fixed: boolean;
 }
 
@@ -14,12 +14,15 @@ const filter = ({
   value,
   added,
   shiftIndex,
-  selectionStart,
-  selectionEnd,
+  selectionRangeStart,
+  selectionRangeEnd,
   fixed,
 }: FilterParams) => {
-  const before = value.slice(0, selectionStart >= shiftIndex ? selectionStart - shiftIndex : 0);
-  let after = value.slice(selectionEnd >= shiftIndex ? selectionEnd - shiftIndex : 0);
+  const before = value.slice(
+    0,
+    selectionRangeStart >= shiftIndex ? selectionRangeStart - shiftIndex : 0
+  );
+  let after = value.slice(selectionRangeEnd >= shiftIndex ? selectionRangeEnd - shiftIndex : 0);
 
   if (fixed) {
     after = after.replace(/0+$/g, '');
@@ -37,8 +40,8 @@ interface MaskParams {
   maximumFractionDigits: number;
   added: string;
   previousValue: string;
-  selectionStart: number;
-  selectionEnd: number;
+  selectionRangeStart: number;
+  selectionRangeEnd: number;
 }
 
 export default function mask({
@@ -50,8 +53,8 @@ export default function mask({
   maximumFractionDigits,
   added,
   previousValue,
-  selectionStart,
-  selectionEnd,
+  selectionRangeStart,
+  selectionRangeEnd,
 }: MaskParams) {
   // eslint-disable-next-line prefer-const
   let [previousInteger = '', previousFraction = ''] = previousValue.split(localeSeparator);
@@ -61,14 +64,14 @@ export default function mask({
   previousInteger = convertToNumber(previousInteger, localeSymbols);
   previousFraction = convertToNumber(previousFraction, localeSymbols);
 
-  const change = selectionStart <= previousInteger.length ? 'integer' : 'fraction';
+  const change = selectionRangeStart <= previousInteger.length ? 'integer' : 'fraction';
 
   const nextInteger = filter({
     value: previousInteger,
     added: change === 'integer' ? added : '',
     shiftIndex: 0,
-    selectionStart,
-    selectionEnd,
+    selectionRangeStart,
+    selectionRangeEnd,
     fixed: false,
   });
 
@@ -76,15 +79,15 @@ export default function mask({
   // для замены значения, чтобы заменить "0" на вводимое значение
   const fixed =
     previousFraction.length === (minimumFractionDigits || 1) &&
-    selectionStart >= previousInteger.length + 1 &&
-    selectionEnd < previousInteger.length + 1 + (minimumFractionDigits || 1);
+    selectionRangeStart >= previousInteger.length + 1 &&
+    selectionRangeEnd < previousInteger.length + 1 + (minimumFractionDigits || 1);
 
   let nextFraction = filter({
     value: previousFraction,
     added: change === 'fraction' ? added : '',
     shiftIndex: previousInteger.length + 1,
-    selectionStart,
-    selectionEnd,
+    selectionRangeStart,
+    selectionRangeEnd,
     fixed,
   });
 

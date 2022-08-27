@@ -166,6 +166,7 @@ export default function useInput<D = any>({
         }
 
         let added = '';
+        let deleted = '';
         let selectionRangeStart = selection.current.start;
         let selectionRangeEnd = selection.current.end;
 
@@ -179,8 +180,11 @@ export default function useInput<D = any>({
             // Для `delete` нам необходимо определить диапазон удаленных символов, так как
             // при удалении без выделения позиция каретки "до" и "после" будут совпадать
             const countDeleted = previousValue.length - value.length;
+
             selectionRangeStart = selectionStart;
             selectionRangeEnd = selectionStart + countDeleted;
+
+            deleted = previousValue.slice(selectionRangeStart, selectionRangeEnd);
             break;
           }
           default: {
@@ -191,9 +195,13 @@ export default function useInput<D = any>({
         const trackingResult = tracking({
           inputType,
           added,
+          deleted,
           previousValue,
-          selectionStart: selectionRangeStart,
-          selectionEnd: selectionRangeEnd,
+          selectionRangeStart,
+          selectionRangeEnd,
+          value,
+          selectionStart,
+          selectionEnd,
         });
 
         setInputAttributes(inputRef, {

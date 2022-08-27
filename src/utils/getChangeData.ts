@@ -28,8 +28,8 @@ interface GetChangeDataParams {
   maskingData: MaskingData;
   inputType: InputType;
   added: string;
-  selectionStart: number;
-  selectionEnd: number;
+  selectionRangeStart: number;
+  selectionRangeEnd: number;
 }
 
 /**
@@ -38,17 +38,17 @@ interface GetChangeDataParams {
  * пользовательского ввода (при событии `insert`) или пустой строкой (при событии `delete`).
  * @param maskingData
  * @param inputType тип ввода
- * @param selectionStart
- * @param selectionEnd
  * @param added добавленные символы в строку (при событии `insert`)
+ * @param selectionRangeStart
+ * @param selectionRangeEnd
  * @returns объект содержащий информацию о пользовательском значении
  */
 export default function getChangeData({
   maskingData,
   inputType,
   added,
-  selectionStart,
-  selectionEnd,
+  selectionRangeStart,
+  selectionRangeEnd,
 }: GetChangeDataParams): ChangeData {
   const { ast, mask, replacement, separate } = maskingData;
 
@@ -59,8 +59,8 @@ export default function getChangeData({
   // Определяем символы до и после диапозона изменяемых символов
   ast.forEach(({ symbol, own }, index) => {
     if (separate ? own === 'change' || own === 'replacement' : own === 'change') {
-      if (index < selectionStart) beforeRange += symbol;
-      else if (index >= selectionEnd) afterRange += symbol;
+      if (index < selectionRangeStart) beforeRange += symbol;
+      else if (index >= selectionRangeEnd) afterRange += symbol;
     }
   });
 
@@ -96,7 +96,7 @@ export default function getChangeData({
   if (separate) {
     // Находим заменяемые символы в диапозоне изменяемых символов
     const separateSymbols = mask.split('').reduce((prev, symbol, index) => {
-      const isSelectionRange = index >= selectionStart && index < selectionEnd;
+      const isSelectionRange = index >= selectionRangeStart && index < selectionRangeEnd;
       const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
       return isSelectionRange && isReplacementKey ? prev + symbol : prev;
     }, '');

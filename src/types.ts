@@ -30,14 +30,12 @@ export type Update<D> = () => (MethodReturn & { customInputEventDetail: D }) | u
 export type Tracking<D> = (params: {
   inputType: InputType;
   added: string;
+  deleted: string;
   previousValue: string;
-  /**
-   * Начальная граница диапазона изменяемых символов
-   */
+  selectionRangeStart: number;
+  selectionRangeEnd: number;
+  value: string;
   selectionStart: number;
-  /**
-   * Конечная граница диапазона изменяемых символов
-   */
   selectionEnd: number;
 }) => MethodReturn & { customInputEventDetail: D };
 

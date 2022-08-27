@@ -31,12 +31,12 @@ const filter = ({
 interface MaskParams {
   locales: string | string[] | undefined;
   options: Intl.NumberFormatOptions | undefined;
-  localSeparator: string;
-  localSymbols: string;
+  localeSeparator: string;
+  localeSymbols: string;
   minimumFractionDigits: number;
   maximumFractionDigits: number;
-  previousValue: string;
   added: string;
+  previousValue: string;
   selectionStart: number;
   selectionEnd: number;
 }
@@ -44,20 +44,22 @@ interface MaskParams {
 export default function mask({
   locales,
   options,
-  localSeparator,
-  localSymbols,
+  localeSeparator,
+  localeSymbols,
   minimumFractionDigits,
   maximumFractionDigits,
-  previousValue,
   added,
+  previousValue,
   selectionStart,
   selectionEnd,
 }: MaskParams) {
   // eslint-disable-next-line prefer-const
-  let [previousInteger = '', previousFraction = ''] = previousValue.split(localSeparator);
+  let [previousInteger = '', previousFraction = ''] = previousValue.split(localeSeparator);
 
-  previousInteger = convertToNumber(previousInteger, localSymbols);
-  previousFraction = convertToNumber(previousFraction, localSymbols);
+  // eslint-disable-next-line no-param-reassign
+  added = convertToNumber(added, localeSymbols);
+  previousInteger = convertToNumber(previousInteger, localeSymbols);
+  previousFraction = convertToNumber(previousFraction, localeSymbols);
 
   const change = selectionStart <= previousInteger.length ? 'integer' : 'fraction';
 

@@ -1,59 +1,53 @@
 import convertToNumber from './convertToNumber';
 
-import SyntheticChangeError from '../../SyntheticChangeError';
-
 import type { InputType } from '../../types';
 
 interface GetCaretPositionParams {
-  currentCaretPosition: number;
+  localeSeparator: string;
+  localeSymbols: string;
+  inputType: InputType;
   previousValue: string;
   nextValue: string;
-  localSeparator: string;
-  localSymbols: string;
-  inputType: InputType;
   selectionStart: number;
   selectionEnd: number;
 }
 
 /**
  * Определяет позицию каретки для последующей установки
- * @param param0
+ * @param param
  * @returns
  */
 export default function getCaretPosition({
-  currentCaretPosition,
+  localeSeparator,
+  localeSymbols,
+  inputType,
   previousValue,
   nextValue,
-  localSeparator,
-  localSymbols,
-  inputType,
   selectionStart,
   selectionEnd,
 }: GetCaretPositionParams) {
   let nextCaretPosition = -1;
 
-  let [previousInteger] = previousValue.split(localSeparator);
-  let [nextInteger] = nextValue.split(localSeparator);
-
-  previousInteger = convertToNumber(previousInteger, localSymbols);
-  nextInteger = convertToNumber(nextInteger, localSymbols);
+  const [previousInteger] = convertToNumber(previousValue, localeSymbols).split(localeSeparator);
+  const [nextInteger] = convertToNumber(nextValue, localeSymbols).split(localeSeparator);
 
   const change = selectionStart <= previousInteger.length ? 'integer' : 'fraction';
 
+  // TODO: исправить позицию каретки
   if (change === 'fraction') {
-    return currentCaretPosition;
+    return 0;
   }
 
   // Считаем количество чисел после `selectionEnd`
   const countAfterSelectionEnd = previousInteger
     .slice(selectionEnd)
-    .replace(new RegExp(`[^\\d${localSeparator}]`, 'g'), '').length;
+    .replace(new RegExp(`[^\\d${localeSeparator}]`, 'g'), '').length;
 
   // Нахоим индекс символа для установки позиции каретки
   let count = 0;
 
   for (let i = nextInteger.length; i >= 0; i--) {
-    if (new RegExp(`[\\d${localSeparator}]`).test(nextInteger[i])) {
+    if (new RegExp(`[\\d${localeSeparator}]`).test(nextInteger[i])) {
       count += 1;
     }
     if (count === countAfterSelectionEnd) {
@@ -72,28 +66,7 @@ export default function getCaretPosition({
     }
   };
 
-  switch (inputType) {
-    case 'insert':
-    case 'deleteBackward': {
-      // Если предыдущее значение не является числом
-      shiftCaretPosition(-1);
-      break;
-    }
-    case 'deleteForward': {
-      if (
-        selectionStart === selectionEnd &&
-        (/\d/.test(previousInteger[selectionStart]) || selectionStart === previousInteger.length)
-      ) {
-        nextCaretPosition += 1;
-      }
-
-      // Если следующее значение не является числом
-      shiftCaretPosition(0);
-      break;
-    }
-    default:
-      throw new SyntheticChangeError('The input type is undefined.');
-  }
+  shiftCaretPosition(inputType === 'deleteForward' ? 0 : -1);
 
   if (nextCaretPosition < 0) {
     nextCaretPosition = 0;

@@ -1,245 +1,157 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useCallback } from 'react';
 
 import mask from './utils/mask';
-import convertToNumber from './utils/convertToNumber';
 import getOptionValues from './utils/getOptionValues';
 import getCaretPosition from './utils/getCaretPosition';
-import setInputAttributes from './utils/setInputAttributes';
-
-import useError from './useError';
 
 import SyntheticChangeError from '../SyntheticChangeError';
 
-import type { InputElement, InputType } from '../types';
+import useInput from '../useInput';
+
+import type { Init, Fallback, Tracking, Update } from '../types';
 
 export default function useNumberFormat(
   locales?: string | string[] | undefined,
   options?: Intl.NumberFormatOptions | undefined
 ) {
-  const inputRef = useRef<InputElement | null>(null);
+  // Преобразовываем объект `options` в строку для сравнения с зависимостью в `useCallback`
+  const stringifiedOptions = JSON.stringify(options);
 
-  const selection = useRef({
-    requestID: -1,
-    fallbackRequestID: -1,
-    cachedRequestID: -1,
-    start: 0,
-    end: 0,
-  });
+  /**
+   *
+   * Init
+   *
+   */
 
-  useError({ inputRef });
-
-  useLayoutEffect(() => {
-    if (inputRef.current === null) return;
-
-    const { initialValue = '' } = inputRef.current._wrapperState ?? {};
-    // Поскольку в предыдущем шаге мы изменяем инициализированное значение,
-    // мы также должны изменить значение элемента
-    setInputAttributes(inputRef, { value: initialValue, selectionStart: selection.current.start });
+  const init: Init = useCallback(({ initialValue }) => {
+    return {
+      value: initialValue,
+      selectionStart: initialValue.length,
+      selectionEnd: initialValue.length,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    const handleInput = (event: Event) => {
-      try {
-        if (inputRef.current === null) {
-          throw new SyntheticChangeError('Reference to input element is not initialized.');
-        }
+  /**
+   *
+   * Update
+   *
+   */
 
-        // Если событие вызывается слишком часто, смена курсора может не поспеть за новым событием,
-        // поэтому сравниваем `requestID` кэшированный и текущий для избежания некорректного поведения маски
-        if (selection.current.cachedRequestID === selection.current.requestID) {
-          throw new SyntheticChangeError('The input caret has not been updated.');
-        }
+  const update: Update<any> = useCallback(() => {
+    return undefined;
+  }, []);
 
-        selection.current.cachedRequestID = selection.current.requestID;
+  /**
+   *
+   * Tracking
+   *
+   */
 
-        const previousValue = inputRef.current._valueTracker?.getValue?.() ?? '';
-        const currentValue = inputRef.current.value;
-        const currentCaretPosition = inputRef.current.selectionStart ?? 0;
+  const tracking: Tracking<any> = useCallback(
+    ({ inputType, added, previousValue, selectionStart, selectionEnd }) => {
+      // if (value === '') {
+      //   return {
+      //     value: '',
+      //     selectionStart: 0,
+      //     selectionEnd: 0,
+      //     customInputEventDetail: {},
+      //   };
+      // }
 
-        let inputType: InputType = 'initial';
-        let added = '';
-        let selectionStart = selection.current.start;
-        let selectionEnd = selection.current.end;
+      const { localeSeparator, localeSymbols, minimumFractionDigits, maximumFractionDigits } =
+        getOptionValues(locales, options);
 
-        // Определяем тип ввода (ручное определение типа ввода способствует кроссбраузерности)
-        if (currentCaretPosition > selection.current.start) {
-          inputType = 'insert';
-        } else if (
-          currentCaretPosition <= selection.current.start &&
-          currentCaretPosition < selection.current.end
-        ) {
-          inputType = 'deleteBackward';
-        } else if (
-          currentCaretPosition === selection.current.end &&
-          currentValue.length < previousValue.length
-        ) {
-          inputType = 'deleteForward';
-        }
-
-        if (
-          (inputType === 'deleteBackward' || inputType === 'deleteForward') &&
-          currentValue.length > previousValue.length
-        ) {
-          throw new SyntheticChangeError('Input type detection error.');
-        }
-
-        switch (inputType) {
-          case 'insert': {
-            added = currentValue.slice(selection.current.start, currentCaretPosition);
-            break;
-          }
-          case 'deleteBackward':
-          case 'deleteForward': {
-            const countDeleted = previousValue.length - currentValue.length;
-            selectionStart = currentCaretPosition;
-            selectionEnd = currentCaretPosition + countDeleted;
-            break;
-          }
-          default: {
-            throw new SyntheticChangeError('The input type is undefined.');
-          }
-        }
-
-        if (currentValue === '') {
-          return;
-        }
-
-        const { localSeparator, localSymbols, minimumFractionDigits, maximumFractionDigits } =
-          getOptionValues(locales, options);
-
-        if (maximumFractionDigits > 0 && added === localSeparator) {
-          const [previousInteger, previousFraction] = previousValue.split(localSeparator);
-          const [nextInteger, nextFraction = localSymbols[0]] = new Intl.NumberFormat(
-            locales,
-            options
-          )
-            .format(0)
-            .split(localSeparator);
-
-          const integer = previousInteger || nextInteger;
-
-          setInputAttributes(inputRef, {
-            value: previousFraction ? previousValue : integer + localSeparator + nextFraction,
-            selectionStart: integer.length + 1,
-          });
-
-          return;
-        }
-
-        added = added.replace(new RegExp(`[^${localSymbols}\\d]`, 'g'), '');
-
-        if (inputType === 'insert' && !added) {
-          throw new SyntheticChangeError(
-            'The symbol does not match the value of the resolved symbols.'
-          );
-        }
-
-        added = convertToNumber(added, localSymbols);
-
-        const nextValue = mask({
+      if (maximumFractionDigits > 0 && added === localeSeparator) {
+        const [previousInteger, previousFraction] = previousValue.split(localeSeparator);
+        const [nextInteger, nextFraction = localeSymbols[0]] = new Intl.NumberFormat(
           locales,
-          options,
-          localSeparator,
-          localSymbols,
-          minimumFractionDigits,
-          maximumFractionDigits,
-          previousValue,
-          added,
-          selectionStart,
-          selectionEnd,
-        });
+          options
+        )
+          .format(0)
+          .split(localeSeparator);
 
-        const nextCaretPosition = getCaretPosition({
-          currentCaretPosition,
-          previousValue,
-          nextValue,
-          localSeparator,
-          localSymbols,
-          inputType,
-          selectionStart: selection.current.start,
-          selectionEnd: selection.current.end,
-        });
+        const integer = previousInteger || nextInteger;
 
-        setInputAttributes(inputRef, { value: nextValue, selectionStart: nextCaretPosition });
-
-        selection.current.start = nextCaretPosition;
-        selection.current.end = nextCaretPosition;
-      } catch (error) {
-        if (
-          process.env.NODE_ENV !== 'production' &&
-          (error as Error).name === 'SyntheticChangeError'
-        ) {
-          // eslint-disable-next-line no-console
-          console.error(error);
-        }
-        // Поскольку внутреннее состояние элемента `input`
-        // изменилось после ввода, его необходимо восстановить
-        if (inputRef.current !== null) {
-          const previousValue = inputRef.current._valueTracker?.getValue?.() ?? '';
-          setInputAttributes(inputRef, {
-            value: previousValue,
-            selectionStart: selection.current.start,
-          });
-        }
-
-        event.preventDefault();
-        event.stopPropagation();
-
-        if ((error as Error).name !== 'SyntheticChangeError') {
-          throw error;
-        }
+        return {
+          value: previousFraction ? previousValue : integer + localeSeparator + nextFraction,
+          selectionStart: integer.length + 1,
+          selectionEnd: integer.length + 1,
+          customInputEventDetail: {},
+        };
       }
-    };
 
-    const inputElement = inputRef.current;
-    inputElement?.addEventListener('input', handleInput);
+      // eslint-disable-next-line no-param-reassign
+      added = added.replace(new RegExp(`[^${localeSymbols}\\d]`, 'g'), '');
 
-    return () => {
-      inputElement?.removeEventListener('input', handleInput);
-    };
-  }, [locales, options]);
+      if (inputType === 'insert' && !added) {
+        throw new SyntheticChangeError(
+          'The symbol does not match the value of the resolved symbols.'
+        );
+      }
 
-  useEffect(() => {
-    const handleFocus = () => {
-      const setSelection = () => {
-        selection.current.start = inputRef.current?.selectionStart ?? 0;
-        selection.current.end = inputRef.current?.selectionEnd ?? 0;
+      const nextValue = mask({
+        locales,
+        options,
+        localeSeparator,
+        localeSymbols,
+        minimumFractionDigits,
+        maximumFractionDigits,
+        added,
+        previousValue,
+        selectionStart,
+        selectionEnd,
+      });
 
-        selection.current.requestID = requestAnimationFrame(setSelection);
+      const caretPosition = getCaretPosition({
+        localeSeparator,
+        localeSymbols,
+        inputType,
+        previousValue,
+        nextValue,
+        selectionStart,
+        selectionEnd,
+      });
+
+      return {
+        value: nextValue,
+        selectionStart: caretPosition,
+        selectionEnd: caretPosition,
+        customInputEventDetail: {},
       };
-      selection.current.requestID = requestAnimationFrame(setSelection);
-    };
-    // Событие `focus` не сработает, при рендере даже если включено свойство `autoFocus`,
-    // поэтому нам необходимо запустить определение позиции курсора вручную при автофокусе
-    if (inputRef.current !== null && document.activeElement === inputRef.current) {
-      handleFocus();
-    }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [locales, stringifiedOptions]
+  );
 
-    const inputElement = inputRef.current;
-    inputElement?.addEventListener('focus', handleFocus);
+  /**
+   *
+   * Fallback
+   *
+   */
 
-    return () => {
-      inputElement?.removeEventListener('focus', handleFocus);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleBlur = () => {
-      cancelAnimationFrame(selection.current.requestID);
-      cancelAnimationFrame(selection.current.fallbackRequestID);
-
-      selection.current.requestID = -1;
-      selection.current.fallbackRequestID = -1;
-      selection.current.cachedRequestID = -1;
-    };
-
-    const inputElement = inputRef.current;
-    inputElement?.addEventListener('blur', handleBlur);
-
-    return () => {
-      inputElement?.removeEventListener('blur', handleBlur);
+  const fallback: Fallback = useCallback(({ previousValue, selectionStart, selectionEnd }) => {
+    return {
+      value: previousValue,
+      selectionStart,
+      selectionEnd,
     };
   }, []);
+
+  /**
+   *
+   * Use input
+   *
+   */
+
+  const inputRef = useInput<any>({
+    init,
+    update,
+    tracking,
+    fallback,
+    customInputEventType: 'numberFormat',
+    customInputEventHandler: () => {},
+  });
 
   return inputRef;
 }

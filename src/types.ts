@@ -31,7 +31,13 @@ export type Tracking<D> = (params: {
   inputType: InputType;
   added: string;
   previousValue: string;
+  /**
+   * Начальная граница диапазона изменяемых символов
+   */
   selectionStart: number;
+  /**
+   * Конечная граница диапазона изменяемых символов
+   */
   selectionEnd: number;
 }) => MethodReturn & { customInputEventDetail: D };
 

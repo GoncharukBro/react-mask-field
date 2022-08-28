@@ -1,11 +1,8 @@
 import { useCallback, forwardRef } from 'react';
 
-import useNumberFormat from './useNumberFormat';
+import useMask from './useMask';
 
-interface A {
-  locales?: string | string[];
-  options: Intl.NumberFormatOptions;
-}
+import type { MaskProps } from './types';
 
 type Component<P = any> = React.ComponentClass<P> | React.FunctionComponent<P> | undefined;
 
@@ -15,33 +12,37 @@ type ComponentProps<C extends Component = undefined, P = any> = C extends React.
   ? Parameters<C>[0] | {}
   : {};
 
-interface PropsWithComponent<C extends Component<P> = undefined, P = any> extends A {
+interface PropsWithComponent<C extends Component<P> = undefined, P = any> extends MaskProps {
   component?: C;
 }
 
-export type NumberFormatProps<C extends Component = undefined, P = any> = PropsWithComponent<C, P> &
+export type InputMaskProps<C extends Component = undefined, P = any> = PropsWithComponent<C, P> &
   (C extends undefined ? React.InputHTMLAttributes<HTMLInputElement> : ComponentProps<C, P>);
 
-function NumberFormatComponent<C extends Component<P> = undefined, P = any>(
+function InputMaskComponent<C extends Component<P> = undefined, P = any>(
   props: PropsWithComponent<C, P> & ComponentProps<C, P>,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element;
 // eslint-disable-next-line no-redeclare
-function NumberFormatComponent(
+function InputMaskComponent(
   props: PropsWithComponent & React.InputHTMLAttributes<HTMLInputElement>,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element;
 // eslint-disable-next-line no-redeclare
-function NumberFormatComponent(
+function InputMaskComponent(
   {
     component: CustomComponent,
-    locales,
-    options,
+    mask,
+    replacement,
+    showMask,
+    separate,
+    modify,
+    onMasking,
     ...props
   }: PropsWithComponent<Component, any> & React.InputHTMLAttributes<HTMLInputElement>,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element {
-  const inputRef = useNumberFormat(locales, options);
+  const inputRef = useMask({ mask, replacement, showMask, separate, modify, onMasking });
 
   const setInputRef = useCallback(
     (ref: HTMLInputElement | null) => {
@@ -64,7 +65,7 @@ function NumberFormatComponent(
   return <input ref={setInputRef} {...props} />;
 }
 
-const NumberFormat = forwardRef(NumberFormatComponent) as {
+const InputMask = forwardRef(InputMaskComponent) as {
   <C extends Component<P> = undefined, P = any>(
     props: PropsWithComponent<C, P> & ComponentProps<C, P> & React.RefAttributes<HTMLInputElement>
   ): JSX.Element;
@@ -75,4 +76,4 @@ const NumberFormat = forwardRef(NumberFormatComponent) as {
   ): JSX.Element;
 };
 
-export default NumberFormat;
+export default InputMask;

@@ -2,17 +2,17 @@ import React, { useState } from 'react';
 
 import type { ComponentStory, Meta } from '@storybook/react';
 
-import MaskFieldComponent from '..';
+import InputMaskComponent from '..';
 
-import type { MaskFieldProps } from '..';
+import type { InputMaskProps } from '..';
 import type { ModifiedData, MaskingEventDetail } from '../types';
 
 export default {
-  title: 'Example',
-  component: MaskFieldComponent,
-} as Meta<MaskFieldProps>;
+  title: 'Mask',
+  component: InputMaskComponent,
+} as Meta<InputMaskProps>;
 
-export const СontrolledInputWithModifyPhone: ComponentStory<typeof MaskFieldComponent> = () => {
+export const СontrolledComponentWithModifyPhone: ComponentStory<typeof InputMaskComponent> = () => {
   const [detail, setDetail] = useState<MaskingEventDetail | null>(null);
 
   const modify = ({ unmaskedValue }: ModifiedData) => {
@@ -23,7 +23,7 @@ export const СontrolledInputWithModifyPhone: ComponentStory<typeof MaskFieldCom
 
   return (
     <>
-      <MaskFieldComponent
+      <InputMaskComponent
         mask="+_ (___) ___-__-__"
         replacement={{ _: /\d/ }}
         modify={modify}

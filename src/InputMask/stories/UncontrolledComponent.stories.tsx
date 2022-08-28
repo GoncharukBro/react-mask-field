@@ -2,26 +2,27 @@ import React, { useState } from 'react';
 
 import type { ComponentStory, Meta } from '@storybook/react';
 
-import MaskFieldComponent from '..';
+import InputMaskComponent from '..';
 
-import type { MaskFieldProps } from '..';
+import type { InputMaskProps } from '..';
 import type { MaskingEventDetail } from '../types';
 
 export default {
-  title: 'Example',
-  component: MaskFieldComponent,
-} as Meta<MaskFieldProps>;
+  title: 'Mask',
+  component: InputMaskComponent,
+} as Meta<InputMaskProps>;
 
-export const СontrolledComponent: ComponentStory<typeof MaskFieldComponent> = () => {
+export const UncontrolledComponent: ComponentStory<typeof InputMaskComponent> = () => {
   const [detail, setDetail] = useState<MaskingEventDetail | null>(null);
 
   return (
     <>
-      <MaskFieldComponent
+      <InputMaskComponent
         mask="+7 (___) ___-__-__"
         replacement={{ _: /\d/ }}
+        defaultValue="+7 (___) ___-__-__"
         onMasking={(event) => setDetail(event.detail)}
-        value={detail?.maskedValue}
+        autoFocus
       />
 
       <pre>{JSON.stringify(detail, null, 2)}</pre>

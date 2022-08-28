@@ -2,17 +2,17 @@ import React, { useState } from 'react';
 
 import type { ComponentStory, Meta } from '@storybook/react';
 
-import MaskFieldComponent from '..';
+import InputMaskComponent from '..';
 
 import useMask from '../useMask';
 
-import type { MaskFieldProps } from '..';
+import type { InputMaskProps } from '..';
 import type { MaskingEventDetail } from '../types';
 
 export default {
-  title: 'Example',
-  component: MaskFieldComponent,
-} as Meta<MaskFieldProps>;
+  title: 'Mask',
+  component: InputMaskComponent,
+} as Meta<InputMaskProps>;
 
 export const Hook: ComponentStory<any> = () => {
   const [detail, setDetail] = useState<MaskingEventDetail | null>(null);

@@ -1,7 +1,7 @@
-export { default as MaskField } from './Mask';
-export { default as useMask } from './Mask/useMask';
+export { default as InputMask } from './InputMask';
+export { default as useMask } from './InputMask/useMask';
 
-export type { MaskFieldProps } from './Mask';
+export type { InputMaskProps } from './InputMask';
 
 export type {
   MaskProps,
@@ -11,4 +11,4 @@ export type {
   MaskingEvent,
   MaskingEventDetail,
   MaskingEventHandler,
-} from './Mask/types';
+} from './InputMask/types';

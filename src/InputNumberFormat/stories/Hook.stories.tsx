@@ -5,10 +5,10 @@ import type { ComponentStory, Meta } from '@storybook/react';
 import useNumberFormat from '../useNumberFormat';
 
 export default {
-  title: 'Example',
+  title: 'Number Format',
 } as Meta;
 
-export const HookNumberFormat: ComponentStory<any> = () => {
+export const Hook: ComponentStory<any> = () => {
   const refDefault = useNumberFormat();
   const refIN = useNumberFormat('en-IN', { minimumIntegerDigits: 4 });
   const refRU = useNumberFormat('ru-RU', { maximumSignificantDigits: 6 });

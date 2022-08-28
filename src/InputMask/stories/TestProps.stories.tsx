@@ -2,17 +2,17 @@ import React, { useState } from 'react';
 
 import type { ComponentStory, Meta } from '@storybook/react';
 
-import MaskFieldComponent from '..';
+import InputMaskComponent from '..';
 
-import type { MaskFieldProps } from '..';
+import type { InputMaskProps } from '..';
 import type { MaskingEventDetail } from '../types';
 
 export default {
-  title: 'Example',
-  component: MaskFieldComponent,
-} as Meta<MaskFieldProps>;
+  title: 'Mask',
+  component: InputMaskComponent,
+} as Meta<InputMaskProps>;
 
-export const TestProps: ComponentStory<typeof MaskFieldComponent> = () => {
+export const TestProps: ComponentStory<typeof InputMaskComponent> = () => {
   const [detail, setDetail] = useState<MaskingEventDetail | null>(null);
   const [state, setState] = useState({
     mask: '+7 (___) ___-__-__',
@@ -25,7 +25,7 @@ export const TestProps: ComponentStory<typeof MaskFieldComponent> = () => {
 
   return (
     <>
-      <MaskFieldComponent
+      <InputMaskComponent
         mask={state.mask}
         replacement={state.replacement}
         showMask={state.showMask}

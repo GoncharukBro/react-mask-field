@@ -2,12 +2,12 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import MaskField from '.';
+import InputMask from '.';
 
 const options = { delay: 10 };
 
 async function init(value: string) {
-  render(<MaskField mask="+7 (___) ___-__-__" replacement="_" />);
+  render(<InputMask mask="+7 (___) ___-__-__" replacement="_" />);
   const input = screen.getByRole('textbox') as HTMLInputElement;
   await userEvent.type(input, value, options);
   return input;

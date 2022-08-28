@@ -1,6 +1,8 @@
-import { useCallback, forwardRef } from 'react';
+import { forwardRef } from 'react';
 
 import useNumberFormat from './useNumberFormat';
+
+import useSetInputRef from '../useSetInputRef';
 
 interface A {
   locales?: string | string[];
@@ -45,20 +47,7 @@ function InputNumberFormatComponent(
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element {
   const inputRef = useNumberFormat(locales, options);
-
-  const setInputRef = useCallback(
-    (ref: HTMLInputElement | null) => {
-      inputRef.current = ref;
-      // Добавляем ссылку на элемент для родительских компонентов
-      if (typeof forwardedRef === 'function') {
-        forwardedRef(ref);
-      } else if (typeof forwardedRef === 'object' && forwardedRef !== null) {
-        // eslint-disable-next-line no-param-reassign
-        forwardedRef.current = ref;
-      }
-    },
-    [forwardedRef, inputRef]
-  );
+  const setInputRef = useSetInputRef(inputRef, forwardedRef);
 
   if (CustomComponent) {
     return <CustomComponent ref={setInputRef} {...props} />;

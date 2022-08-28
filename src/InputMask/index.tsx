@@ -1,8 +1,10 @@
-import { useCallback, forwardRef } from 'react';
+import { forwardRef } from 'react';
 
 import useMask from './useMask';
 
 import type { MaskProps } from './types';
+
+import useSetInputRef from '../useSetInputRef';
 
 type Component<P = any> = React.ComponentClass<P> | React.FunctionComponent<P> | undefined;
 
@@ -43,20 +45,7 @@ function InputMaskComponent(
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element {
   const inputRef = useMask({ mask, replacement, showMask, separate, modify, onMasking });
-
-  const setInputRef = useCallback(
-    (ref: HTMLInputElement | null) => {
-      inputRef.current = ref;
-      // Добавляем ссылку на элемент для родительских компонентов
-      if (typeof forwardedRef === 'function') {
-        forwardedRef(ref);
-      } else if (typeof forwardedRef === 'object' && forwardedRef !== null) {
-        // eslint-disable-next-line no-param-reassign
-        forwardedRef.current = ref;
-      }
-    },
-    [forwardedRef, inputRef]
-  );
+  const setInputRef = useSetInputRef(inputRef, forwardedRef);
 
   if (CustomComponent) {
     return <CustomComponent ref={setInputRef} {...props} />;

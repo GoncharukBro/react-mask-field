@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import type { ComponentStory, Meta } from '@storybook/react';
 
-import useNumberFormat from '../NumberFormat/useNumberFormat';
+import useNumberFormat from '../useNumberFormat';
 
 export default {
   title: 'Example',

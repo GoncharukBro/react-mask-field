@@ -1,4 +1,4 @@
-import convertToReplacementObject from '../utils/convertToReplacementObject';
+import convertToReplacementObject from './convertToReplacementObject';
 
 import type { Modify, Replacement } from '../types';
 

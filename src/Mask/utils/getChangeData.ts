@@ -1,4 +1,6 @@
-import type { Replacement, InputType, ChangeData, MaskingData } from '../types';
+import type { Replacement, ChangeData, MaskingData } from '../types';
+
+import type { InputType } from '../../types';
 
 interface FilterSymbolsParams {
   value: string;

@@ -2,16 +2,17 @@ import React, { useState, forwardRef } from 'react';
 
 import type { ComponentStory, Meta } from '@storybook/react';
 
-import { MaskField as MaskFieldComponent } from '..';
+import MaskFieldComponent from '..';
 
-import type { MaskFieldProps, MaskingEventDetail } from '..';
+import type { MaskFieldProps } from '..';
+import type { MaskingEventDetail } from '../types';
 
 export default {
   title: 'Example',
   component: MaskFieldComponent,
 } as Meta<MaskFieldProps>;
 
-const CustomComponentOuterState = forwardRef(
+const CustomComponent = forwardRef(
   (
     { label, value }: { label?: string; value: string },
     ref: React.ForwardedRef<HTMLInputElement>
@@ -25,15 +26,13 @@ const CustomComponentOuterState = forwardRef(
   }
 );
 
-export const MaskFieldWithCustomComponentOuterState: ComponentStory<
-  typeof MaskFieldComponent
-> = () => {
+export const CustomComponentWithOuterState: ComponentStory<typeof MaskFieldComponent> = () => {
   const [detail, setDetail] = useState<MaskingEventDetail | null>(null);
 
   return (
     <>
       <MaskFieldComponent
-        component={CustomComponentOuterState}
+        component={CustomComponent}
         label="Мой лейбел"
         mask="+7 (___) ___-__-__"
         replacement={{ _: /\d/ }}

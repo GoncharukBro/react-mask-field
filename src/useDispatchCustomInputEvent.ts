@@ -1,6 +1,6 @@
 import { useRef, useCallback } from 'react';
 
-import setInputAttributes from './utils/setInputAttributes';
+import setInputAttributes from './setInputAttributes';
 
 import type { InputElement, CustomInputEvent, CustomInputEventHandler } from './types';
 

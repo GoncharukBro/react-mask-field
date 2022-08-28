@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 
-import type { InputElement, Replacement } from './types';
+import type { Replacement } from './types';
+
+import type { InputElement } from '../types';
 
 interface UseErrorParams {
   inputRef: React.MutableRefObject<InputElement | null>;

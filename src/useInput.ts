@@ -2,7 +2,7 @@ import { useLayoutEffect, useEffect, useRef } from 'react';
 
 import SyntheticChangeError from './SyntheticChangeError';
 
-import setInputAttributes from './utils/setInputAttributes';
+import setInputAttributes from './setInputAttributes';
 
 import useDispatchCustomInputEvent from './useDispatchCustomInputEvent';
 

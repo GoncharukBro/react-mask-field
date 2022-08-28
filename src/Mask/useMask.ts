@@ -1,7 +1,5 @@
 import { useRef, useCallback } from 'react';
 
-import SyntheticChangeError from './SyntheticChangeError';
-
 import convertToReplacementObject from './utils/convertToReplacementObject';
 import getModifiedData from './utils/getModifiedData';
 import getReplaceableSymbolIndex from './utils/getReplaceableSymbolIndex';
@@ -9,19 +7,15 @@ import getChangeData from './utils/getChangeData';
 import getMaskingData from './utils/getMaskingData';
 import getCaretPosition from './utils/getCaretPosition';
 
-import useInput from './useInput';
 import useError from './useError';
 
-import type {
-  Init,
-  Update,
-  Tracking,
-  Fallback,
-  MaskProps,
-  ChangeData,
-  MaskingData,
-  MaskingEventDetail,
-} from './types';
+import type { MaskProps, ChangeData, MaskingData, MaskingEventDetail } from './types';
+
+import SyntheticChangeError from '../SyntheticChangeError';
+
+import useInput from '../useInput';
+
+import type { Init, Update, Tracking, Fallback } from '../types';
 
 export default function useMask({
   mask: maskProps,

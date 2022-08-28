@@ -2,7 +2,7 @@ import React, { useState, forwardRef } from 'react';
 
 import type { ComponentStory, Meta } from '@storybook/react';
 
-import { MaskField as MaskFieldComponent } from '..';
+import MaskFieldComponent from '..';
 
 import type { MaskFieldProps } from '..';
 
@@ -11,7 +11,7 @@ export default {
   component: MaskFieldComponent,
 } as Meta<MaskFieldProps>;
 
-const CustomComponentInnerState = forwardRef(
+const CustomComponent = forwardRef(
   ({ label }: { label?: string }, ref: React.ForwardedRef<HTMLInputElement>) => {
     const [value, setValue] = useState('');
 
@@ -29,13 +29,11 @@ const CustomComponentInnerState = forwardRef(
   }
 );
 
-export const MaskFieldWithCustomComponentInnerState: ComponentStory<
-  typeof MaskFieldComponent
-> = () => {
+export const CustomComponentWithInnerState: ComponentStory<typeof MaskFieldComponent> = () => {
   return (
     <>
       <MaskFieldComponent
-        component={CustomComponentInnerState}
+        component={CustomComponent}
         label="Мой лейбел"
         mask="+7 (___) ___-__-__"
         replacement={{ _: /\d/ }}

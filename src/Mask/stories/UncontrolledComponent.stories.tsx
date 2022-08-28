@@ -2,16 +2,17 @@ import React, { useState } from 'react';
 
 import type { ComponentStory, Meta } from '@storybook/react';
 
-import { MaskField as MaskFieldComponent } from '..';
+import MaskFieldComponent from '..';
 
-import type { MaskFieldProps, MaskingEventDetail } from '..';
+import type { MaskFieldProps } from '..';
+import type { MaskingEventDetail } from '../types';
 
 export default {
   title: 'Example',
   component: MaskFieldComponent,
 } as Meta<MaskFieldProps>;
 
-export const UncontrolledMaskField: ComponentStory<typeof MaskFieldComponent> = () => {
+export const UncontrolledComponent: ComponentStory<typeof MaskFieldComponent> = () => {
   const [detail, setDetail] = useState<MaskingEventDetail | null>(null);
 
   return (

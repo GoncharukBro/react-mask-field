@@ -38,7 +38,7 @@ export default function useNumberFormat(
    *
    */
 
-  const update: Update<any> = useCallback(() => {
+  const update: Update = useCallback(() => {
     return undefined;
   }, []);
 
@@ -48,7 +48,7 @@ export default function useNumberFormat(
    *
    */
 
-  const tracking: Tracking<any> = useCallback(
+  const tracking: Tracking = useCallback(
     ({
       inputType,
       added,
@@ -61,12 +61,7 @@ export default function useNumberFormat(
       selectionEnd,
     }) => {
       if (value === '') {
-        return {
-          value: '',
-          selectionStart: 0,
-          selectionEnd: 0,
-          customInputEventDetail: {},
-        };
+        return { value: '', selectionStart: 0, selectionEnd: 0 };
       }
 
       const { localeSeparator, localeSymbols, minimumFractionDigits, maximumFractionDigits } =
@@ -87,7 +82,6 @@ export default function useNumberFormat(
           value: previousFraction ? previousValue : integer + localeSeparator + nextFraction,
           selectionStart: integer.length + 1,
           selectionEnd: integer.length + 1,
-          customInputEventDetail: {},
         };
       }
 
@@ -99,7 +93,6 @@ export default function useNumberFormat(
           value: previousValue,
           selectionStart: caretPosition,
           selectionEnd: caretPosition,
-          customInputEventDetail: {},
         };
       }
 
@@ -141,7 +134,6 @@ export default function useNumberFormat(
         value: nextValue,
         selectionStart: caretPosition,
         selectionEnd: caretPosition,
-        customInputEventDetail: {},
       };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -108,7 +108,9 @@ export default function useInput<D = any>({
         selectionEnd: updateResult.selectionEnd,
       });
 
-      dispatchCustomInputEvent(updateResult.customInputEventDetail);
+      if (updateResult.customInputEventDetail !== undefined) {
+        dispatchCustomInputEvent(updateResult.customInputEventDetail);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [update]);
@@ -216,7 +218,9 @@ export default function useInput<D = any>({
         selection.current.start = trackingResult.selectionStart;
         selection.current.end = trackingResult.selectionStart;
 
-        dispatchCustomInputEvent(trackingResult.customInputEventDetail);
+        if (trackingResult.customInputEventDetail !== undefined) {
+          dispatchCustomInputEvent(trackingResult.customInputEventDetail);
+        }
 
         // TODO: после изменения значения в кастомном событии или в принципе после изменения значение? Может кастомное событие не влияет?
         // После изменения значения в кастомном событии событие `change` срабатывать не будет,

@@ -23,11 +23,15 @@ interface MethodReturn {
   selectionEnd: number;
 }
 
+interface CustomInputEventDetail<D> {
+  customInputEventDetail?: D;
+}
+
 export type Init = (params: { controlled: boolean; initialValue: string }) => MethodReturn;
 
-export type Update<D> = () => (MethodReturn & { customInputEventDetail: D }) | undefined;
+export type Update<D = any> = () => (MethodReturn & CustomInputEventDetail<D>) | undefined;
 
-export type Tracking<D> = (params: {
+export type Tracking<D = any> = (params: {
   inputType: InputType;
   added: string;
   deleted: string;
@@ -37,7 +41,7 @@ export type Tracking<D> = (params: {
   value: string;
   selectionStart: number;
   selectionEnd: number;
-}) => MethodReturn & { customInputEventDetail: D };
+}) => MethodReturn & CustomInputEventDetail<D>;
 
 export type Fallback = (params: {
   previousValue: string;

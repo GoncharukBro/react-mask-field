@@ -44,7 +44,7 @@ interface MaskParams {
   selectionRangeEnd: number;
 }
 
-export default function mask({
+export default function getFormattedValue({
   locales,
   options,
   localeSeparator,

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import mask from './utils/mask';
+import getFormattedValue from './utils/getFormattedValue';
 import getOptionValues from './utils/getOptionValues';
 import getCaretPosition from './utils/getCaretPosition';
 
@@ -105,7 +105,7 @@ export default function useNumberFormat(
         );
       }
 
-      const nextValue = mask({
+      const nextValue = getFormattedValue({
         locales,
         options,
         localeSeparator,

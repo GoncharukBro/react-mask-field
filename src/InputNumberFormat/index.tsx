@@ -2,69 +2,53 @@ import { forwardRef } from 'react';
 
 import useNumberFormat from './useNumberFormat';
 
+import type { NumberFormatProps } from './types';
+
 import useSetInputRef from '../useSetInputRef';
 
-interface A {
-  locales?: string | string[];
-  options: Intl.NumberFormatOptions;
-}
+import type {
+  ForwardedComponent,
+  ForwardedComponentProps,
+  PropsWithComponent,
+  BaseComponent,
+  BaseComponentProps,
+} from '../types';
 
-type Component<P = any> = React.ComponentClass<P> | React.FunctionComponent<P> | undefined;
+export type InputNumberFormatProps<
+  C extends ForwardedComponent = undefined,
+  P = any
+> = BaseComponentProps<NumberFormatProps, C, P>;
 
-type ComponentProps<C extends Component = undefined, P = any> = C extends React.ComponentClass<P>
-  ? ConstructorParameters<C>[0] | {}
-  : C extends React.FunctionComponent<P>
-  ? Parameters<C>[0] | {}
-  : {};
-
-interface PropsWithComponent<C extends Component<P> = undefined, P = any> extends A {
-  component?: C;
-}
-
-export type InputNumberFormatProps<C extends Component = undefined, P = any> = PropsWithComponent<
-  C,
-  P
-> &
-  (C extends undefined ? React.InputHTMLAttributes<HTMLInputElement> : ComponentProps<C, P>);
-
-function InputNumberFormatComponent<C extends Component<P> = undefined, P = any>(
-  props: PropsWithComponent<C, P> & ComponentProps<C, P>,
+function BaseInputNumberFormat<C extends ForwardedComponent<P> = undefined, P = any>(
+  props: PropsWithComponent<NumberFormatProps, C, P> & ForwardedComponentProps<C, P>,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element;
 // eslint-disable-next-line no-redeclare
-function InputNumberFormatComponent(
-  props: PropsWithComponent & React.InputHTMLAttributes<HTMLInputElement>,
+function BaseInputNumberFormat(
+  props: PropsWithComponent<NumberFormatProps> & React.InputHTMLAttributes<HTMLInputElement>,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element;
 // eslint-disable-next-line no-redeclare
-function InputNumberFormatComponent(
+function BaseInputNumberFormat(
   {
-    component: CustomComponent,
+    component: Component,
     locales,
     options,
     ...props
-  }: PropsWithComponent<Component, any> & React.InputHTMLAttributes<HTMLInputElement>,
+  }: PropsWithComponent<NumberFormatProps, ForwardedComponent> &
+    React.InputHTMLAttributes<HTMLInputElement>,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element {
   const inputRef = useNumberFormat(locales, options);
   const setInputRef = useSetInputRef(inputRef, forwardedRef);
 
-  if (CustomComponent) {
-    return <CustomComponent ref={setInputRef} {...props} />;
+  if (Component) {
+    return <Component ref={setInputRef} {...props} />;
   }
 
   return <input ref={setInputRef} {...props} />;
 }
 
-const InputNumberFormat = forwardRef(InputNumberFormatComponent) as {
-  <C extends Component<P> = undefined, P = any>(
-    props: PropsWithComponent<C, P> & ComponentProps<C, P> & React.RefAttributes<HTMLInputElement>
-  ): JSX.Element;
-  (
-    props: PropsWithComponent &
-      React.InputHTMLAttributes<HTMLInputElement> &
-      React.RefAttributes<HTMLInputElement>
-  ): JSX.Element;
-};
+const InputNumberFormat = forwardRef(BaseInputNumberFormat) as BaseComponent<NumberFormatProps>;
 
 export default InputNumberFormat;

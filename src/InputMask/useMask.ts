@@ -143,7 +143,7 @@ export default function useMask({
    */
 
   const tracking: Tracking<MaskingEventDetail> = useCallback(
-    ({ inputType, added, previousValue, selectionRangeStart, selectionRangeEnd }) => {
+    ({ inputType, added, previousValue, selectionStartRange, selectionEndRange }) => {
       if (changeData.current === null || maskingData.current === null) {
         throw new SyntheticChangeError('The state has not been initialized.');
       }
@@ -166,8 +166,8 @@ export default function useMask({
         maskingData: maskingData.current,
         inputType,
         added,
-        selectionRangeStart,
-        selectionRangeEnd,
+        selectionStartRange,
+        selectionEndRange,
       });
 
       if (inputType === 'insert' && changeData.current.added === '') {

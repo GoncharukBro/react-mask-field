@@ -21,6 +21,6 @@ export interface FormatData {
 }
 
 export interface LocalizedValues {
-  separator: string;
+  decimal: string;
   symbols: string;
 }

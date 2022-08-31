@@ -30,8 +30,8 @@ interface GetChangeDataParams {
   maskingData: MaskingData;
   inputType: InputType;
   added: string;
-  selectionRangeStart: number;
-  selectionRangeEnd: number;
+  selectionStartRange: number;
+  selectionEndRange: number;
 }
 
 /**
@@ -41,16 +41,16 @@ interface GetChangeDataParams {
  * @param maskingData
  * @param inputType тип ввода
  * @param added добавленные символы в строку (при событии `insert`)
- * @param selectionRangeStart
- * @param selectionRangeEnd
+ * @param selectionStartRange
+ * @param selectionEndRange
  * @returns объект содержащий информацию о пользовательском значении
  */
 export default function getChangeData({
   maskingData,
   inputType,
   added,
-  selectionRangeStart,
-  selectionRangeEnd,
+  selectionStartRange,
+  selectionEndRange,
 }: GetChangeDataParams): ChangeData {
   const { ast, mask, replacement, separate } = maskingData;
 
@@ -61,8 +61,8 @@ export default function getChangeData({
   // Определяем символы до и после диапозона изменяемых символов
   ast.forEach(({ symbol, own }, index) => {
     if (separate ? own === 'change' || own === 'replacement' : own === 'change') {
-      if (index < selectionRangeStart) beforeRange += symbol;
-      else if (index >= selectionRangeEnd) afterRange += symbol;
+      if (index < selectionStartRange) beforeRange += symbol;
+      else if (index >= selectionEndRange) afterRange += symbol;
     }
   });
 
@@ -98,7 +98,7 @@ export default function getChangeData({
   if (separate) {
     // Находим заменяемые символы в диапозоне изменяемых символов
     const separateSymbols = mask.split('').reduce((prev, symbol, index) => {
-      const isSelectionRange = index >= selectionRangeStart && index < selectionRangeEnd;
+      const isSelectionRange = index >= selectionStartRange && index < selectionEndRange;
       const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
       return isSelectionRange && isReplacementKey ? prev + symbol : prev;
     }, '');

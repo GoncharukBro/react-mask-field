@@ -59,8 +59,8 @@ export default function useNumberFormat(
       added,
       deleted,
       previousValue,
-      selectionRangeStart,
-      selectionRangeEnd,
+      selectionStartRange,
+      selectionEndRange,
       value,
       selectionStart,
       selectionEnd,
@@ -72,31 +72,31 @@ export default function useNumberFormat(
       const localizedValues = getLocalizedValues(locales);
       const resolvedOptions = new Intl.NumberFormat(locales, options).resolvedOptions();
 
-      if (resolvedOptions.maximumFractionDigits > 0 && added === localizedValues.separator) {
+      if (resolvedOptions.maximumFractionDigits > 0 && added === localizedValues.decimal) {
         const [previousInteger = '', previousFraction = ''] = previousValue.split(
-          localizedValues.separator
+          localizedValues.decimal
         );
         const [nextInteger, nextFraction = localizedValues.symbols[0]] = new Intl.NumberFormat(
           locales,
           options
         )
           .format(0)
-          .split(localizedValues.separator);
+          .split(localizedValues.decimal);
 
         const integer = previousInteger || nextInteger;
 
         return {
           value: previousFraction
             ? previousValue
-            : integer + localizedValues.separator + nextFraction,
+            : integer + localizedValues.decimal + nextFraction,
           selectionStart: integer.length + 1,
           selectionEnd: integer.length + 1,
         };
       }
 
-      if (deleted === localizedValues.separator) {
+      if (deleted === localizedValues.decimal) {
         const caretPosition =
-          inputType === 'deleteForward' ? selectionRangeEnd : selectionRangeStart;
+          inputType === 'deleteForward' ? selectionEndRange : selectionStartRange;
 
         return {
           value: previousValue,
@@ -121,8 +121,8 @@ export default function useNumberFormat(
         resolvedOptions,
         added,
         previousValue,
-        selectionRangeStart,
-        selectionRangeEnd,
+        selectionStartRange,
+        selectionEndRange,
       });
 
       const caretPosition = getCaretPosition({
@@ -130,8 +130,8 @@ export default function useNumberFormat(
         inputType,
         previousValue,
         nextValue: formatData.current.value,
-        selectionRangeStart,
-        selectionRangeEnd,
+        selectionStartRange,
+        selectionEndRange,
         selectionStart,
         selectionEnd,
       });

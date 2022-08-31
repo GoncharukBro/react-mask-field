@@ -1,3 +1,5 @@
+import SyntheticChangeError from '../../SyntheticChangeError';
+
 /**
  * Возвращает применяемые значения по заданной локали
  * @param locales
@@ -5,7 +7,13 @@
  */
 export default function getLocalizedValues(locales: string | string[] | undefined) {
   // Получаем разделитель в заданной локали
-  const separator = new Intl.NumberFormat(locales).format(1.1)[1];
+  const decimal = new Intl.NumberFormat(locales)
+    .formatToParts(1.1)
+    .find(({ type }) => type === 'decimal')?.value;
+
+  if (decimal === undefined) {
+    throw new SyntheticChangeError('The decimal separator is not defined.');
+  }
 
   // Получаем все цыфры в заданной локали (возможны варианты
   // с китайской десятичной системой и арабскими цифрами)
@@ -13,5 +21,5 @@ export default function getLocalizedValues(locales: string | string[] | undefine
 
   symbols = symbols[9] + symbols.slice(0, -1);
 
-  return { separator, symbols };
+  return { decimal, symbols };
 }

@@ -183,8 +183,8 @@ export default function useInput<D = any>({
 
         let added = '';
         let deleted = '';
-        let selectionRangeStart = selection.current.start;
-        let selectionRangeEnd = selection.current.end;
+        let selectionStartRange = selection.current.start;
+        let selectionEndRange = selection.current.end;
 
         switch (inputType) {
           case 'insert': {
@@ -197,10 +197,10 @@ export default function useInput<D = any>({
             // при удалении без выделения позиция каретки "до" и "после" будут совпадать
             const countDeleted = previousValue.length - value.length;
 
-            selectionRangeStart = selectionStart;
-            selectionRangeEnd = selectionStart + countDeleted;
+            selectionStartRange = selectionStart;
+            selectionEndRange = selectionStart + countDeleted;
 
-            deleted = previousValue.slice(selectionRangeStart, selectionRangeEnd);
+            deleted = previousValue.slice(selectionStartRange, selectionEndRange);
             break;
           }
           default: {
@@ -213,8 +213,8 @@ export default function useInput<D = any>({
           added,
           deleted,
           previousValue,
-          selectionRangeStart,
-          selectionRangeEnd,
+          selectionStartRange,
+          selectionEndRange,
           value,
           selectionStart,
           selectionEnd,

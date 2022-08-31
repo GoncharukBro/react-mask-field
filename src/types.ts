@@ -80,8 +80,8 @@ export type Tracking<D = any> = (params: {
   added: string;
   deleted: string;
   previousValue: string;
-  selectionRangeStart: number;
-  selectionRangeEnd: number;
+  selectionStartRange: number;
+  selectionEndRange: number;
   value: string;
   selectionStart: number;
   selectionEnd: number;

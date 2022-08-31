@@ -6,8 +6,8 @@ interface FilterParams {
   value: string;
   added: string;
   shiftIndex: number;
-  selectionRangeStart: number;
-  selectionRangeEnd: number;
+  selectionStartRange: number;
+  selectionEndRange: number;
   fixed: boolean;
 }
 
@@ -16,15 +16,15 @@ const filter = ({
   value,
   added,
   shiftIndex,
-  selectionRangeStart,
-  selectionRangeEnd,
+  selectionStartRange,
+  selectionEndRange,
   fixed,
 }: FilterParams) => {
   const before = value.slice(
     0,
-    selectionRangeStart >= shiftIndex ? selectionRangeStart - shiftIndex : 0
+    selectionStartRange >= shiftIndex ? selectionStartRange - shiftIndex : 0
   );
-  let after = value.slice(selectionRangeEnd >= shiftIndex ? selectionRangeEnd - shiftIndex : 0);
+  let after = value.slice(selectionEndRange >= shiftIndex ? selectionEndRange - shiftIndex : 0);
 
   if (fixed) {
     after = after.replace(/0+$/g, '');
@@ -40,8 +40,8 @@ interface MaskParams {
   resolvedOptions: Intl.ResolvedNumberFormatOptions;
   added: string;
   previousValue: string;
-  selectionRangeStart: number;
-  selectionRangeEnd: number;
+  selectionStartRange: number;
+  selectionEndRange: number;
 }
 
 export default function getFormattedValue({
@@ -51,27 +51,25 @@ export default function getFormattedValue({
   resolvedOptions,
   added,
   previousValue,
-  selectionRangeStart,
-  selectionRangeEnd,
+  selectionStartRange,
+  selectionEndRange,
 }: MaskParams) {
   // eslint-disable-next-line prefer-const
-  let [previousInteger = '', previousFraction = ''] = previousValue.split(
-    localizedValues.separator
-  );
+  let [previousInteger = '', previousFraction = ''] = previousValue.split(localizedValues.decimal);
 
   // eslint-disable-next-line no-param-reassign
   added = convertToNumber(added, localizedValues.symbols);
   previousInteger = convertToNumber(previousInteger, localizedValues.symbols);
   previousFraction = convertToNumber(previousFraction, localizedValues.symbols);
 
-  const change = selectionRangeStart <= previousInteger.length ? 'integer' : 'fraction';
+  const changedPartType = selectionStartRange <= previousInteger.length ? 'integer' : 'fraction';
 
   const nextInteger = filter({
     value: previousInteger,
-    added: change === 'integer' ? added : '',
+    added: changedPartType === 'integer' ? added : '',
     shiftIndex: 0,
-    selectionRangeStart,
-    selectionRangeEnd,
+    selectionStartRange,
+    selectionEndRange,
     fixed: false,
   });
 
@@ -79,15 +77,15 @@ export default function getFormattedValue({
   // для замены значения, чтобы заменить "0" на вводимое значение
   const fixed =
     previousFraction.length === (resolvedOptions.minimumFractionDigits || 1) &&
-    selectionRangeStart >= previousInteger.length + 1 &&
-    selectionRangeEnd < previousInteger.length + 1 + (resolvedOptions.minimumFractionDigits || 1);
+    selectionStartRange >= previousInteger.length + 1 &&
+    selectionEndRange < previousInteger.length + 1 + (resolvedOptions.minimumFractionDigits || 1);
 
   let nextFraction = filter({
     value: previousFraction,
-    added: change === 'fraction' ? added : '',
+    added: changedPartType === 'fraction' ? added : '',
     shiftIndex: previousInteger.length + 1,
-    selectionRangeStart,
-    selectionRangeEnd,
+    selectionStartRange,
+    selectionEndRange,
     fixed,
   });
 

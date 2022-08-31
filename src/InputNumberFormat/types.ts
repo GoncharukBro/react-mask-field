@@ -19,3 +19,8 @@ export interface FormatData {
   value: string;
   numericValue: number;
 }
+
+export interface LocalizedValues {
+  separator: string;
+  symbols: string;
+}

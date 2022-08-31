@@ -1,5 +1,7 @@
 import convertToNumber from './convertToNumber';
 
+import type { LocalizedValues } from '../types';
+
 interface FilterParams {
   value: string;
   added: string;
@@ -34,10 +36,8 @@ const filter = ({
 interface MaskParams {
   locales: string | string[] | undefined;
   options: Intl.NumberFormatOptions | undefined;
-  localeSeparator: string;
-  localeSymbols: string;
-  minimumFractionDigits: number;
-  maximumFractionDigits: number;
+  localizedValues: LocalizedValues;
+  resolvedOptions: Intl.ResolvedNumberFormatOptions;
   added: string;
   previousValue: string;
   selectionRangeStart: number;
@@ -47,22 +47,22 @@ interface MaskParams {
 export default function getFormattedValue({
   locales,
   options,
-  localeSeparator,
-  localeSymbols,
-  minimumFractionDigits,
-  maximumFractionDigits,
+  localizedValues,
+  resolvedOptions,
   added,
   previousValue,
   selectionRangeStart,
   selectionRangeEnd,
 }: MaskParams) {
   // eslint-disable-next-line prefer-const
-  let [previousInteger = '', previousFraction = ''] = previousValue.split(localeSeparator);
+  let [previousInteger = '', previousFraction = ''] = previousValue.split(
+    localizedValues.separator
+  );
 
   // eslint-disable-next-line no-param-reassign
-  added = convertToNumber(added, localeSymbols);
-  previousInteger = convertToNumber(previousInteger, localeSymbols);
-  previousFraction = convertToNumber(previousFraction, localeSymbols);
+  added = convertToNumber(added, localizedValues.symbols);
+  previousInteger = convertToNumber(previousInteger, localizedValues.symbols);
+  previousFraction = convertToNumber(previousFraction, localizedValues.symbols);
 
   const change = selectionRangeStart <= previousInteger.length ? 'integer' : 'fraction';
 
@@ -78,9 +78,9 @@ export default function getFormattedValue({
   // Если изменения происходят в дробной части, очищаем дробную часть
   // для замены значения, чтобы заменить "0" на вводимое значение
   const fixed =
-    previousFraction.length === (minimumFractionDigits || 1) &&
+    previousFraction.length === (resolvedOptions.minimumFractionDigits || 1) &&
     selectionRangeStart >= previousInteger.length + 1 &&
-    selectionRangeEnd < previousInteger.length + 1 + (minimumFractionDigits || 1);
+    selectionRangeEnd < previousInteger.length + 1 + (resolvedOptions.minimumFractionDigits || 1);
 
   let nextFraction = filter({
     value: previousFraction,
@@ -94,7 +94,7 @@ export default function getFormattedValue({
   // Поскольку состояние ввода хранит последний введенный символ,
   // при форматировании может произойти округление, поэтому нам важно
   // заранее обрезать символ не соответствующий максимальному количеству символов
-  nextFraction = nextFraction.slice(0, maximumFractionDigits);
+  nextFraction = nextFraction.slice(0, resolvedOptions.maximumFractionDigits);
 
   if (!nextInteger && Number(nextFraction) === 0) {
     return { value: '', numericValue: 0 };
@@ -106,7 +106,7 @@ export default function getFormattedValue({
     ...options,
     // Чтобы иметь возможность прописывать "0" устанавливаем значение в длину `nextFraction`
     minimumFractionDigits:
-      nextFraction.length > minimumFractionDigits
+      nextFraction.length > resolvedOptions.minimumFractionDigits
         ? nextFraction.length
         : options?.minimumFractionDigits,
   }).format(numericValue);

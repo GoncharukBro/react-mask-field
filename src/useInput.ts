@@ -16,6 +16,10 @@ import type {
   CustomInputEventHandler,
 } from './types';
 
+const validInputType = (inputRef: React.MutableRefObject<InputElement | null>) => {
+  return inputRef.current !== null && inputRef.current.type === 'text';
+};
+
 interface UseInputParams<D> {
   init: Init;
   update: Update<D>;
@@ -57,10 +61,16 @@ export default function useInput<D = any>({
    *
    */
 
-  useEffect(() => {
-    if (process.env.NODE_ENV !== 'production' && inputRef.current === null) {
+  useLayoutEffect(() => {
+    if (process.env.NODE_ENV === 'production') return;
+
+    if (inputRef.current === null) {
       // eslint-disable-next-line no-console
       console.error(new Error('Input element does not exist.'));
+    }
+    if (!validInputType(inputRef)) {
+      // eslint-disable-next-line no-console
+      console.error(new Error('The type of the input element does not match the type "text".'));
     }
   }, []);
 
@@ -71,7 +81,7 @@ export default function useInput<D = any>({
    */
 
   useLayoutEffect(() => {
-    if (inputRef.current === null) return;
+    if (inputRef.current === null || !validInputType(inputRef)) return;
 
     const { controlled = false, initialValue = '' } = inputRef.current._wrapperState ?? {};
 
@@ -94,6 +104,8 @@ export default function useInput<D = any>({
    */
 
   useEffect(() => {
+    if (!validInputType(inputRef)) return;
+
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
@@ -123,6 +135,8 @@ export default function useInput<D = any>({
 
   useEffect(() => {
     const handleInput = (event: Event) => {
+      if (!validInputType(inputRef)) return;
+
       try {
         if (inputRef.current === null) {
           throw new SyntheticChangeError('Reference to input element is not initialized.');
@@ -276,6 +290,8 @@ export default function useInput<D = any>({
 
   useEffect(() => {
     const handleFocus = () => {
+      if (!validInputType(inputRef)) return;
+
       const setSelection = () => {
         // Позиция курсора изменяется после завершения события `change` и к срабатыванию кастомного
         // события позиция курсора может быть некорректной, что может повлеч за собой ошибки
@@ -314,6 +330,8 @@ export default function useInput<D = any>({
 
   useEffect(() => {
     const handleBlur = () => {
+      if (!validInputType(inputRef)) return;
+
       cancelAnimationFrame(selection.current.requestID);
       cancelAnimationFrame(selection.current.fallbackRequestID);
 

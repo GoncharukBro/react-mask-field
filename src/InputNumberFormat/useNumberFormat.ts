@@ -160,14 +160,7 @@ export default function useNumberFormat(
    *
    */
 
-  const inputRef = useInput<any>({
-    init,
-    update,
-    tracking,
-    fallback,
-    customInputEventType: 'numberFormat',
-    customInputEventHandler: () => {},
-  });
+  const inputRef = useInput({ init, update, tracking, fallback });
 
   return inputRef;
 }

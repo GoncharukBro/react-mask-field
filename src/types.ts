@@ -9,12 +9,6 @@ export interface InputElement extends HTMLInputElement {
   };
 }
 
-/**
- *
- * A
- *
- */
-
 export type ForwardedComponent<P = any> =
   | React.ComponentClass<P>
   | React.FunctionComponent<P>
@@ -58,12 +52,6 @@ export type BaseComponentProps<
   (C extends undefined
     ? React.InputHTMLAttributes<HTMLInputElement>
     : ForwardedComponentProps<C, P>);
-
-/**
- *
- * A
- *
- */
 
 export interface CustomInputEvent<D = any> extends CustomEvent<D> {
   target: EventTarget & HTMLInputElement;

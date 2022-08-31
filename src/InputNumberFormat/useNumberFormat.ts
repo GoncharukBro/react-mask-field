@@ -4,7 +4,7 @@ import getFormatData from './utils/getFormatData';
 import getOptionValues from './utils/getOptionValues';
 import getCaretPosition from './utils/getCaretPosition';
 
-import type { FormatData } from './types';
+import type { FormatData, FormatEventDetail, FormatEventHandler } from './types';
 
 import SyntheticChangeError from '../SyntheticChangeError';
 
@@ -14,7 +14,8 @@ import type { Init, Fallback, Tracking, Update } from '../types';
 
 export default function useNumberFormat(
   locales?: string | string[] | undefined,
-  options?: Intl.NumberFormatOptions | undefined
+  options?: Intl.NumberFormatOptions | undefined,
+  onFormat?: FormatEventHandler
 ) {
   const formatData = useRef<FormatData | null>(null);
 
@@ -42,7 +43,7 @@ export default function useNumberFormat(
    *
    */
 
-  const update: Update = useCallback(() => {
+  const update: Update<FormatEventDetail> = useCallback(() => {
     return undefined;
   }, []);
 
@@ -52,7 +53,7 @@ export default function useNumberFormat(
    *
    */
 
-  const tracking: Tracking = useCallback(
+  const tracking: Tracking<FormatEventDetail> = useCallback(
     ({
       inputType,
       added,
@@ -138,6 +139,7 @@ export default function useNumberFormat(
         value: formatData.current.value,
         selectionStart: caretPosition,
         selectionEnd: caretPosition,
+        customInputEventDetail: formatData.current,
       };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -164,7 +166,14 @@ export default function useNumberFormat(
    *
    */
 
-  const inputRef = useInput({ init, update, tracking, fallback });
+  const inputRef = useInput<FormatEventDetail>({
+    init,
+    update,
+    tracking,
+    fallback,
+    customInputEventType: 'format',
+    customInputEventHandler: onFormat,
+  });
 
   return inputRef;
 }

@@ -34,12 +34,13 @@ function BaseInputNumberFormat(
     component: Component,
     locales,
     options,
+    onFormat,
     ...props
   }: PropsWithComponent<NumberFormatProps, ForwardedComponent> &
     React.InputHTMLAttributes<HTMLInputElement>,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element {
-  const inputRef = useNumberFormat(locales, options);
+  const inputRef = useNumberFormat(locales, options, onFormat);
   const setInputRef = useSetInputRef(inputRef, forwardedRef);
 
   if (Component) {

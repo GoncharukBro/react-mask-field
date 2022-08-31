@@ -1,4 +1,4 @@
-import type { InputType, CustomInputEvent } from '../types';
+import type { InputType, CustomInputEvent, CustomInputEventHandler } from '../types';
 
 export interface MaskingEventDetail {
   unmaskedValue: string;
@@ -9,7 +9,7 @@ export interface MaskingEventDetail {
 
 export type MaskingEvent = CustomInputEvent<MaskingEventDetail>;
 
-export type MaskingEventHandler = (event: MaskingEvent) => void;
+export type MaskingEventHandler = CustomInputEventHandler<MaskingEventDetail>;
 
 export interface Replacement {
   [key: string]: RegExp;

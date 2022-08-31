@@ -12,8 +12,8 @@ export default function getCaretPosition(changeData: ChangeData, maskingData: Ma
   const { added, beforeRange, afterRange, inputType } = changeData;
   const { maskedValue, ast, replacement, separate } = maskingData;
 
-  const unmaskedSymbols = ast.filter(({ own }) => {
-    return separate ? own === 'change' || own === 'replacement' : own === 'change';
+  const unmaskedSymbols = ast.filter(({ type }) => {
+    return separate ? type === 'change' || type === 'replacement' : type === 'change';
   });
 
   const getSymbolIndex = (index: number | false) => {

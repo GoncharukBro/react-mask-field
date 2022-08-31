@@ -6,13 +6,13 @@ import type { Replacement, MaskingData } from '../types';
 function generateAST(maskedValue: string, mask: string, replacement: Replacement) {
   return maskedValue.split('').map((symbol, index) => {
     const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
-    const own = isReplacementKey
+    const type = isReplacementKey
       ? ('replacement' as const)
       : symbol === mask[index]
       ? ('mask' as const)
       : ('change' as const);
 
-    return { symbol, index, own };
+    return { type, value: symbol, index };
   });
 }
 
@@ -81,10 +81,10 @@ export default function getMaskingData({
   if (initialValue === undefined && !showMask) {
     // Если пользователь не ввел ниодного символа, присваиваем пустую строку,
     // в противном случае, обрезаем значение по последний пользовательский символ
-    if (ast.find(({ own }) => own === 'change') === undefined) {
+    if (ast.find(({ type }) => type === 'change') === undefined) {
       maskedValue = '';
     } else {
-      const lastChangedSymbol = [...ast].reverse().find(({ own }) => own === 'change');
+      const lastChangedSymbol = [...ast].reverse().find(({ type }) => type === 'change');
       const to = lastChangedSymbol !== undefined ? lastChangedSymbol.index + 1 : 0;
       maskedValue = maskedValue.slice(0, to);
     }

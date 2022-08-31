@@ -35,14 +35,14 @@ export interface MaskProps {
 }
 
 export type AST = {
-  symbol: string;
-  index: number;
   /**
    * - `replacement` - заменяемый символ маски
    * - `mask` - незаменяемый символ маски
    * - `change` - символ введенный пользователем
    */
-  own: 'replacement' | 'mask' | 'change';
+  type: 'replacement' | 'mask' | 'change';
+  value: string;
+  index: number;
 }[];
 
 export interface ChangeData {

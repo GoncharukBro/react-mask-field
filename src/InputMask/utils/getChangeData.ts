@@ -59,10 +59,10 @@ export default function getChangeData({
   let afterRange = '';
 
   // Определяем символы до и после диапозона изменяемых символов
-  ast.forEach(({ symbol, own }, index) => {
-    if (separate ? own === 'change' || own === 'replacement' : own === 'change') {
-      if (index < selectionStartRange) beforeRange += symbol;
-      else if (index >= selectionEndRange) afterRange += symbol;
+  ast.forEach(({ type, value }, index) => {
+    if (separate ? type === 'change' || type === 'replacement' : type === 'change') {
+      if (index < selectionStartRange) beforeRange += value;
+      else if (index >= selectionEndRange) afterRange += value;
     }
   });
 

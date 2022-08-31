@@ -97,12 +97,12 @@ export default function getFormattedValue({
   nextFraction = nextFraction.slice(0, maximumFractionDigits);
 
   if (!nextInteger && Number(nextFraction) === 0) {
-    return '';
+    return { value: '', numericValue: 0 };
   }
 
   const numericValue = Math.abs(Number(`${nextInteger}.${nextFraction}`));
 
-  return new Intl.NumberFormat(locales, {
+  const value = new Intl.NumberFormat(locales, {
     ...options,
     // Чтобы иметь возможность прописывать "0" устанавливаем значение в длину `nextFraction`
     minimumFractionDigits:
@@ -110,4 +110,6 @@ export default function getFormattedValue({
         ? nextFraction.length
         : options?.minimumFractionDigits,
   }).format(numericValue);
+
+  return { value, numericValue };
 }

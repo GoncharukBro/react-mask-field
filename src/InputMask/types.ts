@@ -15,9 +15,33 @@ export interface Replacement {
   [key: string]: RegExp;
 }
 
+export interface ModifiedData {
+  unmaskedValue: string;
+  mask: string;
+  replacement: Replacement;
+  showMask: boolean;
+  separate: boolean;
+}
+
+export type Modify = (modifiedData: ModifiedData) => Partial<ModifiedData> | undefined;
+
+export interface MaskProps {
+  mask?: string;
+  replacement?: string | Replacement;
+  showMask?: boolean;
+  separate?: boolean;
+  modify?: Modify;
+  onMasking?: MaskingEventHandler;
+}
+
 export type AST = {
   symbol: string;
   index: number;
+  /**
+   * - `replacement` - заменяемый символ маски
+   * - `mask` - незаменяемый символ маски
+   * - `change` - символ введенный пользователем
+   */
   own: 'replacement' | 'mask' | 'change';
 }[];
 
@@ -38,23 +62,4 @@ export interface MaskingData {
   showMask: boolean;
   separate: boolean;
   pattern: string;
-}
-
-export interface ModifiedData {
-  unmaskedValue: string;
-  mask: string;
-  replacement: Replacement;
-  showMask: boolean;
-  separate: boolean;
-}
-
-export type Modify = (modifiedData: ModifiedData) => Partial<ModifiedData> | undefined;
-
-export interface MaskProps {
-  mask?: string;
-  replacement?: string | Replacement;
-  showMask?: boolean;
-  separate?: boolean;
-  modify?: Modify;
-  onMasking?: MaskingEventHandler;
 }

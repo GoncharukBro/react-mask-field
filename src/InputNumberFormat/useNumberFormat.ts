@@ -1,8 +1,10 @@
-import { useCallback } from 'react';
+import { useRef, useCallback } from 'react';
 
-import getFormattedValue from './utils/getFormattedValue';
+import getFormatData from './utils/getFormatData';
 import getOptionValues from './utils/getOptionValues';
 import getCaretPosition from './utils/getCaretPosition';
+
+import type { FormatData } from './types';
 
 import SyntheticChangeError from '../SyntheticChangeError';
 
@@ -14,6 +16,8 @@ export default function useNumberFormat(
   locales?: string | string[] | undefined,
   options?: Intl.NumberFormatOptions | undefined
 ) {
+  const formatData = useRef<FormatData | null>(null);
+
   // Преобразовываем объект `options` в строку для сравнения с зависимостью в `useCallback`
   const stringifiedOptions = JSON.stringify(options);
 
@@ -105,7 +109,7 @@ export default function useNumberFormat(
         );
       }
 
-      const nextValue = getFormattedValue({
+      formatData.current = getFormatData({
         locales,
         options,
         localeSeparator,
@@ -123,7 +127,7 @@ export default function useNumberFormat(
         localeSymbols,
         inputType,
         previousValue,
-        nextValue,
+        nextValue: formatData.current.value,
         selectionRangeStart,
         selectionRangeEnd,
         selectionStart,
@@ -131,7 +135,7 @@ export default function useNumberFormat(
       });
 
       return {
-        value: nextValue,
+        value: formatData.current.value,
         selectionStart: caretPosition,
         selectionEnd: caretPosition,
       };

@@ -1,6 +1,10 @@
 import convertToNumber from './convertToNumber';
 
-import type { LocalizedValues, ResolvedValues } from '../types';
+import type {
+  NumberFormatOptions,
+  NumberFormatLocalizedValues,
+  NumberFormatResolvedValues,
+} from '../types';
 
 interface FilterParams {
   value: string;
@@ -36,9 +40,9 @@ const filter = ({
 
 interface MaskParams {
   locales: string | string[] | undefined;
-  options: Intl.NumberFormatOptions | undefined;
-  localizedValues: LocalizedValues;
-  resolvedValues: ResolvedValues;
+  options: NumberFormatOptions | undefined;
+  localizedValues: NumberFormatLocalizedValues;
+  resolvedValues: NumberFormatResolvedValues;
   added: string;
   previousValue: string;
   selectionStartRange: number;

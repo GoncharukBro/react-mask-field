@@ -1,3 +1,5 @@
+import type { NumberFormatOptions } from '../types';
+
 const getFractionLength = (parts: Intl.NumberFormatPart[]) => {
   const fraction = parts.reduce((prev, { type, value }) => {
     return type === 'fraction' ? prev + value : prev;
@@ -16,7 +18,7 @@ const getFractionLength = (parts: Intl.NumberFormatPart[]) => {
 export default function getResolvedValues(
   value: number,
   locales: string | string[] | undefined,
-  options: Intl.NumberFormatOptions | undefined
+  options: NumberFormatOptions | undefined
 ) {
   const resolvedOptions = new Intl.NumberFormat(locales, options).resolvedOptions();
 
@@ -40,5 +42,8 @@ export default function getResolvedValues(
   return {
     minimumFractionDigits: getFractionLength(partsForMinimum),
     maximumFractionDigits: getFractionLength(partsForMaximum),
+    minimumIntegerDigits: resolvedOptions.minimumIntegerDigits,
+    maximumIntegerDigits:
+      resolvedOptions.maximumSignificantDigits ?? options?.maximumIntegerDigits ?? 21,
   };
 }

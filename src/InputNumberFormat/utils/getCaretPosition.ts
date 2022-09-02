@@ -1,11 +1,11 @@
 import convertToNumber from './convertToNumber';
 
-import type { LocalizedValues } from '../types';
+import type { NumberFormatLocalizedValues } from '../types';
 
 import type { InputType } from '../../types';
 
 interface GetCaretPositionParams {
-  localizedValues: LocalizedValues;
+  localizedValues: NumberFormatLocalizedValues;
   inputType: InputType;
   previousValue: string;
   nextValue: string;

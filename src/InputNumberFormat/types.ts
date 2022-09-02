@@ -9,23 +9,28 @@ export type FormatEvent = CustomInputEvent<FormatEventDetail>;
 
 export type FormatEventHandler = CustomInputEventHandler<FormatEventDetail>;
 
+export interface NumberFormatOptions extends Intl.NumberFormatOptions {
+  maximumIntegerDigits?: number;
+}
+
+export interface NumberFormatLocalizedValues {
+  decimal: string;
+  symbols: string;
+}
+
+export interface NumberFormatResolvedValues {
+  minimumFractionDigits: number;
+  maximumFractionDigits: number;
+  maximumIntegerDigits: number;
+}
+
 export interface NumberFormatProps {
   locales?: string | string[];
-  options?: Intl.NumberFormatOptions;
+  options?: NumberFormatOptions;
   onFormat?: FormatEventHandler;
 }
 
 export interface FormatData {
   value: string;
   numericValue: number;
-}
-
-export interface LocalizedValues {
-  decimal: string;
-  symbols: string;
-}
-
-export interface ResolvedValues {
-  minimumFractionDigits: number;
-  maximumFractionDigits: number;
 }

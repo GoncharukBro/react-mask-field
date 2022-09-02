@@ -1,10 +1,11 @@
 import { useRef, useCallback } from 'react';
 
-import getFormatData from './utils/getFormatData';
 import getLocalizedValues from './utils/getLocalizedValues';
+import getResolvedValues from './utils/getResolvedValues';
+import getFormatData from './utils/getFormatData';
 import getCaretPosition from './utils/getCaretPosition';
 
-import type { FormatData, FormatEventDetail, FormatEventHandler } from './types';
+import type { NumberFormatProps, FormatData, FormatEventDetail } from './types';
 
 import SyntheticChangeError from '../SyntheticChangeError';
 
@@ -12,11 +13,7 @@ import useInput from '../useInput';
 
 import type { Init, Fallback, Tracking, Update } from '../types';
 
-export default function useNumberFormat(
-  locales?: string | string[] | undefined,
-  options?: Intl.NumberFormatOptions | undefined,
-  onFormat?: FormatEventHandler
-) {
+export default function useNumberFormat({ locales, options, onFormat }: NumberFormatProps) {
   const formatData = useRef<FormatData | null>(null);
 
   // Преобразовываем объект `options` в строку для сравнения с зависимостью в `useCallback`
@@ -65,14 +62,18 @@ export default function useNumberFormat(
       selectionStart,
       selectionEnd,
     }) => {
+      if (formatData.current === null) {
+        throw new SyntheticChangeError('The state has not been initialized.');
+      }
+
       if (value === '') {
         return { value: '', selectionStart: 0, selectionEnd: 0 };
       }
 
       const localizedValues = getLocalizedValues(locales);
-      const resolvedOptions = new Intl.NumberFormat(locales, options).resolvedOptions();
+      const resolvedValues = getResolvedValues(formatData.current.numericValue, locales, options);
 
-      if (resolvedOptions.maximumFractionDigits > 0 && added === localizedValues.decimal) {
+      if (added === localizedValues.decimal && resolvedValues.maximumFractionDigits > 0) {
         const [previousInteger = '', previousFraction = ''] = previousValue.split(
           localizedValues.decimal
         );
@@ -118,7 +119,7 @@ export default function useNumberFormat(
         locales,
         options,
         localizedValues,
-        resolvedOptions,
+        resolvedValues,
         added,
         previousValue,
         selectionStartRange,

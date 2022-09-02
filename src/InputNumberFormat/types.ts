@@ -24,3 +24,8 @@ export interface LocalizedValues {
   decimal: string;
   symbols: string;
 }
+
+export interface ResolvedValues {
+  minimumFractionDigits: number;
+  maximumFractionDigits: number;
+}

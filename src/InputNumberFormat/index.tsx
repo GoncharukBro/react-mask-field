@@ -40,7 +40,7 @@ function BaseInputNumberFormat(
     React.InputHTMLAttributes<HTMLInputElement>,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element {
-  const inputRef = useNumberFormat(locales, options, onFormat);
+  const inputRef = useNumberFormat({ locales, options, onFormat });
   const setInputRef = useSetInputRef(inputRef, forwardedRef);
 
   if (Component) {

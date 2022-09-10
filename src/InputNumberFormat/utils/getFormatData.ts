@@ -1,9 +1,10 @@
-import convertToNumber from './convertToNumber';
+import replaceWithNumber from './replaceWithNumber';
 
 import type {
   NumberFormatOptions,
   NumberFormatLocalizedValues,
   NumberFormatResolvedValues,
+  FormatData,
 } from '../types';
 
 interface FilterParams {
@@ -23,7 +24,7 @@ const filter = ({
   selectionStartRange,
   selectionEndRange,
   fixed,
-}: FilterParams) => {
+}: FilterParams): string => {
   const getBoundRange = (boundRange: number) => {
     return boundRange >= shiftIndex ? boundRange - shiftIndex : 0;
   };
@@ -38,7 +39,7 @@ const filter = ({
   return (before + added + after).replace(/[\D]/g, '');
 };
 
-interface MaskParams {
+interface GetFormatDataParams {
   locales: string | string[] | undefined;
   options: NumberFormatOptions | undefined;
   localizedValues: NumberFormatLocalizedValues;
@@ -49,7 +50,7 @@ interface MaskParams {
   selectionEndRange: number;
 }
 
-export default function getFormattedValue({
+export default function getFormatData({
   locales,
   options,
   localizedValues,
@@ -58,18 +59,18 @@ export default function getFormattedValue({
   previousValue,
   selectionStartRange,
   selectionEndRange,
-}: MaskParams) {
+}: GetFormatDataParams): FormatData {
   // eslint-disable-next-line prefer-const
   let [previousInteger = '', previousFraction = ''] = previousValue.split(localizedValues.decimal);
 
   // eslint-disable-next-line no-param-reassign
-  added = convertToNumber(added, localizedValues.symbols);
-  previousInteger = convertToNumber(previousInteger, localizedValues.symbols);
-  previousFraction = convertToNumber(previousFraction, localizedValues.symbols);
+  added = replaceWithNumber(added, localizedValues.symbols);
+  previousInteger = replaceWithNumber(previousInteger, localizedValues.symbols);
+  previousFraction = replaceWithNumber(previousFraction, localizedValues.symbols);
 
   const changedPartType = selectionStartRange <= previousInteger.length ? 'integer' : 'fraction';
 
-  const nextInteger = filter({
+  let nextInteger = filter({
     value: previousInteger,
     added: changedPartType === 'integer' ? added : '',
     shiftIndex: 0,
@@ -78,10 +79,12 @@ export default function getFormattedValue({
     fixed: false,
   });
 
+  nextInteger = nextInteger.slice(0, resolvedValues.maximumIntegerDigits);
+
   // Если изменения происходят в дробной части, очищаем дробную часть
   // для замены значения, чтобы заменить "0" на вводимое значение
   const fixed =
-    previousFraction.length <= (resolvedValues.minimumFractionDigits || 1) &&
+    previousFraction.replace(/[\D]/g, '').length <= (resolvedValues.minimumFractionDigits || 1) &&
     selectionStartRange >= previousInteger.length + 1 &&
     selectionEndRange < previousInteger.length + 1 + (resolvedValues.minimumFractionDigits || 1);
 
@@ -103,7 +106,7 @@ export default function getFormattedValue({
     return { value: '', numericValue: 0 };
   }
 
-  const numericValue = Math.abs(Number(`${nextInteger}.${nextFraction}`));
+  const numericValue = Math.abs(Number(nextInteger + (nextFraction ? `.${nextFraction}` : '')));
 
   const value = new Intl.NumberFormat(locales, {
     ...options,

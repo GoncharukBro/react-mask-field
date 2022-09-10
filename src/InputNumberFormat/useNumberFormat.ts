@@ -1,5 +1,6 @@
 import { useRef, useCallback } from 'react';
 
+import replaceWithNumber from './utils/replaceWithNumber';
 import getLocalizedValues from './utils/getLocalizedValues';
 import getResolvedValues from './utils/getResolvedValues';
 import getFormatData from './utils/getFormatData';
@@ -13,7 +14,9 @@ import useInput from '../useInput';
 
 import type { Init, Fallback, Tracking, Update } from '../types';
 
-export default function useNumberFormat({ locales, options, onFormat }: NumberFormatProps) {
+export default function useNumberFormat(props?: NumberFormatProps) {
+  const { locales, options, onFormat } = props ?? {};
+
   const formatData = useRef<FormatData | null>(null);
 
   // Преобразовываем объект `options` в строку для сравнения с зависимостью в `useCallback`
@@ -26,6 +29,19 @@ export default function useNumberFormat({ locales, options, onFormat }: NumberFo
    */
 
   const init: Init = useCallback(({ initialValue }) => {
+    const localizedValues = getLocalizedValues(locales);
+
+    const replacedInitialValue = replaceWithNumber(initialValue, localizedValues.symbols);
+
+    const regExp = new RegExp(`[^\\d\\${localizedValues.decimal}]`, 'g');
+    const filteredInitialValue = replacedInitialValue.replace(regExp, '');
+
+    const [integer = '', fraction = ''] = filteredInitialValue.split(localizedValues.decimal);
+
+    const numericValue = Math.abs(Number(integer + (fraction ? `.${fraction}` : '')));
+
+    formatData.current = { value: initialValue, numericValue };
+
     return {
       value: initialValue,
       selectionStart: initialValue.length,

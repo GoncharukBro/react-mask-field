@@ -1,4 +1,4 @@
-import convertToNumber from './convertToNumber';
+import replaceWithNumber from './replaceWithNumber';
 
 import type { NumberFormatLocalizedValues } from '../types';
 
@@ -31,30 +31,30 @@ export default function getCaretPosition({
 }: GetCaretPositionParams) {
   let nextCaretPosition = -1;
 
-  const [previousInteger = ''] = convertToNumber(previousValue, localizedValues.symbols).split(
+  const [previousInteger = ''] = replaceWithNumber(previousValue, localizedValues.symbols).split(
     localizedValues.decimal
   );
-  const [nextInteger = ''] = convertToNumber(nextValue, localizedValues.symbols).split(
+  const [nextInteger = ''] = replaceWithNumber(nextValue, localizedValues.symbols).split(
     localizedValues.decimal
   );
 
-  const change = selectionStartRange <= previousInteger.length ? 'integer' : 'fraction';
+  const changedPartType = selectionStartRange <= previousInteger.length ? 'integer' : 'fraction';
 
-  // TODO: подумать над позицией каретки при `change === 'fraction'`
-  if (change === 'fraction') {
+  // TODO: подумать над позицией каретки при `changedPartType === 'fraction'`
+  if (changedPartType === 'fraction') {
     return selectionStart;
   }
 
   // Считаем количество чисел после `selectionEndRange`
   const countAfterSelectionEnd = previousInteger
     .slice(selectionEndRange)
-    .replace(new RegExp(`[^\\d${localizedValues.decimal}]`, 'g'), '').length;
+    .replace(new RegExp(`[^\\d\\${localizedValues.decimal}]`, 'g'), '').length;
 
   let count = 0;
 
   // Нахоим индекс символа для установки позиции каретки
   for (let i = nextInteger.length; i >= 0; i--) {
-    if (new RegExp(`[\\d${localizedValues.decimal}]`).test(nextInteger[i])) {
+    if (new RegExp(`[\\d\\${localizedValues.decimal}]`).test(nextInteger[i])) {
       count += 1;
     }
 

@@ -1,6 +1,5 @@
 import { useRef, useCallback } from 'react';
 
-import convertToReplacementObject from './utils/convertToReplacementObject';
 import getModifiedData from './utils/getModifiedData';
 import getReplaceableSymbolIndex from './utils/getReplaceableSymbolIndex';
 import getChangeData from './utils/getChangeData';
@@ -9,7 +8,7 @@ import getCaretPosition from './utils/getCaretPosition';
 
 import useError from './useError';
 
-import type { MaskProps, ChangeData, MaskingData, MaskingEventDetail } from './types';
+import type { MaskProps, ChangeData, MaskingData, MaskingEventDetail, Replacement } from './types';
 
 import SyntheticChangeError from '../SyntheticChangeError';
 
@@ -17,18 +16,22 @@ import useInput from '../useInput';
 
 import type { Init, Update, Tracking, Fallback } from '../types';
 
+const convertToReplacementObject = (replacement: string): Replacement => {
+  return replacement.length > 0 ? { [replacement]: /./ } : {};
+};
+
 export default function useMask({
-  mask: maskProps,
-  replacement: replacementProps,
-  showMask: showMaskProps,
-  separate: separateProps,
+  mask = '',
+  replacement: replacementProps = {},
+  showMask = false,
+  separate = false,
   modify,
   onMasking,
 }: MaskProps): React.MutableRefObject<HTMLInputElement | null> {
-  const mask = maskProps ?? '';
-  const replacement = convertToReplacementObject(replacementProps ?? {});
-  const showMask = showMaskProps ?? false;
-  const separate = separateProps ?? false;
+  const replacement =
+    typeof replacementProps === 'string'
+      ? convertToReplacementObject(replacementProps)
+      : replacementProps;
 
   const changeData = useRef<ChangeData | null>(null);
   const maskingData = useRef<MaskingData | null>(null);

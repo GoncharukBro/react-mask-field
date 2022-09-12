@@ -1,6 +1,4 @@
-import convertToReplacementObject from './convertToReplacementObject';
-
-import type { Modify, Replacement } from '../types';
+import type { ModifiedData, Modify, Replacement } from '../types';
 
 interface GetModifiedDataParams {
   unmaskedValue: string;
@@ -18,7 +16,7 @@ export default function getModifiedData({
   showMask,
   separate,
   modify,
-}: GetModifiedDataParams) {
+}: GetModifiedDataParams): ModifiedData {
   let modifiedUnmaskedValue = unmaskedValue;
   let modifiedMask = mask;
   let modifiedReplacement = replacement;
@@ -36,9 +34,7 @@ export default function getModifiedData({
   if (modifiedData) {
     modifiedUnmaskedValue = modifiedData.unmaskedValue ?? modifiedUnmaskedValue;
     modifiedMask = modifiedData.mask ?? modifiedMask;
-    modifiedReplacement = convertToReplacementObject(
-      modifiedData.replacement ?? modifiedReplacement
-    );
+    modifiedReplacement = modifiedData.replacement ?? modifiedReplacement;
     modifiedShowMask = modifiedData.showMask ?? modifiedShowMask;
     modifiedSeparate = modifiedData.separate ?? modifiedSeparate;
   }

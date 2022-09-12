@@ -4,7 +4,7 @@
  * @param localeSymbols набор всех символов заданной локали от нуля до девяти
  * @returns ковертированная строка
  */
-export default function replaceWithNumber(value: string, localeSymbols: string) {
+export default function replaceWithNumber(value: string, localeSymbols: string): string {
   return value
     .split('')
     .map((symbol) => {

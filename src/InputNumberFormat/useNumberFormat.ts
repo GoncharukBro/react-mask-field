@@ -14,7 +14,9 @@ import useInput from '../useInput';
 
 import type { Init, Fallback, Tracking, Update } from '../types';
 
-export default function useNumberFormat(props?: NumberFormatProps) {
+export default function useNumberFormat(
+  props?: NumberFormatProps
+): React.MutableRefObject<HTMLInputElement | null> {
   const { locales, options, onFormat } = props ?? {};
 
   const formatData = useRef<FormatData | null>(null);

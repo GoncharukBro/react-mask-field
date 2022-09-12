@@ -10,7 +10,12 @@ interface FilterSymbolsParams {
 }
 
 // Фильтруем символы для соответствия значениям `replacement`
-function filterSymbols({ value, replaceableSymbols, replacement, separate }: FilterSymbolsParams) {
+function filterSymbols({
+  value,
+  replaceableSymbols,
+  replacement,
+  separate,
+}: FilterSymbolsParams): string {
   let symbols = replaceableSymbols;
 
   return value.split('').reduce((prev, symbol) => {

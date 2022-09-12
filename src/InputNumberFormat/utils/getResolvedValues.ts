@@ -1,6 +1,6 @@
-import type { NumberFormatOptions } from '../types';
+import type { NumberFormatOptions, NumberFormatResolvedValues } from '../types';
 
-const getFractionLength = (parts: Intl.NumberFormatPart[]) => {
+const getFractionLength = (parts: Intl.NumberFormatPart[]): number => {
   const fraction = parts.reduce((prev, { type, value }) => {
     return type === 'fraction' ? prev + value : prev;
   }, '');
@@ -19,7 +19,7 @@ export default function getResolvedValues(
   value: number,
   locales: string | string[] | undefined,
   options: NumberFormatOptions | undefined
-) {
+): NumberFormatResolvedValues {
   const resolvedOptions = new Intl.NumberFormat(locales, options).resolvedOptions();
 
   const numberFormat = (

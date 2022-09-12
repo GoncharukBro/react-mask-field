@@ -1,5 +1,3 @@
-import { InputElement } from './types';
-
 interface InputAttributes {
   value: string;
   selectionStart: number;
@@ -7,7 +5,7 @@ interface InputAttributes {
 }
 
 export default function setInputAttributes(
-  inputRef: React.MutableRefObject<InputElement | null>,
+  inputRef: React.MutableRefObject<HTMLInputElement | null>,
   { value, selectionStart, selectionEnd }: InputAttributes
 ) {
   if (inputRef.current === null) return;

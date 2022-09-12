@@ -1,3 +1,4 @@
+import { NumberFormatLocalizedValues } from 'InputNumberFormat/types';
 import SyntheticChangeError from '../../SyntheticChangeError';
 
 /**
@@ -5,7 +6,9 @@ import SyntheticChangeError from '../../SyntheticChangeError';
  * @param locales
  * @returns
  */
-export default function getLocalizedValues(locales: string | string[] | undefined) {
+export default function getLocalizedValues(
+  locales: string | string[] | undefined
+): NumberFormatLocalizedValues {
   // Получаем разделитель в заданной локали
   const decimal = new Intl.NumberFormat(locales)
     .formatToParts(1.1)

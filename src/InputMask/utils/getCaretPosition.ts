@@ -8,7 +8,7 @@ import type { ChangeData, MaskingData } from '../types';
  * @param maskingData
  * @returns позиция курсора
  */
-export default function getCaretPosition(changeData: ChangeData, maskingData: MaskingData) {
+export default function getCaretPosition(changeData: ChangeData, maskingData: MaskingData): number {
   const { added, beforeRange, afterRange, inputType } = changeData;
   const { maskedValue, ast, replacement, separate } = maskingData;
 
@@ -16,7 +16,7 @@ export default function getCaretPosition(changeData: ChangeData, maskingData: Ma
     return separate ? type === 'change' || type === 'replacement' : type === 'change';
   });
 
-  const getSymbolIndex = (index: number | false) => {
+  const getSymbolIndex = (index: number | false): number => {
     return index !== false ? unmaskedSymbols[index]?.index ?? -1 : -1;
   };
 

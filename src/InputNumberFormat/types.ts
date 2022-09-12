@@ -21,6 +21,7 @@ export interface NumberFormatLocalizedValues {
 export interface NumberFormatResolvedValues {
   minimumFractionDigits: number;
   maximumFractionDigits: number;
+  minimumIntegerDigits: number;
   maximumIntegerDigits: number;
 }
 

@@ -16,7 +16,7 @@ import type {
   CustomInputEventHandler,
 } from './types';
 
-const validInputType = (inputRef: React.MutableRefObject<InputElement | null>) => {
+const validInputType = (inputRef: React.MutableRefObject<HTMLInputElement | null>) => {
   return inputRef.current !== null && inputRef.current.type === 'text';
 };
 
@@ -36,7 +36,7 @@ export default function useInput<D = any>({
   fallback,
   customInputEventType,
   customInputEventHandler,
-}: UseInputParams<D>) {
+}: UseInputParams<D>): React.MutableRefObject<HTMLInputElement | null> {
   const inputRef = useRef<InputElement | null>(null);
 
   const isFirstRender = useRef(true);

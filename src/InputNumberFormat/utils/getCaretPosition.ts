@@ -28,7 +28,7 @@ export default function getCaretPosition({
   selectionStartRange,
   selectionEndRange,
   selectionStart,
-}: GetCaretPositionParams) {
+}: GetCaretPositionParams): number {
   let nextCaretPosition = -1;
 
   const [previousInteger = ''] = replaceWithNumber(previousValue, localizedValues.symbols).split(

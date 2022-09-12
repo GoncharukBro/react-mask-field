@@ -8,7 +8,7 @@ export default function useDispatchCustomInputEvent<D = any>(
   inputRef: React.MutableRefObject<InputElement | null>,
   customInputEventType: string | undefined,
   customInputEventHandler: CustomInputEventHandler<D> | undefined
-) {
+): [React.MutableRefObject<boolean>, (customEventDetail: D) => void] {
   const dispatched = useRef(true);
 
   const dispatch = useCallback(
@@ -64,5 +64,5 @@ export default function useDispatchCustomInputEvent<D = any>(
     [inputRef, customInputEventType, customInputEventHandler]
   );
 
-  return [dispatched, dispatch] as [typeof dispatched, typeof dispatch];
+  return [dispatched, dispatch];
 }

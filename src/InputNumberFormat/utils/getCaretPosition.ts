@@ -7,6 +7,7 @@ import type { InputType } from '../../types';
 interface GetCaretPositionParams {
   localizedValues: NumberFormatLocalizedValues;
   inputType: InputType;
+  added: string;
   previousValue: string;
   nextValue: string;
   selectionStartRange: number;
@@ -23,6 +24,7 @@ interface GetCaretPositionParams {
 export default function getCaretPosition({
   localizedValues,
   inputType,
+  added,
   previousValue,
   nextValue,
   selectionStartRange,
@@ -46,9 +48,17 @@ export default function getCaretPosition({
   }
 
   // Считаем количество чисел после `selectionEndRange`
-  const countAfterSelectionEnd = previousInteger
+  let countAfterSelectionEnd = previousInteger
     .slice(selectionEndRange)
     .replace(new RegExp(`[^\\d\\${localizedValues.decimal}]`, 'g'), '').length;
+
+  if (
+    previousInteger.length === nextInteger.length &&
+    added.length > 0 &&
+    countAfterSelectionEnd >= added.length
+  ) {
+    countAfterSelectionEnd -= added.length;
+  }
 
   let count = 0;
 

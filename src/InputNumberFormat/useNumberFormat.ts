@@ -147,6 +147,7 @@ export default function useNumberFormat(
       const caretPosition = getCaretPosition({
         localizedValues,
         inputType,
+        added,
         previousValue,
         nextValue: formatData.current.value,
         selectionStartRange,

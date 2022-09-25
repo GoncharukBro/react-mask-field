@@ -91,7 +91,10 @@ export default function useNumberFormat(
       const localizedValues = getLocalizedValues(locales);
       const resolvedValues = getResolvedValues(formatData.current.numericValue, locales, options);
 
-      if (added === localizedValues.decimal && resolvedValues.maximumFractionDigits > 0) {
+      if (
+        (added === '.' || added === ',' || added === localizedValues.decimal) &&
+        resolvedValues.maximumFractionDigits > 0
+      ) {
         const [previousInteger = '', previousFraction = ''] = previousValue.split(
           localizedValues.decimal
         );
@@ -103,13 +106,12 @@ export default function useNumberFormat(
           .split(localizedValues.decimal);
 
         const integer = previousInteger || nextInteger;
+        const fraction = previousFraction || nextFraction;
 
         return {
-          value: previousFraction
-            ? previousValue
-            : integer + localizedValues.decimal + nextFraction,
-          selectionStart: integer.length + 1,
-          selectionEnd: integer.length + 1,
+          value: integer + localizedValues.decimal + fraction,
+          selectionStart: integer.length + localizedValues.decimal.length,
+          selectionEnd: integer.length + localizedValues.decimal.length,
         };
       }
 

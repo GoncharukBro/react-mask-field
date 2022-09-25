@@ -9,28 +9,60 @@ export default {
 } as Meta;
 
 export const Hook: ComponentStory<any> = () => {
-  const refDefault = useNumberFormat({
-    locales: 'ja-JP',
-    options: { style: 'currency', currency: 'JPY' },
-  });
   const refIN = useNumberFormat({ locales: 'en-IN', options: { minimumIntegerDigits: 4 } });
-  const refRU = useNumberFormat({ locales: 'ru-RU', options: { maximumIntegerDigits: 6 } });
-  const refRU2 = useNumberFormat({ locales: 'ru-RU' });
+  const refRU = useNumberFormat({ locales: 'ru-RU', options: { maximumSignificantDigits: 6 } });
+  const refRUCur = useNumberFormat({
+    locales: 'ru-RU',
+    options: { style: 'currency', currency: 'RUB' },
+  });
+  const refJA = useNumberFormat({
+    locales: 'ja-JP',
+    options: { style: 'currency', currency: 'RUB' },
+  });
   const refAR = useNumberFormat({ locales: 'ar-EG' });
   const refCN = useNumberFormat({ locales: 'zh-Hans-CN-u-nu-hanidec' });
 
-  const [value, setValue] = useState('');
-
   return (
     <>
-      <input ref={refDefault} value={value} onChange={(event) => setValue(event.target.value)} />
-      <input ref={refIN} />
-      <input ref={refRU} />
-      <input ref={refRU2} />
-      <input ref={refAR} />
-      <input ref={refCN} />
+      <div>
+        <p>-</p>
+        <input ref={refIN} />
+      </div>
 
-      <div>value: {value}</div>
+      <hr />
+
+      <div>
+        <p>-</p>
+        <input ref={refRU} />
+      </div>
+
+      <hr />
+
+      <div>
+        <p>ru-RU currency-RUB</p>
+        <input ref={refRUCur} />
+      </div>
+
+      <hr />
+
+      <div>
+        <p>ja-JP currency-RUB</p>
+        <input ref={refJA} />
+      </div>
+
+      <hr />
+
+      <div>
+        <p>ar-EG</p>
+        <input ref={refAR} />
+      </div>
+
+      <hr />
+
+      <div>
+        <p>zh-Hans-CN-u-nu-hanidec</p>
+        <input ref={refCN} />
+      </div>
     </>
   );
 };

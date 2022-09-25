@@ -29,14 +29,14 @@ const filter = ({
     return boundRange >= shiftIndex ? boundRange - shiftIndex : 0;
   };
 
-  const before = value.slice(0, getBoundRange(selectionStartRange));
-  let after = value.slice(getBoundRange(selectionEndRange));
+  const before = value.slice(0, getBoundRange(selectionStartRange)).replace(/[\D]/g, '');
+  let after = value.slice(getBoundRange(selectionEndRange)).replace(/[\D]/g, '');
 
   if (fixed) {
     after = after.replace(/0+$/g, '');
   }
 
-  return (before + added + after).replace(/[\D]/g, '');
+  return before + added + after;
 };
 
 interface GetFormatDataParams {
@@ -85,13 +85,16 @@ export default function getFormatData({
   // для замены значения, чтобы заменить "0" на вводимое значение
   const fixed =
     previousFraction.replace(/[\D]/g, '').length <= (resolvedValues.minimumFractionDigits || 1) &&
-    selectionStartRange >= previousInteger.length + 1 &&
-    selectionEndRange < previousInteger.length + 1 + (resolvedValues.minimumFractionDigits || 1);
+    selectionStartRange >= previousInteger.length + localizedValues.decimal.length &&
+    selectionEndRange <
+      previousInteger.length +
+        localizedValues.decimal.length +
+        (resolvedValues.minimumFractionDigits || 1);
 
   let nextFraction = filter({
     value: previousFraction,
     added: changedPartType === 'fraction' ? added : '',
-    shiftIndex: previousInteger.length + 1,
+    shiftIndex: previousInteger.length + localizedValues.decimal.length,
     selectionStartRange,
     selectionEndRange,
     fixed,

@@ -36,21 +36,31 @@ export default function getCaretPosition({
   const [previousInteger = ''] = replaceWithNumber(previousValue, localizedValues.symbols).split(
     localizedValues.decimal
   );
-  const [nextInteger = ''] = replaceWithNumber(nextValue, localizedValues.symbols).split(
-    localizedValues.decimal
-  );
+  const [nextInteger = '', nextFraction = ''] = replaceWithNumber(
+    nextValue,
+    localizedValues.symbols
+  ).split(localizedValues.decimal);
 
   const changedPartType = selectionStartRange <= previousInteger.length ? 'integer' : 'fraction';
 
   // TODO: подумать над позицией каретки при `changedPartType === 'fraction'`
   if (changedPartType === 'fraction') {
+    const nextFractionWithNumber = nextFraction.replace(/[^\d]/g, '');
+
+    const caretPosition =
+      nextInteger.length + localizedValues.decimal.length + nextFractionWithNumber.length;
+
+    if (selectionEndRange >= caretPosition) {
+      return caretPosition;
+    }
+
     return selectionStart;
   }
 
   // Считаем количество чисел после `selectionEndRange`
   let countAfterSelectionEnd = previousInteger
     .slice(selectionEndRange)
-    .replace(new RegExp(`[^\\d\\${localizedValues.decimal}]`, 'g'), '').length;
+    .replace(/[^\d]/g, '').length;
 
   if (
     previousInteger.length === nextInteger.length &&
@@ -64,7 +74,7 @@ export default function getCaretPosition({
 
   // Нахоим индекс символа для установки позиции каретки
   for (let i = nextInteger.length; i >= 0; i--) {
-    if (new RegExp(`[\\d\\${localizedValues.decimal}]`).test(nextInteger[i])) {
+    if (/\d/.test(nextInteger[i])) {
       count += 1;
     }
 

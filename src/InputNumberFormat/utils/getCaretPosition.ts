@@ -33,22 +33,24 @@ export default function getCaretPosition({
 }: GetCaretPositionParams): number {
   let nextCaretPosition = -1;
 
-  const [previousInteger = ''] = replaceWithNumber(previousValue, localizedValues.symbols).split(
-    localizedValues.decimal
-  );
-  const [nextInteger = '', nextFraction = ''] = replaceWithNumber(
+  const [previousBeforeDecimal = ''] = replaceWithNumber(
+    previousValue,
+    localizedValues.symbols
+  ).split(localizedValues.decimal);
+  const [nextBeforeDecimal = '', nextAfterDecimal = ''] = replaceWithNumber(
     nextValue,
     localizedValues.symbols
   ).split(localizedValues.decimal);
 
-  const changedPartType = selectionStartRange <= previousInteger.length ? 'integer' : 'fraction';
+  const changedPartType =
+    selectionStartRange <= previousBeforeDecimal.length ? 'integer' : 'fraction';
 
   // TODO: подумать над позицией каретки при `changedPartType === 'fraction'`
   if (changedPartType === 'fraction') {
-    const nextFractionWithNumber = nextFraction.replace(/[^\d]/g, '');
+    const nextFractionWithNumber = nextAfterDecimal.replace(/[^\d]/g, '');
 
     const caretPosition =
-      nextInteger.length + localizedValues.decimal.length + nextFractionWithNumber.length;
+      nextBeforeDecimal.length + localizedValues.decimal.length + nextFractionWithNumber.length;
 
     if (selectionEndRange >= caretPosition) {
       return caretPosition;
@@ -58,12 +60,12 @@ export default function getCaretPosition({
   }
 
   // Считаем количество чисел после `selectionEndRange`
-  let countAfterSelectionEnd = previousInteger
+  let countAfterSelectionEnd = previousBeforeDecimal
     .slice(selectionEndRange)
     .replace(/[^\d]/g, '').length;
 
   if (
-    previousInteger.length === nextInteger.length &&
+    previousBeforeDecimal.length === nextBeforeDecimal.length &&
     added.length > 0 &&
     countAfterSelectionEnd >= added.length
   ) {
@@ -73,8 +75,8 @@ export default function getCaretPosition({
   let count = 0;
 
   // Нахоим индекс символа для установки позиции каретки
-  for (let i = nextInteger.length; i >= 0; i--) {
-    if (/\d/.test(nextInteger[i])) {
+  for (let i = nextBeforeDecimal.length; i >= 0; i--) {
+    if (/\d/.test(nextBeforeDecimal[i])) {
       count += 1;
     }
 
@@ -88,7 +90,7 @@ export default function getCaretPosition({
   const shiftCaretPosition = (shiftIndex: number) => {
     const index = nextCaretPosition + shiftIndex;
 
-    if (index >= 0 && index < nextInteger.length && !/\d/.test(nextInteger[index])) {
+    if (index >= 0 && index < nextBeforeDecimal.length && !/\d/.test(nextBeforeDecimal[index])) {
       nextCaretPosition += shiftIndex < 0 ? -1 : 1;
       shiftCaretPosition(shiftIndex);
     }

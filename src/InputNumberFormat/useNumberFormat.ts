@@ -95,23 +95,19 @@ export default function useNumberFormat(
         (added === '.' || added === ',' || added === localizedValues.decimal) &&
         resolvedValues.maximumFractionDigits > 0
       ) {
-        const [previousInteger = '', previousFraction = ''] = previousValue.split(
+        const [previousBeforeDecimal = '', previousAfterDecimal = ''] = previousValue.split(
           localizedValues.decimal
         );
-        const [nextInteger, nextFraction = localizedValues.symbols[0]] = new Intl.NumberFormat(
-          locales,
-          options
-        )
-          .format(0)
-          .split(localizedValues.decimal);
+        const [nextBeforeDecimal, nextAfterDecimal = localizedValues.symbols[0]] =
+          new Intl.NumberFormat(locales, options).format(0).split(localizedValues.decimal);
 
-        const integer = previousInteger || nextInteger;
-        const fraction = previousFraction || nextFraction;
+        const beforeDecimal = previousBeforeDecimal || nextBeforeDecimal;
+        const afterDecimal = previousAfterDecimal || nextAfterDecimal;
 
         return {
-          value: integer + localizedValues.decimal + fraction,
-          selectionStart: integer.length + localizedValues.decimal.length,
-          selectionEnd: integer.length + localizedValues.decimal.length,
+          value: beforeDecimal + localizedValues.decimal + afterDecimal,
+          selectionStart: beforeDecimal.length + localizedValues.decimal.length,
+          selectionEnd: beforeDecimal.length + localizedValues.decimal.length,
         };
       }
 

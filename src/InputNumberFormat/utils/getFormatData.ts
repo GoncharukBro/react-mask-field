@@ -61,17 +61,20 @@ export default function getFormatData({
   selectionEndRange,
 }: GetFormatDataParams): FormatData {
   // eslint-disable-next-line prefer-const
-  let [previousInteger = '', previousFraction = ''] = previousValue.split(localizedValues.decimal);
+  let [previousBeforeDecimal = '', previousAfterDecimal = ''] = previousValue.split(
+    localizedValues.decimal
+  );
 
   // eslint-disable-next-line no-param-reassign
   added = replaceWithNumber(added, localizedValues.symbols);
-  previousInteger = replaceWithNumber(previousInteger, localizedValues.symbols);
-  previousFraction = replaceWithNumber(previousFraction, localizedValues.symbols);
+  previousBeforeDecimal = replaceWithNumber(previousBeforeDecimal, localizedValues.symbols);
+  previousAfterDecimal = replaceWithNumber(previousAfterDecimal, localizedValues.symbols);
 
-  const changedPartType = selectionStartRange <= previousInteger.length ? 'integer' : 'fraction';
+  const changedPartType =
+    selectionStartRange <= previousBeforeDecimal.length ? 'integer' : 'fraction';
 
   let nextInteger = filter({
-    value: previousInteger,
+    value: previousBeforeDecimal,
     added: changedPartType === 'integer' ? added : '',
     shiftIndex: 0,
     selectionStartRange,
@@ -84,17 +87,18 @@ export default function getFormatData({
   // Если изменения происходят в дробной части, очищаем дробную часть
   // для замены значения, чтобы заменить "0" на вводимое значение
   const fixed =
-    previousFraction.replace(/[\D]/g, '').length <= (resolvedValues.minimumFractionDigits || 1) &&
-    selectionStartRange >= previousInteger.length + localizedValues.decimal.length &&
+    previousAfterDecimal.replace(/[\D]/g, '').length <=
+      (resolvedValues.minimumFractionDigits || 1) &&
+    selectionStartRange >= previousBeforeDecimal.length + localizedValues.decimal.length &&
     selectionEndRange <
-      previousInteger.length +
+      previousBeforeDecimal.length +
         localizedValues.decimal.length +
         (resolvedValues.minimumFractionDigits || 1);
 
   let nextFraction = filter({
-    value: previousFraction,
+    value: previousAfterDecimal,
     added: changedPartType === 'fraction' ? added : '',
-    shiftIndex: previousInteger.length + localizedValues.decimal.length,
+    shiftIndex: previousBeforeDecimal.length + localizedValues.decimal.length,
     selectionStartRange,
     selectionEndRange,
     fixed,

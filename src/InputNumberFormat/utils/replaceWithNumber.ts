@@ -1,8 +1,8 @@
 /**
- * Конвертирует символы заданной локали в численные символы
+ * Заменяет символы заданной локали в численные символы
  * @param value значение состоящее из символов локали для конвертации
  * @param localeSymbols набор всех символов заданной локали от нуля до девяти
- * @returns ковертированная строка
+ * @returns строка с замененными символами
  */
 export default function replaceWithNumber(value: string, localeSymbols: string): string {
   return value

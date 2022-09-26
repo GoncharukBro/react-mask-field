@@ -1,16 +1,24 @@
-import type { Replacement, MaskingData, AST } from '../types';
+import type { Replacement, MaskingData, MaskPart } from '../types';
 
-// Генерируем дерево синтаксического анализа (AST). AST представляет собой массив объектов, где
-// каждый объект содержит в себе всю необходимую информацию о каждом символе значения. AST
-// используется для точечного манипулирования символом или группой символов.
-function generateAST(maskedValue: string, mask: string, replacement: Replacement): AST {
+interface FormatToPartsOptions {
+  mask: string;
+  replacement: Replacement;
+}
+
+/**
+ * Определяет части маскированного значения. Части маскированного значения представляет собой массив
+ * объектов, где каждый объект содержит в себе всю необходимую информацию о каждом символе значения.
+ * Части маскированного значения используется для точечного манипулирования символом или группой символов.
+ */
+function formatToParts(maskedValue: string, options: FormatToPartsOptions): MaskPart[] {
   return maskedValue.split('').map((symbol, index) => {
-    const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
+    const isReplacementKey = Object.prototype.hasOwnProperty.call(options.replacement, symbol);
+
     const type = isReplacementKey
-      ? ('replacement' as const)
-      : symbol === mask[index]
-      ? ('mask' as const)
-      : ('change' as const);
+      ? ('replacement' as const) // заменяемый символ маски
+      : symbol === options.mask[index]
+      ? ('mask' as const) // незаменяемый символ маски
+      : ('change' as const); // символ введенный пользователем
 
     return { type, value: symbol, index };
   });
@@ -80,15 +88,15 @@ export default function getMaskingData({
 }: GetMaskingDataParams): MaskingData {
   let maskedValue = initialValue ?? maskValue(unmaskedValue, mask, replacement);
 
-  const ast = generateAST(maskedValue, mask, replacement);
+  const parts = formatToParts(maskedValue, { mask, replacement });
 
   if (initialValue === undefined && !showMask) {
     // Если пользователь не ввел ниодного символа, присваиваем пустую строку,
     // в противном случае, обрезаем значение по последний пользовательский символ
-    if (ast.find(({ type }) => type === 'change') === undefined) {
+    if (parts.find(({ type }) => type === 'change') === undefined) {
       maskedValue = '';
     } else {
-      const lastChangedSymbol = [...ast].reverse().find(({ type }) => type === 'change');
+      const lastChangedSymbol = [...parts].reverse().find(({ type }) => type === 'change');
       const to = lastChangedSymbol !== undefined ? lastChangedSymbol.index + 1 : 0;
       maskedValue = maskedValue.slice(0, to);
     }
@@ -98,5 +106,5 @@ export default function getMaskingData({
   const patternForbiddingReplacement = generatePattern(mask, replacement, true);
   const isValid = new RegExp(patternForbiddingReplacement).test(maskedValue);
 
-  return { maskedValue, ast, isValid, mask, replacement, showMask, separate, pattern };
+  return { maskedValue, parts, isValid, mask, replacement, showMask, separate, pattern };
 }

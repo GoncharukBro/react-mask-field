@@ -10,9 +10,9 @@ import type { ChangeData, MaskingData } from '../types';
  */
 export default function getCaretPosition(changeData: ChangeData, maskingData: MaskingData): number {
   const { added, beforeRange, afterRange, inputType } = changeData;
-  const { maskedValue, ast, replacement, separate } = maskingData;
+  const { maskedValue, parts, replacement, separate } = maskingData;
 
-  const unmaskedSymbols = ast.filter(({ type }) => {
+  const unmaskedSymbols = parts.filter(({ type }) => {
     return separate ? type === 'change' || type === 'replacement' : type === 'change';
   });
 

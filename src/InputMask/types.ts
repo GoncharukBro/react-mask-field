@@ -34,7 +34,7 @@ export interface MaskProps {
   onMasking?: MaskingEventHandler;
 }
 
-export type AST = {
+export type MaskPart = {
   /**
    * - `replacement` - заменяемый символ маски
    * - `mask` - незаменяемый символ маски
@@ -43,7 +43,7 @@ export type AST = {
   type: 'replacement' | 'mask' | 'change';
   value: string;
   index: number;
-}[];
+};
 
 export interface ChangeData {
   unmaskedValue: string;
@@ -55,7 +55,7 @@ export interface ChangeData {
 
 export interface MaskingData {
   maskedValue: string;
-  ast: AST;
+  parts: MaskPart[];
   isValid: boolean;
   mask: string;
   replacement: Replacement;

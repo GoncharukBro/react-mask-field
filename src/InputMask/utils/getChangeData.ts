@@ -57,14 +57,14 @@ export default function getChangeData({
   selectionStartRange,
   selectionEndRange,
 }: GetChangeDataParams): ChangeData {
-  const { ast, mask, replacement, separate } = maskingData;
+  const { parts, mask, replacement, separate } = maskingData;
 
   let addedSymbols = added;
   let beforeRange = '';
   let afterRange = '';
 
   // Определяем символы до и после диапозона изменяемых символов
-  ast.forEach(({ type, value }, index) => {
+  parts.forEach(({ type, value }, index) => {
     if (separate ? type === 'change' || type === 'replacement' : type === 'change') {
       if (index < selectionStartRange) beforeRange += value;
       else if (index >= selectionEndRange) afterRange += value;

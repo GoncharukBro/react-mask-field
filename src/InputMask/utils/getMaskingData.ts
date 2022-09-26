@@ -1,6 +1,40 @@
 import type { Replacement, MaskingData, MaskPart } from '../types';
 
-interface FormatToPartsOptions {
+/**
+ * Формирует регулярное выражение для паттерна в `input`
+ * @param disableReplacementKey если `true`, поиск по регулярке не будет учитывать ключ параметра
+ * `replacement`, то есть символ по индексу заменяемого символа в значении может быть любым
+ * символом соответствующим значению `replacement` кроме ключа самого `replacement`.
+ * Так, если `mask === 'abc_123'` и `replacement === { _: /\D/ }` то
+ * - при `false`: `pattern === /^abc\D123$/` и `pattern.test('abc_123')` вернёт `true`;
+ * - при `true`: `pattern === /^abc(?!_)\D123$/` и `pattern.test('abc_123')` вернёт `false`.
+ * @param mask
+ * @param replacement
+ * @returns
+ */
+function generatePattern(
+  disableReplacementKey: boolean,
+  mask: string,
+  replacement: Replacement
+): string {
+  const special = ['[', ']', '\\', '/', '^', '$', '.', '|', '?', '*', '+', '(', ')', '{', '}'];
+
+  return mask.split('').reduce((prev, symbol, index, array) => {
+    const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
+    const lookahead = disableReplacementKey ? `(?!${symbol})` : '';
+
+    const pattern = isReplacementKey
+      ? lookahead + replacement[symbol].toString().slice(1, -1)
+      : special.includes(symbol)
+      ? `\\${symbol}`
+      : symbol;
+
+    const value = prev + pattern;
+    return index + 1 === array.length ? `${value}$` : value;
+  }, '^');
+}
+
+interface Options {
   mask: string;
   replacement: Replacement;
 }
@@ -9,14 +43,17 @@ interface FormatToPartsOptions {
  * Определяет части маскированного значения. Части маскированного значения представляет собой массив
  * объектов, где каждый объект содержит в себе всю необходимую информацию о каждом символе значения.
  * Части маскированного значения используется для точечного манипулирования символом или группой символов.
+ * @param maskedValue
+ * @param options
+ * @returns
  */
-function formatToParts(maskedValue: string, options: FormatToPartsOptions): MaskPart[] {
+function formatToParts(maskedValue: string, { mask, replacement }: Options): MaskPart[] {
   return maskedValue.split('').map((symbol, index) => {
-    const isReplacementKey = Object.prototype.hasOwnProperty.call(options.replacement, symbol);
+    const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
 
     const type = isReplacementKey
       ? ('replacement' as const) // заменяемый символ маски
-      : symbol === options.mask[index]
+      : symbol === mask[index]
       ? ('mask' as const) // незаменяемый символ маски
       : ('change' as const); // символ введенный пользователем
 
@@ -24,36 +61,19 @@ function formatToParts(maskedValue: string, options: FormatToPartsOptions): Mask
   });
 }
 
-// Формируем регулярное выражение для паттерна в `input`
-function generatePattern(
-  mask: string,
-  replacement: Replacement,
-  disableReplacementKey?: boolean
-): string {
-  const special = ['[', ']', '\\', '/', '^', '$', '.', '|', '?', '*', '+', '(', ')', '{', '}'];
-
-  return mask.split('').reduce((prev, item, index, array) => {
-    const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, item);
-    const lookahead = disableReplacementKey ? `(?!${item})` : '';
-
-    const symbol = isReplacementKey
-      ? lookahead + replacement[item].toString().slice(1, -1)
-      : special.includes(item)
-      ? `\\${item}`
-      : item;
-
-    const value = prev + symbol;
-    return index + 1 === array.length ? `${value}$` : value;
-  }, '^');
-}
-
-// Маскируем значение
-function maskValue(unmaskedValue: string, mask: string, replacement: Replacement): string {
+/**
+ * Маскирует значение по заданной маске
+ * @param unmaskedValue
+ * @param options
+ * @returns
+ */
+function formatToMask(unmaskedValue: string, { mask, replacement }: Options): string {
   let position = 0;
 
   return mask.split('').reduce((prev, symbol) => {
     const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
     const hasUnmaskedSymbol = unmaskedValue[position] !== undefined;
+
     return prev + (isReplacementKey && hasUnmaskedSymbol ? unmaskedValue[position++] : symbol);
   }, '');
 }
@@ -86,7 +106,7 @@ export default function getMaskingData({
   showMask,
   separate,
 }: GetMaskingDataParams): MaskingData {
-  let maskedValue = initialValue ?? maskValue(unmaskedValue, mask, replacement);
+  let maskedValue = initialValue ?? formatToMask(unmaskedValue, { mask, replacement });
 
   const parts = formatToParts(maskedValue, { mask, replacement });
 
@@ -102,9 +122,18 @@ export default function getMaskingData({
     }
   }
 
-  const pattern = generatePattern(mask, replacement);
-  const patternForbiddingReplacement = generatePattern(mask, replacement, true);
-  const isValid = new RegExp(patternForbiddingReplacement).test(maskedValue);
+  const pattern = generatePattern(false, mask, replacement);
+  const patternWithDisableReplacementKey = generatePattern(true, mask, replacement);
+  const isValid = new RegExp(patternWithDisableReplacementKey).test(maskedValue);
 
-  return { maskedValue, parts, isValid, mask, replacement, showMask, separate, pattern };
+  return {
+    maskedValue,
+    parts,
+    isValid,
+    mask,
+    replacement,
+    showMask,
+    separate,
+    pattern,
+  };
 }

@@ -12,14 +12,14 @@ export default {
 } as Meta<InputMaskProps>;
 
 const CustomComponent = forwardRef(
-  ({ label }: { label?: string }, ref: React.ForwardedRef<HTMLInputElement>) => {
+  ({ label }: { label?: string }, forwardedRef: React.ForwardedRef<HTMLInputElement>) => {
     const [value, setValue] = useState('');
 
     return (
       <>
         <label htmlFor="custom-input">{label}</label>
         <input
-          ref={ref}
+          ref={forwardedRef}
           id="custom-input"
           value={value}
           onChange={(event) => setValue(event.target.value)}

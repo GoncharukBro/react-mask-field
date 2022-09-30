@@ -2,9 +2,12 @@ import React, { useState, forwardRef } from 'react';
 
 import type { ComponentStory, Meta } from '@storybook/react';
 
+import useMask from '../useMask';
+
 import InputMaskComponent from '..';
 
 import type { InputMaskProps } from '..';
+
 import type { MaskingEventDetail } from '../types';
 
 export default {
@@ -14,31 +17,34 @@ export default {
 
 const CustomComponent = forwardRef(
   (
-    { label, value }: { label?: string; value: string },
+    { label, ...props }: { label?: string } & React.InputHTMLAttributes<HTMLInputElement>,
     forwardedRef: React.ForwardedRef<HTMLInputElement>
   ) => {
     return (
       <>
         <label htmlFor="custom-input">{label}</label>
-        <input ref={forwardedRef} id="custom-input" value={value} />
+        <input ref={forwardedRef} {...props} />
       </>
     );
   }
 );
 
-export const CustomComponentWithOuterState: ComponentStory<typeof InputMaskComponent> = () => {
+export const CustomComponentWithHook: ComponentStory<any> = () => {
   const [detail, setDetail] = useState<MaskingEventDetail | null>(null);
+
+  const ref = useMask({
+    mask: '+7 (___) ___-__-__',
+    replacement: { _: /\d/ },
+    separate: true,
+    showMask: true,
+    onMasking: (event) => {
+      setDetail(event.detail);
+    },
+  });
 
   return (
     <>
-      <InputMaskComponent
-        component={CustomComponent}
-        label="Мой лейбел"
-        mask="+7 (___) ___-__-__"
-        replacement={{ _: /\d/ }}
-        onMasking={(event) => setDetail(event.detail)}
-        value={detail?.maskedValue}
-      />
+      <CustomComponent ref={ref} label="Мой лейбел" id="custom-input" value={detail?.maskedValue} />
 
       <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>

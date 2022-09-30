@@ -3,12 +3,12 @@ import { useRef, useCallback } from 'react';
 import getModifiedData from './utils/getModifiedData';
 import getReplaceableSymbolIndex from './utils/getReplaceableSymbolIndex';
 import getChangeData from './utils/getChangeData';
-import getMaskingData from './utils/getMaskingData';
+import getMaskData from './utils/getMaskData';
 import getCaretPosition from './utils/getCaretPosition';
 
 import useError from './useError';
 
-import type { MaskProps, ChangeData, MaskingData, MaskingEventDetail, Replacement } from './types';
+import type { MaskProps, ChangeData, MaskData, MaskEventDetail, Replacement } from './types';
 
 import SyntheticChangeError from '../SyntheticChangeError';
 
@@ -26,7 +26,7 @@ export default function useMask({
   showMask = false,
   separate = false,
   modify,
-  onMasking,
+  onMask,
 }: MaskProps): React.MutableRefObject<HTMLInputElement | null> {
   const replacement =
     typeof replacementProps === 'string'
@@ -34,7 +34,7 @@ export default function useMask({
       : replacementProps;
 
   const changeData = useRef<ChangeData | null>(null);
-  const maskingData = useRef<MaskingData | null>(null);
+  const maskData = useRef<MaskData | null>(null);
 
   // Преобразовываем объект `replacement` в строку для сравнения с зависимостью в `useCallback`
   const stringifiedReplacement = JSON.stringify(replacement, (key, value) => {
@@ -74,7 +74,7 @@ export default function useMask({
       inputType: 'initial',
     };
 
-    maskingData.current = getMaskingData({
+    maskData.current = getMaskData({
       initialValue,
       unmaskedValue,
       mask,
@@ -83,10 +83,10 @@ export default function useMask({
       separate,
     });
 
-    const curetPosition = getCaretPosition(changeData.current, maskingData.current);
+    const curetPosition = getCaretPosition(changeData.current, maskData.current);
 
     return {
-      value: maskingData.current.maskedValue,
+      value: maskData.current.maskedValue,
       selectionStart: curetPosition,
       selectionEnd: curetPosition,
     };
@@ -99,7 +99,7 @@ export default function useMask({
    *
    */
 
-  const update: Update<MaskingEventDetail> = useCallback(() => {
+  const update: Update<MaskEventDetail> = useCallback(() => {
     if (changeData.current === null) {
       return undefined;
     }
@@ -113,7 +113,7 @@ export default function useMask({
       modify,
     });
 
-    maskingData.current = getMaskingData({
+    maskData.current = getMaskData({
       unmaskedValue: modifiedData.unmaskedValue,
       mask: modifiedData.mask,
       replacement: modifiedData.replacement,
@@ -121,20 +121,20 @@ export default function useMask({
       separate: modifiedData.separate,
     });
 
-    const curetPosition = getCaretPosition(changeData.current, maskingData.current);
+    const curetPosition = getCaretPosition(changeData.current, maskData.current);
 
-    const maskingEventDetail = {
+    const maskEventDetail = {
       unmaskedValue: modifiedData.unmaskedValue,
-      maskedValue: maskingData.current.maskedValue,
-      pattern: maskingData.current.pattern,
-      isValid: maskingData.current.isValid,
+      maskedValue: maskData.current.maskedValue,
+      pattern: maskData.current.pattern,
+      isValid: maskData.current.isValid,
     };
 
     return {
-      value: maskingData.current.maskedValue,
+      value: maskData.current.maskedValue,
       selectionStart: curetPosition,
       selectionEnd: curetPosition,
-      customInputEventDetail: maskingEventDetail,
+      customInputEventDetail: maskEventDetail,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mask, stringifiedReplacement, showMask, separate]);
@@ -145,28 +145,28 @@ export default function useMask({
    *
    */
 
-  const tracking: Tracking<MaskingEventDetail> = useCallback(
+  const tracking: Tracking<MaskEventDetail> = useCallback(
     ({ inputType, added, previousValue, selectionStartRange, selectionEndRange }) => {
-      if (changeData.current === null || maskingData.current === null) {
+      if (changeData.current === null || maskData.current === null) {
         throw new SyntheticChangeError('The state has not been initialized.');
       }
 
       // Предыдущее значение всегда должно соответствовать маскированному значению из кэша. Обратная ситуация может
       // возникнуть при контроле значения, если значение не было изменено после ввода. Для предотвращения подобных
       // ситуаций, нам важно синхронизировать предыдущее значение с кэшированным значением, если они различаются
-      if (maskingData.current.maskedValue !== previousValue) {
-        maskingData.current = getMaskingData({
+      if (maskData.current.maskedValue !== previousValue) {
+        maskData.current = getMaskData({
           initialValue: previousValue,
           unmaskedValue: '',
-          mask: maskingData.current.mask,
-          replacement: maskingData.current.replacement,
-          showMask: maskingData.current.showMask,
-          separate: maskingData.current.separate,
+          mask: maskData.current.mask,
+          replacement: maskData.current.replacement,
+          showMask: maskData.current.showMask,
+          separate: maskData.current.separate,
         });
       }
 
       changeData.current = getChangeData({
-        maskingData: maskingData.current,
+        maskData: maskData.current,
         inputType,
         added,
         selectionStartRange,
@@ -188,7 +188,7 @@ export default function useMask({
         modify,
       });
 
-      maskingData.current = getMaskingData({
+      maskData.current = getMaskData({
         unmaskedValue: modifiedData.unmaskedValue,
         mask: modifiedData.mask,
         replacement: modifiedData.replacement,
@@ -196,20 +196,20 @@ export default function useMask({
         separate: modifiedData.separate,
       });
 
-      const curetPosition = getCaretPosition(changeData.current, maskingData.current);
+      const curetPosition = getCaretPosition(changeData.current, maskData.current);
 
-      const maskingEventDetail = {
+      const maskEventDetail = {
         unmaskedValue: modifiedData.unmaskedValue,
-        maskedValue: maskingData.current.maskedValue,
-        pattern: maskingData.current.pattern,
-        isValid: maskingData.current.isValid,
+        maskedValue: maskData.current.maskedValue,
+        pattern: maskData.current.pattern,
+        isValid: maskData.current.isValid,
       };
 
       return {
-        value: maskingData.current.maskedValue,
+        value: maskData.current.maskedValue,
         selectionStart: curetPosition,
         selectionEnd: curetPosition,
-        customInputEventDetail: maskingEventDetail,
+        customInputEventDetail: maskEventDetail,
       };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -224,13 +224,13 @@ export default function useMask({
 
   const fallback: Fallback = useCallback(({ previousValue, selectionStart }) => {
     const replaceableSymbolIndex =
-      maskingData.current !== null
-        ? getReplaceableSymbolIndex(previousValue, maskingData.current.replacement, selectionStart)
+      maskData.current !== null
+        ? getReplaceableSymbolIndex(previousValue, maskData.current.replacement, selectionStart)
         : -1;
 
     const curetPosition =
-      changeData.current !== null && maskingData.current !== null
-        ? getCaretPosition(changeData.current, maskingData.current)
+      changeData.current !== null && maskData.current !== null
+        ? getCaretPosition(changeData.current, maskData.current)
         : replaceableSymbolIndex !== -1
         ? replaceableSymbolIndex
         : previousValue.length;
@@ -248,13 +248,13 @@ export default function useMask({
    *
    */
 
-  const inputRef = useInput<MaskingEventDetail>({
+  const inputRef = useInput<MaskEventDetail>({
     init,
     update,
     tracking,
     fallback,
-    customInputEventType: 'masking',
-    customInputEventHandler: onMasking,
+    customInputEventType: 'mask',
+    customInputEventHandler: onMask,
   });
 
   useError({ inputRef, mask, replacement });

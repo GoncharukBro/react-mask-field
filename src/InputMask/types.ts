@@ -1,15 +1,15 @@
 import type { InputType, CustomInputEvent, CustomInputEventHandler } from '../types';
 
-export interface MaskingEventDetail {
+export interface MaskEventDetail {
   unmaskedValue: string;
   maskedValue: string;
   pattern: string;
   isValid: boolean;
 }
 
-export type MaskingEvent = CustomInputEvent<MaskingEventDetail>;
+export type MaskEvent = CustomInputEvent<MaskEventDetail>;
 
-export type MaskingEventHandler = CustomInputEventHandler<MaskingEventDetail>;
+export type MaskEventHandler = CustomInputEventHandler<MaskEventDetail>;
 
 export interface Replacement {
   [key: string]: RegExp;
@@ -31,7 +31,7 @@ export interface MaskProps {
   showMask?: boolean;
   separate?: boolean;
   modify?: Modify;
-  onMasking?: MaskingEventHandler;
+  onMask?: MaskEventHandler;
 }
 
 export type MaskPart = {
@@ -53,7 +53,7 @@ export interface ChangeData {
   inputType: InputType;
 }
 
-export interface MaskingData {
+export interface MaskData {
   maskedValue: string;
   parts: MaskPart[];
   isValid: boolean;

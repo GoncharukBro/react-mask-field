@@ -28,7 +28,7 @@ yarn add react-mask-field
 | showMask    |     boolean      |  false  | Controls the display of the mask, for example, `+7 (912) ___-__-__` instead of `+7 (912`.                                                                                                                                                                                                                                                                                              |
 | separate    |     boolean      |  false  | Stores the position of the entered characters. By default, input characters are non-breaking, which means that if you remove characters in the middle of the value, the characters are shifted to the left, forming a non-breaking value, which is the behavior of `input`. For example, with `true`, the possible value is `+7 (912) ___-67-__`, with `false` - `+7 (912) 67_-__-__`. |
 | modify      |     function     |         | Function triggered before masking. Allows you conditionally change the properties of the component that affect masking. Valid values ​​for modification are `unmaskedValue` (value without mask characters), `mask`, `replacement`, `showMask` and `separate`. This is useful when you need conditionally tweak the displayed value to improve UX (see «Modify»).                      |
-| onMasking   |     function     |         | Handler for the custom event `masking`. Unlike the `change` event, which fires only on input, the `masking` event fires when masking, for example, if `props` have changed and stores additional data about the masked value (see «Masking event»).                                                                                                                                    |
+| onMask      |     function     |         | Handler for the custom event `mask`. Unlike the `change` event, which fires only on input, the `mask` event fires when masking, for example, if `props` have changed and stores additional data about the masked value (see «Mask event»).                                                                                                                                             |
 
 > You can also pass other properties available element `input` default or your own components, when integrated across the property `component`.
 
@@ -113,11 +113,11 @@ export default function App() {
 
 The advantage of this approach is that you do not need to store the state of the component to change the `props`, the modification happens in the already running masking process.
 
-## Masking event
+## Mask event
 
-It can be useful to have additional data about the value at hand or to instantly get a new value when `props` changes, for this you can use the `masking` event.
+It can be useful to have additional data about the value at hand or to instantly get a new value when `props` changes, for this you can use the `mask` event.
 
-The `masking` event is fired asynchronously after the` change` event, in addition, the `masking` event object has a` detail` property that contains additional information about the value:
+The `mask` event is fired asynchronously after the` change` event, in addition, the `mask` event object has a` detail` property that contains additional information about the value:
 
 | Name          |  Type   | Description                                                             |
 | ------------- | :-----: | ----------------------------------------------------------------------- |
@@ -126,11 +126,11 @@ The `masking` event is fired asynchronously after the` change` event, in additio
 | pattern       | string  | A regular expression of type `string` that the masked value must match. |
 | isValid       | boolean | `true` if the mask is full and matches the pattern value.               |
 
-Unlike the `change` event, which fires only on input, the `masking` event fires every time a value changes, through input, or when `props` changes.
+Unlike the `change` event, which fires only on input, the `mask` event fires every time a value changes, through input, or when `props` changes.
 
-> You can use both the `masking` event and the` change` event to save the state, however if you do not need additional parameters in the `detail` property, prefer the` change` event, otherwise it is recommended to use only the `masking` event as it is called asynchronously after the `change` event finishes, which may entail additional rendering of the component.
+> You can use both the `mask` event and the` change` event to save the state, however if you do not need additional parameters in the `detail` property, prefer the` change` event, otherwise it is recommended to use only the `mask` event as it is called asynchronously after the `change` event finishes, which may entail additional rendering of the component.
 
-An example of using the `masking` event:
+An example of using the `mask` event:
 
 ```jsx
 import React from 'react';
@@ -139,7 +139,7 @@ import { InputMask } from 'react-mask-field';
 export default function App() {
   const [detail, setDetail] = React.useState(null);
 
-  const handleMasking = (event) => {
+  const handleMask = (event) => {
     setDetail(event.detail);
   };
 
@@ -148,7 +148,7 @@ export default function App() {
       mask="1yyy"
       replacement={{ y: /\d/ }}
       value={detail?.maskedValue}
-      onMasking={handleMasking}
+      onMask={handleMask}
     />
   );
 }
@@ -236,16 +236,16 @@ import { InputMask } from 'react-mask-field';
 import type {
   ModifiedData,
   Modify,
-  MaskingEvent,
-  MaskingEventDetail,
-  MaskingEventHandler,
+  MaskEvent,
+  MaskEventDetail,
+  MaskEventHandler,
 } from 'react-mask-field';
 
 export default function App() {
-  const [detail, setDetail] = React.useState<MaskingEventDetail, null>(null);
+  const [detail, setDetail] = React.useState<MaskEventDetail, null>(null);
 
-  // Or `event: MaskingEvent`
-  const handleMasking: MaskingEventHandler = (event) => {
+  // Or `event: MaskEvent`
+  const handleMask: MaskEventHandler = (event) => {
     setDetail(event.detail);
   };
 
@@ -254,7 +254,7 @@ export default function App() {
     return data;
   };
 
-  return <InputMask mask="___-___" replacement="_" modify={modify} onMasking={handleMasking} />;
+  return <InputMask mask="___-___" replacement="_" modify={modify} onMask={handleMask} />;
 }
 ```
 

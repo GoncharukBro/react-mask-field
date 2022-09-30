@@ -1,16 +1,16 @@
 import getReplaceableSymbolIndex from './getReplaceableSymbolIndex';
 
-import type { ChangeData, MaskingData } from '../types';
+import type { ChangeData, MaskData } from '../types';
 
 /**
  * Определяет позицию курсора для последующей установки
  * @param changeData
- * @param maskingData
+ * @param maskData
  * @returns позиция курсора
  */
-export default function getCaretPosition(changeData: ChangeData, maskingData: MaskingData): number {
+export default function getCaretPosition(changeData: ChangeData, maskData: MaskData): number {
   const { added, beforeRange, afterRange, inputType } = changeData;
-  const { maskedValue, parts, replacement, separate } = maskingData;
+  const { maskedValue, parts, replacement, separate } = maskData;
 
   const unmaskedSymbols = parts.filter(({ type }) => {
     return separate ? type === 'change' || type === 'replacement' : type === 'change';

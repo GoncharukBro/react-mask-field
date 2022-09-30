@@ -1,4 +1,4 @@
-import type { Replacement, ChangeData, MaskingData } from '../types';
+import type { Replacement, ChangeData, MaskData } from '../types';
 
 import type { InputType } from '../../types';
 
@@ -32,7 +32,7 @@ function filterSymbols({
 }
 
 interface GetChangeDataParams {
-  maskingData: MaskingData;
+  maskData: MaskData;
   inputType: InputType;
   added: string;
   selectionStartRange: number;
@@ -43,7 +43,7 @@ interface GetChangeDataParams {
  * Получает значение введенное пользователем. Для определения пользовательского значения, функция
  * выявляет значение до диапазона изменяемых символов и после него. Сам диапазон заменяется символами
  * пользовательского ввода (при событии `insert`) или пустой строкой (при событии `delete`).
- * @param maskingData
+ * @param maskData
  * @param inputType тип ввода
  * @param added добавленные символы в строку (при событии `insert`)
  * @param selectionStartRange
@@ -51,13 +51,13 @@ interface GetChangeDataParams {
  * @returns объект содержащий информацию о пользовательском значении
  */
 export default function getChangeData({
-  maskingData,
+  maskData,
   inputType,
   added,
   selectionStartRange,
   selectionEndRange,
 }: GetChangeDataParams): ChangeData {
-  const { parts, mask, replacement, separate } = maskingData;
+  const { parts, mask, replacement, separate } = maskData;
 
   let addedSymbols = added;
   let beforeRange = '';

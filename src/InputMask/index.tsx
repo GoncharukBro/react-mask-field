@@ -38,13 +38,13 @@ function BaseInputMask(
     showMask,
     separate,
     modify,
-    onMasking,
+    onMask,
     ...props
   }: PropsWithComponent<MaskProps, ForwardedComponent> &
     React.InputHTMLAttributes<HTMLInputElement>,
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element {
-  const inputRef = useMask({ mask, replacement, showMask, separate, modify, onMasking });
+  const inputRef = useMask({ mask, replacement, showMask, separate, modify, onMask });
   const setInputRef = useSetInputRef(inputRef, forwardedRef);
 
   if (Component) {

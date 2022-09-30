@@ -1,4 +1,4 @@
-import type { Replacement, MaskingData, MaskPart } from '../types';
+import type { Replacement, MaskData, MaskPart } from '../types';
 
 /**
  * Формирует регулярное выражение для паттерна в `input`
@@ -78,7 +78,7 @@ function formatToMask(unmaskedValue: string, { mask, replacement }: Options): st
   }, '');
 }
 
-interface GetMaskingDataParams {
+interface GetMaskDataParams {
   initialValue?: string;
   unmaskedValue: string;
   mask: string;
@@ -98,14 +98,14 @@ interface GetMaskingDataParams {
  * @param param.separate
  * @returns объект с данными маскированного значение
  */
-export default function getMaskingData({
+export default function getMaskData({
   initialValue,
   unmaskedValue,
   mask,
   replacement,
   showMask,
   separate,
-}: GetMaskingDataParams): MaskingData {
+}: GetMaskDataParams): MaskData {
   let maskedValue = initialValue ?? formatToMask(unmaskedValue, { mask, replacement });
 
   const parts = formatToParts(maskedValue, { mask, replacement });

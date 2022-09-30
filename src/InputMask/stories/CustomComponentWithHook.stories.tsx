@@ -8,7 +8,7 @@ import InputMaskComponent from '..';
 
 import type { InputMaskProps } from '..';
 
-import type { MaskingEventDetail } from '../types';
+import type { MaskEventDetail } from '../types';
 
 export default {
   title: 'Mask',
@@ -30,14 +30,14 @@ const CustomComponent = forwardRef(
 );
 
 export const CustomComponentWithHook: ComponentStory<any> = () => {
-  const [detail, setDetail] = useState<MaskingEventDetail | null>(null);
+  const [detail, setDetail] = useState<MaskEventDetail | null>(null);
 
   const ref = useMask({
     mask: '+7 (___) ___-__-__',
     replacement: { _: /\d/ },
     separate: true,
     showMask: true,
-    onMasking: (event) => {
+    onMask: (event) => {
       setDetail(event.detail);
     },
   });

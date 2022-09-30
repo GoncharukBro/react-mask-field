@@ -5,7 +5,7 @@ import type { ComponentStory, Meta } from '@storybook/react';
 import InputMaskComponent from '..';
 
 import type { InputMaskProps } from '..';
-import type { MaskingEventDetail } from '../types';
+import type { MaskEventDetail } from '../types';
 
 export default {
   title: 'Mask',
@@ -13,7 +13,7 @@ export default {
 } as Meta<InputMaskProps>;
 
 export const TestProps: ComponentStory<typeof InputMaskComponent> = () => {
-  const [detail, setDetail] = useState<MaskingEventDetail | null>(null);
+  const [detail, setDetail] = useState<MaskEventDetail | null>(null);
   const [state, setState] = useState({
     mask: '+7 (___) ___-__-__',
     replacement: { _: /\d/ },
@@ -33,7 +33,7 @@ export const TestProps: ComponentStory<typeof InputMaskComponent> = () => {
         value={value}
         // defaultValue="fegoj0fwfwe"
         onChange={(event) => setValue(event.target.value)}
-        onMasking={(event) => {
+        onMask={(event) => {
           setDetail(event.detail);
         }}
       />

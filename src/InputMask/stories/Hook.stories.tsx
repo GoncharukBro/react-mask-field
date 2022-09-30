@@ -7,7 +7,7 @@ import InputMaskComponent from '..';
 import useMask from '../useMask';
 
 import type { InputMaskProps } from '..';
-import type { MaskingEventDetail } from '../types';
+import type { MaskEventDetail } from '../types';
 
 export default {
   title: 'Mask',
@@ -15,7 +15,7 @@ export default {
 } as Meta<InputMaskProps>;
 
 export const Hook: ComponentStory<any> = () => {
-  const [detail, setDetail] = useState<MaskingEventDetail | null>(null);
+  const [detail, setDetail] = useState<MaskEventDetail | null>(null);
   const [value, setValue] = useState('');
 
   const ref = useMask({
@@ -23,7 +23,7 @@ export const Hook: ComponentStory<any> = () => {
     replacement: { _: /\d/ },
     separate: true,
     showMask: true,
-    onMasking: (event) => {
+    onMask: (event) => {
       setDetail(event.detail);
     },
   });

@@ -8,7 +8,7 @@ export type {
   Replacement,
   ModifiedData,
   Modify,
-  MaskingEvent,
-  MaskingEventDetail,
-  MaskingEventHandler,
+  MaskEvent,
+  MaskEventDetail,
+  MaskEventHandler,
 } from './InputMask/types';

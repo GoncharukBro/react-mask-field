@@ -5,7 +5,7 @@ import type { ComponentStory, Meta } from '@storybook/react';
 import InputMaskComponent from '..';
 
 import type { InputMaskProps } from '..';
-import type { ModifiedData, MaskingEventDetail } from '../types';
+import type { ModifiedData, MaskEventDetail } from '../types';
 
 export default {
   title: 'Mask',
@@ -13,7 +13,7 @@ export default {
 } as Meta<InputMaskProps>;
 
 export const СontrolledComponentWithModifyPhone: ComponentStory<typeof InputMaskComponent> = () => {
-  const [detail, setDetail] = useState<MaskingEventDetail | null>(null);
+  const [detail, setDetail] = useState<MaskEventDetail | null>(null);
 
   const modify = ({ unmaskedValue }: ModifiedData) => {
     const newMask =
@@ -28,7 +28,7 @@ export const СontrolledComponentWithModifyPhone: ComponentStory<typeof InputMas
         replacement={{ _: /\d/ }}
         value={detail?.maskedValue}
         modify={modify}
-        onMasking={(event) => setDetail(event.detail)}
+        onMask={(event) => setDetail(event.detail)}
       />
 
       <pre>{JSON.stringify(detail, null, 2)}</pre>

@@ -1,4 +1,5 @@
 import { NumberFormatLocalizedValues } from 'InputNumberFormat/types';
+
 import SyntheticChangeError from '../../SyntheticChangeError';
 
 /**

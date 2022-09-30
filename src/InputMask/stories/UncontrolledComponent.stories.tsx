@@ -21,8 +21,8 @@ export const UncontrolledComponent: ComponentStory<typeof InputMaskComponent> = 
         mask="+7 (___) ___-__-__"
         replacement={{ _: /\d/ }}
         defaultValue="+7 (___) ___-__-__"
-        onMasking={(event) => setDetail(event.detail)}
         autoFocus
+        onMasking={(event) => setDetail(event.detail)}
       />
 
       <pre>{JSON.stringify(detail, null, 2)}</pre>

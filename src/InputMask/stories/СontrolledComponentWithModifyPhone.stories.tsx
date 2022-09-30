@@ -26,8 +26,8 @@ export const СontrolledComponentWithModifyPhone: ComponentStory<typeof InputMas
       <InputMaskComponent
         mask="+_ (___) ___-__-__"
         replacement={{ _: /\d/ }}
-        modify={modify}
         value={detail?.maskedValue}
+        modify={modify}
         onMasking={(event) => setDetail(event.detail)}
       />
 

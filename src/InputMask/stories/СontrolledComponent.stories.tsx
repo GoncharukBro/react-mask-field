@@ -20,8 +20,8 @@ export const СontrolledComponent: ComponentStory<typeof InputMaskComponent> = (
       <InputMaskComponent
         mask="+7 (___) ___-__-__"
         replacement={{ _: /\d/ }}
-        onMasking={(event) => setDetail(event.detail)}
         value={detail?.maskedValue}
+        onMasking={(event) => setDetail(event.detail)}
       />
 
       <pre>{JSON.stringify(detail, null, 2)}</pre>

@@ -1,13 +1,13 @@
 import type { CustomInputEvent, CustomInputEventHandler } from '../types';
 
-export interface FormatEventDetail {
+export interface NumberFormatEventDetail {
   value: string;
   numericValue: number;
 }
 
-export type FormatEvent = CustomInputEvent<FormatEventDetail>;
+export type NumberFormatEvent = CustomInputEvent<NumberFormatEventDetail>;
 
-export type FormatEventHandler = CustomInputEventHandler<FormatEventDetail>;
+export type NumberFormatEventHandler = CustomInputEventHandler<NumberFormatEventDetail>;
 
 export interface NumberFormatOptions extends Intl.NumberFormatOptions {
   maximumIntegerDigits?: number;
@@ -28,10 +28,10 @@ export interface NumberFormatResolvedValues {
 export interface NumberFormatProps {
   locales?: string | string[];
   options?: NumberFormatOptions;
-  onFormat?: FormatEventHandler;
+  onFormat?: NumberFormatEventHandler;
 }
 
-export interface FormatData {
+export interface NumberFormatData {
   value: string;
   numericValue: number;
 }

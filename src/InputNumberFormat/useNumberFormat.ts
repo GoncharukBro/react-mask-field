@@ -6,7 +6,7 @@ import getResolvedValues from './utils/getResolvedValues';
 import getFormatData from './utils/getFormatData';
 import getCaretPosition from './utils/getCaretPosition';
 
-import type { NumberFormatProps, FormatData, FormatEventDetail } from './types';
+import type { NumberFormatProps, NumberFormatData, NumberFormatEventDetail } from './types';
 
 import SyntheticChangeError from '../SyntheticChangeError';
 
@@ -19,7 +19,7 @@ export default function useNumberFormat(
 ): React.MutableRefObject<HTMLInputElement | null> {
   const { locales, options, onFormat } = props ?? {};
 
-  const formatData = useRef<FormatData | null>(null);
+  const formatData = useRef<NumberFormatData | null>(null);
 
   // Преобразовываем объект `options` в строку для сравнения с зависимостью в `useCallback`
   const stringifiedOptions = JSON.stringify(options);
@@ -58,7 +58,7 @@ export default function useNumberFormat(
    *
    */
 
-  const update: Update<FormatEventDetail> = useCallback(() => {
+  const update: Update<NumberFormatEventDetail> = useCallback(() => {
     return undefined;
   }, []);
 
@@ -68,7 +68,7 @@ export default function useNumberFormat(
    *
    */
 
-  const tracking: Tracking<FormatEventDetail> = useCallback(
+  const tracking: Tracking<NumberFormatEventDetail> = useCallback(
     ({
       inputType,
       added,
@@ -185,7 +185,7 @@ export default function useNumberFormat(
    *
    */
 
-  const inputRef = useInput<FormatEventDetail>({
+  const inputRef = useInput<NumberFormatEventDetail>({
     init,
     update,
     tracking,

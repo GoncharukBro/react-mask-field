@@ -1,10 +1,10 @@
 import { useRef, useCallback } from 'react';
 
-import replaceWithNumber from './utils/replaceWithNumber';
 import getLocalizedValues from './utils/getLocalizedValues';
 import getResolvedValues from './utils/getResolvedValues';
 import getFormatData from './utils/getFormatData';
 import getCaretPosition from './utils/getCaretPosition';
+import toNumber from './utils/toNumber';
 
 import type { NumberFormatProps, NumberFormatData, NumberFormatEventDetail } from './types';
 
@@ -33,16 +33,10 @@ export default function useNumberFormat(
   const init: Init = useCallback(({ initialValue }) => {
     const localizedValues = getLocalizedValues(locales);
 
-    const replacedInitialValue = replaceWithNumber(initialValue, localizedValues.symbols);
-
-    const regExp = new RegExp(`[^\\d\\${localizedValues.decimal}]`, 'g');
-    const filteredInitialValue = replacedInitialValue.replace(regExp, '');
-
-    const [integer = '', fraction = ''] = filteredInitialValue.split(localizedValues.decimal);
-
-    const numericValue = Math.abs(Number(integer + (fraction ? `.${fraction}` : '')));
-
-    formatData.current = { value: initialValue, numericValue };
+    formatData.current = {
+      value: initialValue,
+      numericValue: toNumber(initialValue, localizedValues),
+    };
 
     return {
       value: initialValue,
@@ -85,7 +79,14 @@ export default function useNumberFormat(
       }
 
       if (value === '') {
-        return { value: '', selectionStart: 0, selectionEnd: 0 };
+        formatData.current = { value: '', numericValue: 0 };
+
+        return {
+          value: '',
+          selectionStart: 0,
+          selectionEnd: 0,
+          customInputEventDetail: formatData.current,
+        };
       }
 
       const localizedValues = getLocalizedValues(locales);
@@ -104,10 +105,18 @@ export default function useNumberFormat(
         const beforeDecimal = previousBeforeDecimal || nextBeforeDecimal;
         const afterDecimal = previousAfterDecimal || nextAfterDecimal;
 
+        const formattedValue = beforeDecimal + localizedValues.decimal + afterDecimal;
+
+        formatData.current = {
+          value: formattedValue,
+          numericValue: toNumber(formattedValue, localizedValues),
+        };
+
         return {
-          value: beforeDecimal + localizedValues.decimal + afterDecimal,
+          value: formatData.current.value,
           selectionStart: beforeDecimal.length + localizedValues.decimal.length,
           selectionEnd: beforeDecimal.length + localizedValues.decimal.length,
+          customInputEventDetail: formatData.current,
         };
       }
 

@@ -55,7 +55,7 @@ function formatToParts(maskedValue: string, { mask, replacement }: Options): Mas
       ? ('replacement' as const) // заменяемый символ маски
       : symbol === mask[index]
       ? ('mask' as const) // незаменяемый символ маски
-      : ('change' as const); // символ введенный пользователем
+      : ('input' as const); // символ введенный пользователем
 
     return { type, value: symbol, index };
   });
@@ -113,10 +113,10 @@ export default function getMaskData({
   if (initialValue === undefined && !showMask) {
     // Если пользователь не ввел ниодного символа, присваиваем пустую строку,
     // в противном случае, обрезаем значение по последний пользовательский символ
-    if (parts.find(({ type }) => type === 'change') === undefined) {
+    if (parts.find(({ type }) => type === 'input') === undefined) {
       maskedValue = '';
     } else {
-      const lastChangedSymbol = [...parts].reverse().find(({ type }) => type === 'change');
+      const lastChangedSymbol = [...parts].reverse().find(({ type }) => type === 'input');
       const to = lastChangedSymbol !== undefined ? lastChangedSymbol.index + 1 : 0;
       maskedValue = maskedValue.slice(0, to);
     }

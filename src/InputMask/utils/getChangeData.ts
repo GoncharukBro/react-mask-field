@@ -65,7 +65,7 @@ export default function getChangeData({
 
   // Определяем символы до и после диапозона изменяемых символов
   parts.forEach(({ type, value }, index) => {
-    if (separate ? type === 'change' || type === 'replacement' : type === 'change') {
+    if (type === 'input' || (separate && type === 'replacement')) {
       if (index < selectionStartRange) beforeRange += value;
       else if (index >= selectionEndRange) afterRange += value;
     }

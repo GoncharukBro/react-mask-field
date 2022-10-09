@@ -31,13 +31,11 @@ export default function getModifiedData({
     separate: modifiedSeparate,
   });
 
-  if (modifiedData) {
-    modifiedUnmaskedValue = modifiedData.unmaskedValue ?? modifiedUnmaskedValue;
-    modifiedMask = modifiedData.mask ?? modifiedMask;
-    modifiedReplacement = modifiedData.replacement ?? modifiedReplacement;
-    modifiedShowMask = modifiedData.showMask ?? modifiedShowMask;
-    modifiedSeparate = modifiedData.separate ?? modifiedSeparate;
-  }
+  modifiedUnmaskedValue = modifiedData?.unmaskedValue ?? modifiedUnmaskedValue;
+  modifiedMask = modifiedData?.mask ?? modifiedMask;
+  modifiedReplacement = modifiedData?.replacement ?? modifiedReplacement;
+  modifiedShowMask = modifiedData?.showMask ?? modifiedShowMask;
+  modifiedSeparate = modifiedData?.separate ?? modifiedSeparate;
 
   // В случае `separate === true` убираем все не пользовательские симовлы
   if (!separate) {

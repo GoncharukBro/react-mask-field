@@ -13,27 +13,27 @@ export default function getCaretPosition(changeData: ChangeData, maskData: MaskD
   const { maskedValue, parts, replacement, separate } = maskData;
 
   const unmaskedSymbols = parts.filter(({ type }) => {
-    return separate ? type === 'change' || type === 'replacement' : type === 'change';
+    return type === 'input' || (separate && type === 'replacement');
   });
 
-  const getSymbolIndex = (index: number | false): number => {
-    return index !== false ? unmaskedSymbols[index]?.index ?? -1 : -1;
+  const getSymbolIndex = (index: number): number | false => {
+    return unmaskedSymbols[index]?.index ?? false;
   };
 
-  const addedLastIndex = getSymbolIndex(!!added && beforeRange.length + added.length - 1);
-  const beforeRangeLastIndex = getSymbolIndex(!!beforeRange && beforeRange.length - 1);
-  const afterRangeFirstIndex = getSymbolIndex(!!afterRange && beforeRange.length + added.length);
+  const addedLastIndex = !!added && getSymbolIndex(beforeRange.length + added.length - 1);
+  const beforeRangeLastIndex = !!beforeRange && getSymbolIndex(beforeRange.length - 1);
+  const afterRangeFirstIndex = !!afterRange && getSymbolIndex(beforeRange.length + added.length);
 
   switch (inputType) {
     case 'insert':
     case 'deleteForward':
-      if (addedLastIndex !== -1) return addedLastIndex + 1;
-      if (afterRangeFirstIndex !== -1) return afterRangeFirstIndex;
-      if (beforeRangeLastIndex !== -1) return beforeRangeLastIndex + 1;
+      if (addedLastIndex) return addedLastIndex + 1;
+      if (afterRangeFirstIndex) return afterRangeFirstIndex;
+      if (beforeRangeLastIndex) return beforeRangeLastIndex + 1;
       break;
     case 'deleteBackward':
-      if (beforeRangeLastIndex !== -1) return beforeRangeLastIndex + 1;
-      if (afterRangeFirstIndex !== -1) return afterRangeFirstIndex;
+      if (beforeRangeLastIndex) return beforeRangeLastIndex + 1;
+      if (afterRangeFirstIndex) return afterRangeFirstIndex;
       break;
   }
 

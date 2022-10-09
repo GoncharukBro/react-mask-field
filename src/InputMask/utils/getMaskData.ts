@@ -129,11 +129,11 @@ export default function getMaskData({
   return {
     maskedValue,
     parts,
+    pattern,
     isValid,
     mask,
     replacement,
     showMask,
     separate,
-    pattern,
   };
 }

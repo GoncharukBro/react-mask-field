@@ -1,7 +1,6 @@
 import { useRef, useCallback } from 'react';
 
 import getModifiedData from './utils/getModifiedData';
-import findReplacementSymbolIndex from './utils/findReplacementSymbolIndex';
 import getChangeData from './utils/getChangeData';
 import getMaskData from './utils/getMaskData';
 import getCaretPosition from './utils/getCaretPosition';
@@ -220,17 +219,10 @@ export default function useMask({
    *
    */
 
-  const fallback: Fallback = useCallback(({ inputType, previousValue, selectionStart }) => {
-    const replacementSymbolIndex =
-      maskData.current !== null
-        ? findReplacementSymbolIndex(previousValue, maskData.current.replacement, selectionStart)
-        : -1;
-
+  const fallback: Fallback = useCallback(({ inputType, previousValue }) => {
     const curetPosition =
       changeData.current !== null && maskData.current !== null
         ? getCaretPosition(inputType, changeData.current, maskData.current)
-        : replacementSymbolIndex !== -1
-        ? replacementSymbolIndex
         : previousValue.length;
 
     return {

@@ -219,18 +219,18 @@ export default function useMask({
    *
    */
 
-  const fallback: Fallback = useCallback(({ inputType, previousValue }) => {
-    const curetPosition =
-      changeData.current !== null && maskData.current !== null
-        ? getCaretPosition(inputType, changeData.current, maskData.current)
-        : previousValue.length;
+  const fallback: Fallback = useCallback(
+    ({ inputType, previousValue, selectionStart, selectionEnd }) => {
+      if (changeData.current !== null && maskData.current !== null) {
+        const curetPosition = getCaretPosition(inputType, changeData.current, maskData.current);
 
-    return {
-      value: previousValue,
-      selectionStart: curetPosition,
-      selectionEnd: curetPosition,
-    };
-  }, []);
+        return { value: previousValue, selectionStart: curetPosition, selectionEnd: curetPosition };
+      }
+
+      return { value: previousValue, selectionStart, selectionEnd };
+    },
+    []
+  );
 
   /**
    *

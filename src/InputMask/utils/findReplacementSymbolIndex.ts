@@ -1,13 +1,13 @@
 import type { Replacement } from '../types';
 
 /**
- * Находит индекс заменяемого символа указанного в свойстве `replacement`
+ * Находит индекс символа замены указанного в свойстве `replacement`
  * @param value значение в котором необходимо осуществить поиск
- * @param replacement
+ * @param replacement символ замены указанный в свойстве `replacement`
  * @param position индекс с которого требуется искать, если индекс не передан, поиск будет идти с начала
- * @returns индекс заменяемого символа
+ * @returns индекс символа замены
  */
-export default function getReplaceableSymbolIndex(
+export default function findReplacementSymbolIndex(
   value: string,
   replacement: Replacement,
   position?: number

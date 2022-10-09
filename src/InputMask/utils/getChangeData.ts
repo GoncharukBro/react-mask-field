@@ -1,10 +1,8 @@
 import type { Replacement, ChangeData, MaskData } from '../types';
 
-import type { InputType } from '../../types';
-
 interface FilterSymbolsParams {
   value: string;
-  replaceableSymbols: string;
+  replacementSymbols: string;
   replacement: Replacement;
   separate: boolean;
 }
@@ -12,11 +10,11 @@ interface FilterSymbolsParams {
 // Фильтруем символы для соответствия значениям `replacement`
 function filterSymbols({
   value,
-  replaceableSymbols,
+  replacementSymbols,
   replacement,
   separate,
 }: FilterSymbolsParams): string {
-  let symbols = replaceableSymbols;
+  let symbols = replacementSymbols;
 
   return value.split('').reduce((prev, symbol) => {
     const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
@@ -33,7 +31,6 @@ function filterSymbols({
 
 interface GetChangeDataParams {
   maskData: MaskData;
-  inputType: InputType;
   added: string;
   selectionStartRange: number;
   selectionEndRange: number;
@@ -52,7 +49,6 @@ interface GetChangeDataParams {
  */
 export default function getChangeData({
   maskData,
-  inputType,
   added,
   selectionStartRange,
   selectionEndRange,
@@ -73,7 +69,7 @@ export default function getChangeData({
 
   // Находим все заменяемые символы для фильтрации пользовательского значения.
   // Важно определить корректное значение на данном этапе
-  let replaceableSymbols = mask.split('').reduce((prev, symbol) => {
+  let replacementSymbols = mask.split('').reduce((prev, symbol) => {
     const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
     return isReplacementKey ? prev + symbol : prev;
   }, '');
@@ -81,18 +77,18 @@ export default function getChangeData({
   if (beforeRange) {
     beforeRange = filterSymbols({
       value: beforeRange,
-      replaceableSymbols,
+      replacementSymbols,
       replacement,
       separate,
     });
   }
 
-  replaceableSymbols = replaceableSymbols.slice(beforeRange.length);
+  replacementSymbols = replacementSymbols.slice(beforeRange.length);
 
   if (addedSymbols) {
     addedSymbols = filterSymbols({
       value: addedSymbols,
-      replaceableSymbols,
+      replacementSymbols,
       replacement,
       separate: false, // Поскольку нас интересуют только "полезные" символы, фильтуем без учёта заменяемых символов
     });
@@ -121,12 +117,12 @@ export default function getChangeData({
     }
   }
 
-  replaceableSymbols = replaceableSymbols.slice(addedSymbols.length);
+  replacementSymbols = replacementSymbols.slice(addedSymbols.length);
 
   if (afterRange) {
     afterRange = filterSymbols({
       value: afterRange,
-      replaceableSymbols,
+      replacementSymbols,
       replacement,
       separate,
     });
@@ -137,6 +133,5 @@ export default function getChangeData({
     added: addedSymbols,
     beforeRange,
     afterRange,
-    inputType,
   };
 }

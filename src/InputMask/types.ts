@@ -1,4 +1,4 @@
-import type { InputType, CustomInputEvent, CustomInputEventHandler } from '../types';
+import type { CustomInputEvent, CustomInputEventHandler } from '../types';
 
 export interface MaskEventDetail {
   maskedValue: string;
@@ -35,7 +35,6 @@ export interface MaskProps {
 }
 
 export interface ChangeData {
-  inputType: InputType;
   unmaskedValue: string;
   added: string;
   beforeRange: string;
@@ -44,8 +43,8 @@ export interface ChangeData {
 
 export type MaskPart = {
   /**
-   * - `replacement` - заменяемый символ маски
-   * - `mask` - незаменяемый символ маски
+   * - `replacement` - символ замены
+   * - `mask` - символ маски
    * - `input` - символ введенный пользователем
    */
   type: 'replacement' | 'mask' | 'input';

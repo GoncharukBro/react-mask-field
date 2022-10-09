@@ -3,7 +3,7 @@ import type { Replacement, MaskData, MaskPart } from '../types';
 /**
  * Формирует регулярное выражение для паттерна в `input`
  * @param disableReplacementKey если `true`, поиск по регулярке не будет учитывать ключ параметра
- * `replacement`, то есть символ по индексу заменяемого символа в значении может быть любым
+ * `replacement`, то есть символ по индексу символа замены в значении может быть любым
  * символом соответствующим значению `replacement` кроме ключа самого `replacement`.
  * Так, если `mask === 'abc_123'` и `replacement === { _: /\D/ }` то
  * - при `false`: `pattern === /^abc\D123$/` и `pattern.test('abc_123')` вернёт `true`;
@@ -52,9 +52,9 @@ function formatToParts(maskedValue: string, { mask, replacement }: Options): Mas
     const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
 
     const type = isReplacementKey
-      ? ('replacement' as const) // заменяемый символ маски
+      ? ('replacement' as const) // символ замены
       : symbol === mask[index]
-      ? ('mask' as const) // незаменяемый символ маски
+      ? ('mask' as const) // символ маски
       : ('input' as const); // символ введенный пользователем
 
     return { type, value: symbol, index };

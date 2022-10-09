@@ -137,6 +137,9 @@ export default function useInput<D = any>({
     const handleInput = (event: Event) => {
       if (!validInputType(inputRef)) return;
 
+      let inputType: InputType = 'initial';
+      const previousValue = inputRef.current?._valueTracker?.getValue?.() ?? '';
+
       try {
         if (inputRef.current === null) {
           throw new SyntheticChangeError('Reference to input element is not initialized.');
@@ -150,14 +153,11 @@ export default function useInput<D = any>({
 
         selection.current.cachedRequestID = selection.current.requestID;
 
-        const previousValue = inputRef.current._valueTracker?.getValue?.() ?? '';
         const { value, selectionStart, selectionEnd } = inputRef.current;
 
         if (selectionStart === null || selectionEnd === null) {
           throw new SyntheticChangeError('The selection attributes have not been initialized.');
         }
-
-        let inputType: InputType = 'initial';
 
         // Определяем тип ввода (ручное определение типа ввода способствует кроссбраузерности)
         if (selectionStart > selection.current.start) {
@@ -249,11 +249,9 @@ export default function useInput<D = any>({
           // eslint-disable-next-line no-console
           console.error(error);
         }
-        // Поскольку внутреннее состояние элемента `input`,
-        // изменилось после ввода его необходимо восстановить
-        const previousValue = inputRef.current?._valueTracker?.getValue?.() ?? '';
 
         const fallbackResult = fallback({
+          inputType,
           previousValue,
           selectionStart: selection.current.start,
           selectionEnd: selection.current.end,

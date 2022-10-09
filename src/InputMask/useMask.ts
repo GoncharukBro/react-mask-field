@@ -1,7 +1,7 @@
 import { useRef, useCallback } from 'react';
 
 import getModifiedData from './utils/getModifiedData';
-import getReplaceableSymbolIndex from './utils/getReplaceableSymbolIndex';
+import findReplacementSymbolIndex from './utils/findReplacementSymbolIndex';
 import getChangeData from './utils/getChangeData';
 import getMaskData from './utils/getMaskData';
 import getCaretPosition from './utils/getCaretPosition';
@@ -57,9 +57,9 @@ export default function useMask({
       const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
 
       if (isReplacementKey) {
-        const hasReplaceableSymbol =
+        const hasReplacementSymbol =
           initialValue[index] !== undefined && initialValue[index] !== symbol;
-        if (hasReplaceableSymbol) return prev + initialValue[index];
+        if (hasReplacementSymbol) return prev + initialValue[index];
         if (separate) return prev + symbol;
       }
 
@@ -71,7 +71,6 @@ export default function useMask({
       beforeRange: '',
       added: '',
       afterRange: '',
-      inputType: 'initial',
     };
 
     maskData.current = getMaskData({
@@ -83,10 +82,10 @@ export default function useMask({
       separate,
     });
 
-    const curetPosition = getCaretPosition(changeData.current, maskData.current);
+    const curetPosition = getCaretPosition('initial', changeData.current, maskData.current);
 
     return {
-      value: maskData.current.maskedValue,
+      value: initialValue,
       selectionStart: curetPosition,
       selectionEnd: curetPosition,
     };
@@ -121,7 +120,7 @@ export default function useMask({
       separate: modifiedData.separate,
     });
 
-    const curetPosition = getCaretPosition(changeData.current, maskData.current);
+    const curetPosition = getCaretPosition('initial', changeData.current, maskData.current);
 
     const maskEventDetail = {
       unmaskedValue: modifiedData.unmaskedValue,
@@ -167,7 +166,6 @@ export default function useMask({
 
       changeData.current = getChangeData({
         maskData: maskData.current,
-        inputType,
         added,
         selectionStartRange,
         selectionEndRange,
@@ -196,7 +194,7 @@ export default function useMask({
         separate: modifiedData.separate,
       });
 
-      const curetPosition = getCaretPosition(changeData.current, maskData.current);
+      const curetPosition = getCaretPosition(inputType, changeData.current, maskData.current);
 
       const maskEventDetail = {
         unmaskedValue: modifiedData.unmaskedValue,
@@ -222,17 +220,17 @@ export default function useMask({
    *
    */
 
-  const fallback: Fallback = useCallback(({ previousValue, selectionStart }) => {
-    const replaceableSymbolIndex =
+  const fallback: Fallback = useCallback(({ inputType, previousValue, selectionStart }) => {
+    const replacementSymbolIndex =
       maskData.current !== null
-        ? getReplaceableSymbolIndex(previousValue, maskData.current.replacement, selectionStart)
+        ? findReplacementSymbolIndex(previousValue, maskData.current.replacement, selectionStart)
         : -1;
 
     const curetPosition =
       changeData.current !== null && maskData.current !== null
-        ? getCaretPosition(changeData.current, maskData.current)
-        : replaceableSymbolIndex !== -1
-        ? replaceableSymbolIndex
+        ? getCaretPosition(inputType, changeData.current, maskData.current)
+        : replacementSymbolIndex !== -1
+        ? replacementSymbolIndex
         : previousValue.length;
 
     return {

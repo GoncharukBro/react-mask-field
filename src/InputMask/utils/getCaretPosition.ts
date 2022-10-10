@@ -20,17 +20,22 @@ function findReplacementSymbolIndex(
   });
 }
 
+interface GetCaretPositionParams {
+  inputType: InputType;
+  changeData: ChangeData;
+  maskData: MaskData;
+}
+
 /**
  * Определяет позицию курсора для последующей установки
- * @param changeData
- * @param maskData
+ * @param param
  * @returns позиция курсора
  */
-export default function getCaretPosition(
-  inputType: InputType,
-  changeData: ChangeData,
-  maskData: MaskData
-): number {
+export default function getCaretPosition({
+  inputType,
+  changeData,
+  maskData,
+}: GetCaretPositionParams): number {
   const { added, beforeRange, afterRange } = changeData;
   const { maskedValue, parts, replacement, separate } = maskData;
 

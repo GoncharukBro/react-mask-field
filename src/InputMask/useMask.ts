@@ -81,7 +81,11 @@ export default function useMask({
       separate,
     });
 
-    const curetPosition = getCaretPosition('initial', changeData.current, maskData.current);
+    const curetPosition = getCaretPosition({
+      inputType: 'initial',
+      changeData: changeData.current,
+      maskData: maskData.current,
+    });
 
     return {
       value: initialValue,
@@ -119,7 +123,11 @@ export default function useMask({
       separate: modifiedData.separate,
     });
 
-    const curetPosition = getCaretPosition('initial', changeData.current, maskData.current);
+    const curetPosition = getCaretPosition({
+      inputType: 'initial',
+      changeData: changeData.current,
+      maskData: maskData.current,
+    });
 
     const maskEventDetail = {
       unmaskedValue: modifiedData.unmaskedValue,
@@ -193,7 +201,11 @@ export default function useMask({
         separate: modifiedData.separate,
       });
 
-      const curetPosition = getCaretPosition(inputType, changeData.current, maskData.current);
+      const curetPosition = getCaretPosition({
+        inputType,
+        changeData: changeData.current,
+        maskData: maskData.current,
+      });
 
       const maskEventDetail = {
         unmaskedValue: modifiedData.unmaskedValue,
@@ -222,7 +234,11 @@ export default function useMask({
   const fallback: Fallback = useCallback(
     ({ inputType, previousValue, selectionStart, selectionEnd }) => {
       if (changeData.current !== null && maskData.current !== null) {
-        const curetPosition = getCaretPosition(inputType, changeData.current, maskData.current);
+        const curetPosition = getCaretPosition({
+          inputType,
+          changeData: changeData.current,
+          maskData: maskData.current,
+        });
 
         return { value: previousValue, selectionStart: curetPosition, selectionEnd: curetPosition };
       }

@@ -108,7 +108,10 @@ export default function useMask({
       added: changeData.current.added,
       beforeRange: changeData.current.beforeRange,
       afterRange: changeData.current.afterRange,
-      maskData: maskData.current,
+      maskedValue: maskData.current.maskedValue,
+      parts: maskData.current.parts,
+      replacement: maskData.current.replacement,
+      separate: maskData.current.separate,
     });
 
     const maskEventDetail = {
@@ -155,9 +158,9 @@ export default function useMask({
 
       changeData.current = getChangeData({
         added,
+        previousValue,
         selectionStartRange,
         selectionEndRange,
-        parts: maskData.current.parts,
         mask: maskData.current.mask,
         replacement: maskData.current.replacement,
         separate: maskData.current.separate,
@@ -184,7 +187,10 @@ export default function useMask({
         added: changeData.current.added,
         beforeRange: changeData.current.beforeRange,
         afterRange: changeData.current.afterRange,
-        maskData: maskData.current,
+        maskedValue: maskData.current.maskedValue,
+        parts: maskData.current.parts,
+        replacement: maskData.current.replacement,
+        separate: maskData.current.separate,
       });
 
       const maskEventDetail = {
@@ -219,7 +225,10 @@ export default function useMask({
           added: changeData.current.added,
           beforeRange: changeData.current.beforeRange,
           afterRange: changeData.current.afterRange,
-          maskData: maskData.current,
+          maskedValue: maskData.current.maskedValue,
+          parts: maskData.current.parts,
+          replacement: maskData.current.replacement,
+          separate: maskData.current.separate,
         });
 
         return { value: previousValue, selectionStart: curetPosition, selectionEnd: curetPosition };

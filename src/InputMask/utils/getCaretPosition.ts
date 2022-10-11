@@ -1,6 +1,6 @@
 import findReplacementSymbolIndex from './findReplacementSymbolIndex';
 
-import type { MaskData } from '../types';
+import type { MaskPart, Replacement } from '../types';
 
 import type { InputType } from '../../types';
 
@@ -9,7 +9,10 @@ interface GetCaretPositionParams {
   added: string;
   beforeRange: string;
   afterRange: string;
-  maskData: MaskData;
+  maskedValue: string;
+  parts: MaskPart[];
+  replacement: Replacement;
+  separate: boolean;
 }
 
 /**
@@ -22,10 +25,11 @@ export default function getCaretPosition({
   added,
   beforeRange,
   afterRange,
-  maskData,
+  maskedValue,
+  parts,
+  replacement,
+  separate,
 }: GetCaretPositionParams): number {
-  const { maskedValue, parts, replacement, separate } = maskData;
-
   const unmaskedSymbols = parts.filter(({ type }) => {
     return type === 'input' || (separate && type === 'replacement');
   });

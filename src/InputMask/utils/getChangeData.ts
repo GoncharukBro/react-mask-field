@@ -1,6 +1,6 @@
 import unmask from './unmask';
 
-import type { Replacement, ChangeData, MaskPart } from '../types';
+import type { Replacement, ChangeData } from '../types';
 
 interface FilterParams {
   value: string;
@@ -28,9 +28,9 @@ function filter({ value, replacementSymbols, replacement, separate }: FilterPara
 
 interface GetChangeDataParams {
   added: string;
+  previousValue: string;
   selectionStartRange: number;
   selectionEndRange: number;
-  parts: MaskPart[];
   mask: string;
   replacement: Replacement;
   separate: boolean;
@@ -40,38 +40,39 @@ interface GetChangeDataParams {
  * Получает значение введенное пользователем. Для определения пользовательского значения, функция
  * выявляет значение до диапазона изменяемых символов и после него. Сам диапазон заменяется символами
  * пользовательского ввода (при событии `insert`) или пустой строкой (при событии `delete`).
- * @param inputType тип ввода
  * @param added добавленные символы в строку (при событии `insert`)
+ * @param previousValue предыдущее значение
  * @param selectionStartRange
  * @param selectionEndRange
  * @returns объект содержащий информацию о пользовательском значении
  */
 export default function getChangeData({
   added,
+  previousValue,
   selectionStartRange,
   selectionEndRange,
-  parts,
   mask,
   replacement,
   separate,
 }: GetChangeDataParams): ChangeData {
-  let beforeRange = '';
-  let afterRange = '';
-
-  // Определяем символы до и после диапозона изменяемых символов
-  parts.forEach(({ type, value }, index) => {
-    if (type === 'input' || (separate && type === 'replacement')) {
-      if (index < selectionStartRange) beforeRange += value;
-      else if (index >= selectionEndRange) afterRange += value;
-    }
+  let beforeRange = unmask({
+    value: previousValue,
+    end: selectionStartRange,
+    mask,
+    replacement,
+    separate,
+  });
+  let afterRange = unmask({
+    value: previousValue,
+    start: selectionEndRange,
+    mask,
+    replacement,
+    separate,
   });
 
   // Находим все заменяемые символы для фильтрации пользовательского значения.
   // Важно определить корректное значение на данном этапе
-  let replacementSymbols = mask.split('').reduce((prev, symbol) => {
-    const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
-    return isReplacementKey ? prev + symbol : prev;
-  }, '');
+  let replacementSymbols = mask.replace(new RegExp(`[^${Object.keys(replacement)}]`, 'g'), '');
 
   if (beforeRange) {
     beforeRange = filter({
@@ -100,11 +101,11 @@ export default function getChangeData({
     // Находим заменяемые символы в диапозоне изменяемых символов
     const separateSymbols = unmask({
       value: mask,
+      start: selectionStartRange,
+      end: selectionEndRange,
       mask,
       replacement,
       separate,
-      start: selectionStartRange,
-      end: selectionEndRange,
     });
 
     // Получаем количество символов для сохранения перед `afterRange`. Возможные значения:

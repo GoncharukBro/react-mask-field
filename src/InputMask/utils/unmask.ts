@@ -2,20 +2,20 @@ import { Replacement } from '../types';
 
 interface UnmaskParams {
   value: string;
+  start?: number;
+  end?: number;
   mask: string;
   replacement: Replacement;
   separate: boolean;
-  start?: number;
-  end?: number;
 }
 
 export default function unmask({
   value,
+  start = 0,
+  end,
   mask,
   replacement,
   separate,
-  start = 0,
-  end,
 }: UnmaskParams) {
   const slicedMask = mask.slice(start, end);
   const slicedValue = value.slice(start, end);

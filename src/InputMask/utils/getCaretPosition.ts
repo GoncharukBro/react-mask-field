@@ -1,28 +1,14 @@
-import type { Replacement, ChangeData, MaskData } from '../types';
+import findReplacementSymbolIndex from './findReplacementSymbolIndex';
+
+import type { MaskData } from '../types';
 
 import type { InputType } from '../../types';
 
-/**
- * Находит индекс символа замены указанного в свойстве `replacement`
- * @param value значение в котором необходимо осуществить поиск
- * @param replacement символ замены указанный в свойстве `replacement`
- * @param position индекс с которого требуется искать, если индекс не передан, поиск будет идти с начала
- * @returns индекс символа замены
- */
-function findReplacementSymbolIndex(
-  value: string,
-  replacement: Replacement,
-  position?: number
-): number {
-  return value.split('').findIndex((symbol, index) => {
-    const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
-    return index >= (position ?? 0) && isReplacementKey;
-  });
-}
-
 interface GetCaretPositionParams {
   inputType: InputType;
-  changeData: ChangeData;
+  added: string;
+  beforeRange: string;
+  afterRange: string;
   maskData: MaskData;
 }
 
@@ -33,10 +19,11 @@ interface GetCaretPositionParams {
  */
 export default function getCaretPosition({
   inputType,
-  changeData,
+  added,
+  beforeRange,
+  afterRange,
   maskData,
 }: GetCaretPositionParams): number {
-  const { added, beforeRange, afterRange } = changeData;
   const { maskedValue, parts, replacement, separate } = maskData;
 
   const unmaskedSymbols = parts.filter(({ type }) => {

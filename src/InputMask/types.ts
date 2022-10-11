@@ -16,7 +16,6 @@ export interface Replacement {
 }
 
 export interface ModifiedData {
-  unmaskedValue: string;
   mask: string;
   replacement: Replacement;
   showMask: boolean;

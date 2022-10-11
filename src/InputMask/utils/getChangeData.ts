@@ -1,6 +1,8 @@
-import type { Replacement, ChangeData, MaskData } from '../types';
+import unmask from './unmask';
 
-interface FilterSymbolsParams {
+import type { Replacement, ChangeData, MaskPart } from '../types';
+
+interface FilterParams {
   value: string;
   replacementSymbols: string;
   replacement: Replacement;
@@ -8,19 +10,14 @@ interface FilterSymbolsParams {
 }
 
 // Фильтруем символы для соответствия значениям `replacement`
-function filterSymbols({
-  value,
-  replacementSymbols,
-  replacement,
-  separate,
-}: FilterSymbolsParams): string {
+function filter({ value, replacementSymbols, replacement, separate }: FilterParams): string {
   let symbols = replacementSymbols;
 
   return value.split('').reduce((prev, symbol) => {
     const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
-    const isCorrectSymbol = replacement[symbols[0]]?.test(symbol);
+    const isValidSymbol = replacement[symbols[0]]?.test(symbol);
 
-    if (separate ? isReplacementKey || isCorrectSymbol : !isReplacementKey && isCorrectSymbol) {
+    if (separate ? isReplacementKey || isValidSymbol : !isReplacementKey && isValidSymbol) {
       symbols = symbols.slice(1);
       return prev + symbol;
     }
@@ -30,17 +27,19 @@ function filterSymbols({
 }
 
 interface GetChangeDataParams {
-  maskData: MaskData;
   added: string;
   selectionStartRange: number;
   selectionEndRange: number;
+  parts: MaskPart[];
+  mask: string;
+  replacement: Replacement;
+  separate: boolean;
 }
 
 /**
  * Получает значение введенное пользователем. Для определения пользовательского значения, функция
  * выявляет значение до диапазона изменяемых символов и после него. Сам диапазон заменяется символами
  * пользовательского ввода (при событии `insert`) или пустой строкой (при событии `delete`).
- * @param maskData
  * @param inputType тип ввода
  * @param added добавленные символы в строку (при событии `insert`)
  * @param selectionStartRange
@@ -48,14 +47,14 @@ interface GetChangeDataParams {
  * @returns объект содержащий информацию о пользовательском значении
  */
 export default function getChangeData({
-  maskData,
   added,
   selectionStartRange,
   selectionEndRange,
+  parts,
+  mask,
+  replacement,
+  separate,
 }: GetChangeDataParams): ChangeData {
-  const { parts, mask, replacement, separate } = maskData;
-
-  let addedSymbols = added;
   let beforeRange = '';
   let afterRange = '';
 
@@ -75,7 +74,7 @@ export default function getChangeData({
   }, '');
 
   if (beforeRange) {
-    beforeRange = filterSymbols({
+    beforeRange = filter({
       value: beforeRange,
       replacementSymbols,
       replacement,
@@ -85,9 +84,10 @@ export default function getChangeData({
 
   replacementSymbols = replacementSymbols.slice(beforeRange.length);
 
-  if (addedSymbols) {
-    addedSymbols = filterSymbols({
-      value: addedSymbols,
+  if (added) {
+    // eslint-disable-next-line no-param-reassign
+    added = filter({
+      value: added,
       replacementSymbols,
       replacement,
       separate: false, // Поскольку нас интересуют только "полезные" символы, фильтуем без учёта заменяемых символов
@@ -98,17 +98,20 @@ export default function getChangeData({
   // после фильтрации `added` и перед фильтрацией `afterRange`
   if (separate) {
     // Находим заменяемые символы в диапозоне изменяемых символов
-    const separateSymbols = mask.split('').reduce((prev, symbol, index) => {
-      const isSelectionRange = index >= selectionStartRange && index < selectionEndRange;
-      const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
-      return isSelectionRange && isReplacementKey ? prev + symbol : prev;
-    }, '');
+    const separateSymbols = unmask({
+      value: mask,
+      mask,
+      replacement,
+      separate,
+      start: selectionStartRange,
+      end: selectionEndRange,
+    });
 
     // Получаем количество символов для сохранения перед `afterRange`. Возможные значения:
     // `меньше ноля` - обрезаем значение от начала на количество символов;
     // `ноль` - не меняем значение;
     // `больше ноля` - добавляем заменяемые символы к началу значения.
-    const countSeparateSymbols = separateSymbols.length - addedSymbols.length;
+    const countSeparateSymbols = separateSymbols.length - added.length;
 
     if (countSeparateSymbols < 0) {
       afterRange = afterRange.slice(-countSeparateSymbols);
@@ -117,10 +120,10 @@ export default function getChangeData({
     }
   }
 
-  replacementSymbols = replacementSymbols.slice(addedSymbols.length);
+  replacementSymbols = replacementSymbols.slice(added.length);
 
   if (afterRange) {
-    afterRange = filterSymbols({
+    afterRange = filter({
       value: afterRange,
       replacementSymbols,
       replacement,
@@ -129,8 +132,8 @@ export default function getChangeData({
   }
 
   return {
-    unmaskedValue: beforeRange + addedSymbols + afterRange,
-    added: addedSymbols,
+    unmaskedValue: beforeRange + added + afterRange,
+    added,
     beforeRange,
     afterRange,
   };

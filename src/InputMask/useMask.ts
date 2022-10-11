@@ -1,9 +1,10 @@
 import { useRef, useCallback } from 'react';
 
-import getModifiedData from './utils/getModifiedData';
 import getChangeData from './utils/getChangeData';
 import getMaskData from './utils/getMaskData';
 import getCaretPosition from './utils/getCaretPosition';
+import findReplacementSymbolIndex from './utils/findReplacementSymbolIndex';
+import unmask from './utils/unmask';
 
 import useError from './useError';
 
@@ -52,23 +53,12 @@ export default function useMask({
 
     // Немаскированное значение необходимо для инициализации состояния. Выбираем из инициализированного значения
     // все символы, не являющиеся символами маски. Ожидается, что инициализированное значение соответствует паттерну маски
-    const unmaskedValue = mask.split('').reduce((prev, symbol, index) => {
-      const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
-
-      if (isReplacementKey) {
-        const hasReplacementSymbol =
-          initialValue[index] !== undefined && initialValue[index] !== symbol;
-        if (hasReplacementSymbol) return prev + initialValue[index];
-        if (separate) return prev + symbol;
-      }
-
-      return prev;
-    }, '');
+    const unmaskedValue = unmask({ value: initialValue, mask, replacement, separate });
 
     changeData.current = {
       unmaskedValue,
       beforeRange: '',
-      added: '',
+      added: unmaskedValue,
       afterRange: '',
     };
 
@@ -81,11 +71,10 @@ export default function useMask({
       separate,
     });
 
-    const curetPosition = getCaretPosition({
-      inputType: 'initial',
-      changeData: changeData.current,
-      maskData: maskData.current,
-    });
+    const replacementSymbolIndex = findReplacementSymbolIndex(initialValue, replacement);
+
+    const curetPosition =
+      replacementSymbolIndex !== -1 ? replacementSymbolIndex : initialValue.length;
 
     return {
       value: initialValue,
@@ -106,32 +95,25 @@ export default function useMask({
       return undefined;
     }
 
-    const modifiedData = getModifiedData({
+    maskData.current = getMaskData({
       unmaskedValue: changeData.current.unmaskedValue,
       mask,
       replacement,
       showMask,
       separate,
-      modify,
-    });
-
-    maskData.current = getMaskData({
-      unmaskedValue: modifiedData.unmaskedValue,
-      mask: modifiedData.mask,
-      replacement: modifiedData.replacement,
-      showMask: modifiedData.showMask,
-      separate: modifiedData.separate,
     });
 
     const curetPosition = getCaretPosition({
       inputType: 'initial',
-      changeData: changeData.current,
+      added: changeData.current.added,
+      beforeRange: changeData.current.beforeRange,
+      afterRange: changeData.current.afterRange,
       maskData: maskData.current,
     });
 
     const maskEventDetail = {
-      unmaskedValue: modifiedData.unmaskedValue,
       maskedValue: maskData.current.maskedValue,
+      unmaskedValue: changeData.current.unmaskedValue,
       pattern: maskData.current.pattern,
       isValid: maskData.current.isValid,
     };
@@ -172,10 +154,13 @@ export default function useMask({
       }
 
       changeData.current = getChangeData({
-        maskData: maskData.current,
         added,
         selectionStartRange,
         selectionEndRange,
+        parts: maskData.current.parts,
+        mask: maskData.current.mask,
+        replacement: maskData.current.replacement,
+        separate: maskData.current.separate,
       });
 
       if (inputType === 'insert' && changeData.current.added === '') {
@@ -184,32 +169,27 @@ export default function useMask({
         );
       }
 
-      const modifiedData = getModifiedData({
-        unmaskedValue: changeData.current.unmaskedValue,
-        mask,
-        replacement,
-        showMask,
-        separate,
-        modify,
-      });
+      const modifiedData = modify?.({ mask, replacement, showMask, separate });
 
       maskData.current = getMaskData({
-        unmaskedValue: modifiedData.unmaskedValue,
-        mask: modifiedData.mask,
-        replacement: modifiedData.replacement,
-        showMask: modifiedData.showMask,
-        separate: modifiedData.separate,
+        unmaskedValue: changeData.current.unmaskedValue,
+        mask: modifiedData?.mask ?? mask,
+        replacement: modifiedData?.replacement ?? replacement,
+        showMask: modifiedData?.showMask ?? showMask,
+        separate: modifiedData?.separate ?? separate,
       });
 
       const curetPosition = getCaretPosition({
         inputType,
-        changeData: changeData.current,
+        added: changeData.current.added,
+        beforeRange: changeData.current.beforeRange,
+        afterRange: changeData.current.afterRange,
         maskData: maskData.current,
       });
 
       const maskEventDetail = {
-        unmaskedValue: modifiedData.unmaskedValue,
         maskedValue: maskData.current.maskedValue,
+        unmaskedValue: changeData.current.unmaskedValue,
         pattern: maskData.current.pattern,
         isValid: maskData.current.isValid,
       };
@@ -236,7 +216,9 @@ export default function useMask({
       if (changeData.current !== null && maskData.current !== null) {
         const curetPosition = getCaretPosition({
           inputType,
-          changeData: changeData.current,
+          added: changeData.current.added,
+          beforeRange: changeData.current.beforeRange,
+          afterRange: changeData.current.afterRange,
           maskData: maskData.current,
         });
 

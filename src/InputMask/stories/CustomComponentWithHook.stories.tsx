@@ -44,7 +44,7 @@ export const CustomComponentWithHook: ComponentStory<any> = () => {
 
   return (
     <>
-      <CustomComponent ref={ref} label="Мой лейбел" id="custom-input" value={detail?.maskedValue} />
+      <CustomComponent ref={ref} label="Мой лейбел" id="custom-input" value={detail?.value} />
 
       <pre>{JSON.stringify(detail, null, 2)}</pre>
     </>

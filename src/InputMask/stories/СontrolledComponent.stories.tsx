@@ -20,7 +20,7 @@ export const СontrolledComponent: ComponentStory<typeof InputMaskComponent> = (
       <InputMaskComponent
         mask="+7 (___) ___-__-__"
         replacement={{ _: /\d/ }}
-        value={detail?.maskedValue}
+        value={detail?.value}
         onMask={(event) => setDetail(event.detail)}
       />
 

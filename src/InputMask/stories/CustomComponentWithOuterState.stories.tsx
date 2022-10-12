@@ -36,7 +36,7 @@ export const CustomComponentWithOuterState: ComponentStory<typeof InputMaskCompo
         label="Мой лейбел"
         mask="+7 (___) ___-__-__"
         replacement={{ _: /\d/ }}
-        value={detail?.maskedValue}
+        value={detail?.value}
         onMask={(event) => setDetail(event.detail)}
       />
 

@@ -43,12 +43,12 @@ interface Options {
  * Определяет части маскированного значения. Части маскированного значения представляет собой массив
  * объектов, где каждый объект содержит в себе всю необходимую информацию о каждом символе значения.
  * Части маскированного значения используется для точечного манипулирования символом или группой символов.
- * @param maskedValue
+ * @param value
  * @param options
  * @returns
  */
-function formatToParts(maskedValue: string, { mask, replacement }: Options): MaskPart[] {
-  return maskedValue.split('').map((symbol, index) => {
+function formatToParts(value: string, { mask, replacement }: Options): MaskPart[] {
+  return value.split('').map((symbol, index) => {
     const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
 
     const type = isReplacementKey
@@ -106,28 +106,29 @@ export default function getMaskData({
   showMask,
   separate,
 }: GetMaskDataParams): MaskData {
-  let maskedValue = initialValue ?? formatToMask(unmaskedValue, { mask, replacement });
+  let value = initialValue ?? formatToMask(unmaskedValue, { mask, replacement });
 
-  const parts = formatToParts(maskedValue, { mask, replacement });
+  const parts = formatToParts(value, { mask, replacement });
 
   if (initialValue === undefined && !showMask) {
     // Если пользователь не ввел ниодного символа, присваиваем пустую строку,
     // в противном случае, обрезаем значение по последний пользовательский символ
     if (parts.find(({ type }) => type === 'input') === undefined) {
-      maskedValue = '';
+      value = '';
     } else {
       const lastChangedSymbol = [...parts].reverse().find(({ type }) => type === 'input');
       const to = lastChangedSymbol !== undefined ? lastChangedSymbol.index + 1 : 0;
-      maskedValue = maskedValue.slice(0, to);
+      value = value.slice(0, to);
     }
   }
 
   const pattern = generatePattern(false, mask, replacement);
   const patternWithDisableReplacementKey = generatePattern(true, mask, replacement);
-  const isValid = new RegExp(patternWithDisableReplacementKey).test(maskedValue);
+  const isValid = new RegExp(patternWithDisableReplacementKey).test(value);
 
   return {
-    maskedValue,
+    value,
+    unmaskedValue,
     parts,
     pattern,
     isValid,

@@ -9,7 +9,7 @@ interface GetCaretPositionParams {
   added: string;
   beforeRange: string;
   afterRange: string;
-  maskedValue: string;
+  value: string;
   parts: MaskPart[];
   replacement: Replacement;
   separate: boolean;
@@ -25,7 +25,7 @@ export default function getCaretPosition({
   added,
   beforeRange,
   afterRange,
-  maskedValue,
+  value,
   parts,
   replacement,
   separate,
@@ -55,7 +55,7 @@ export default function getCaretPosition({
       break;
   }
 
-  const replacementSymbolIndex = findReplacementSymbolIndex(maskedValue, replacement);
+  const replacementSymbolIndex = findReplacementSymbolIndex(value, replacement);
 
-  return replacementSymbolIndex !== -1 ? replacementSymbolIndex : maskedValue.length;
+  return replacementSymbolIndex !== -1 ? replacementSymbolIndex : value.length;
 }

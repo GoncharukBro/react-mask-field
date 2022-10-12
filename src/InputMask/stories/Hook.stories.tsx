@@ -19,9 +19,9 @@ export const Hook: ComponentStory<any> = () => {
   const [value, setValue] = useState('');
 
   const ref = useMask({
-    mask: '+7 (___) ___-__-__',
-    replacement: { _: /\d/ },
-    separate: true,
+    mask: 'wwwnnn',
+    replacement: { w: /\D/, n: /\d/ },
+    // separate: true,
     showMask: true,
     onMask: (event) => {
       setDetail(event.detail);

@@ -1,8 +1,9 @@
 import type { CustomInputEvent, CustomInputEventHandler } from '../types';
 
 export interface MaskEventDetail {
-  maskedValue: string;
+  value: string;
   unmaskedValue: string;
+  parts: MaskPart[];
   pattern: string;
   isValid: boolean;
 }
@@ -52,7 +53,8 @@ export type MaskPart = {
 };
 
 export interface MaskData {
-  maskedValue: string;
+  value: string;
+  unmaskedValue: string;
   parts: MaskPart[];
   pattern: string;
   isValid: boolean;

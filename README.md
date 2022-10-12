@@ -121,8 +121,8 @@ The `mask` event is fired asynchronously after the` change` event, in addition, 
 
 | Name          |  Type   | Description                                                             |
 | ------------- | :-----: | ----------------------------------------------------------------------- |
+| value         | string  | Masked value (same as `event.target.value`).                            |
 | unmaskedValue | string  | Value without mask symbols.                                             |
-| maskedValue   | string  | Masked value (same as `event.target.value`).                            |
 | pattern       | string  | A regular expression of type `string` that the masked value must match. |
 | isValid       | boolean | `true` if the mask is full and matches the pattern value.               |
 
@@ -144,12 +144,7 @@ export default function App() {
   };
 
   return (
-    <InputMask
-      mask="1yyy"
-      replacement={{ y: /\d/ }}
-      value={detail?.maskedValue}
-      onMask={handleMask}
-    />
+    <InputMask mask="1yyy" replacement={{ y: /\d/ }} value={detail?.value} onMask={handleMask} />
   );
 }
 ```

@@ -91,12 +91,12 @@ export default function useMask({
    */
 
   const update: Update<MaskEventDetail> = useCallback(() => {
-    if (changeData.current === null) {
+    if (changeData.current === null || maskData.current === null) {
       return undefined;
     }
 
     maskData.current = getMaskData({
-      unmaskedValue: changeData.current.unmaskedValue,
+      unmaskedValue: maskData.current.unmaskedValue,
       mask,
       replacement,
       showMask,
@@ -108,21 +108,22 @@ export default function useMask({
       added: changeData.current.added,
       beforeRange: changeData.current.beforeRange,
       afterRange: changeData.current.afterRange,
-      maskedValue: maskData.current.maskedValue,
+      value: maskData.current.value,
       parts: maskData.current.parts,
       replacement: maskData.current.replacement,
       separate: maskData.current.separate,
     });
 
     const maskEventDetail = {
-      maskedValue: maskData.current.maskedValue,
-      unmaskedValue: changeData.current.unmaskedValue,
+      value: maskData.current.value,
+      unmaskedValue: maskData.current.unmaskedValue,
+      parts: maskData.current.parts,
       pattern: maskData.current.pattern,
       isValid: maskData.current.isValid,
     };
 
     return {
-      value: maskData.current.maskedValue,
+      value: maskData.current.value,
       selectionStart: curetPosition,
       selectionEnd: curetPosition,
       customInputEventDetail: maskEventDetail,
@@ -145,7 +146,7 @@ export default function useMask({
       // Предыдущее значение всегда должно соответствовать маскированному значению из кэша. Обратная ситуация может
       // возникнуть при контроле значения, если значение не было изменено после ввода. Для предотвращения подобных
       // ситуаций, нам важно синхронизировать предыдущее значение с кэшированным значением, если они различаются
-      if (maskData.current.maskedValue !== previousValue) {
+      if (maskData.current.value !== previousValue) {
         maskData.current = getMaskData({
           initialValue: previousValue,
           unmaskedValue: '',
@@ -172,10 +173,15 @@ export default function useMask({
         );
       }
 
-      const modifiedData = modify?.({ mask, replacement, showMask, separate });
+      const modifiedData = modify?.({
+        mask,
+        replacement,
+        showMask,
+        separate,
+      });
 
       maskData.current = getMaskData({
-        unmaskedValue: changeData.current.unmaskedValue,
+        unmaskedValue: maskData.current.unmaskedValue,
         mask: modifiedData?.mask ?? mask,
         replacement: modifiedData?.replacement ?? replacement,
         showMask: modifiedData?.showMask ?? showMask,
@@ -187,21 +193,22 @@ export default function useMask({
         added: changeData.current.added,
         beforeRange: changeData.current.beforeRange,
         afterRange: changeData.current.afterRange,
-        maskedValue: maskData.current.maskedValue,
+        value: maskData.current.value,
         parts: maskData.current.parts,
         replacement: maskData.current.replacement,
         separate: maskData.current.separate,
       });
 
       const maskEventDetail = {
-        maskedValue: maskData.current.maskedValue,
-        unmaskedValue: changeData.current.unmaskedValue,
+        value: maskData.current.value,
+        unmaskedValue: maskData.current.unmaskedValue,
+        parts: maskData.current.parts,
         pattern: maskData.current.pattern,
         isValid: maskData.current.isValid,
       };
 
       return {
-        value: maskData.current.maskedValue,
+        value: maskData.current.value,
         selectionStart: curetPosition,
         selectionEnd: curetPosition,
         customInputEventDetail: maskEventDetail,
@@ -225,7 +232,7 @@ export default function useMask({
           added: changeData.current.added,
           beforeRange: changeData.current.beforeRange,
           afterRange: changeData.current.afterRange,
-          maskedValue: maskData.current.maskedValue,
+          value: maskData.current.value,
           parts: maskData.current.parts,
           replacement: maskData.current.replacement,
           separate: maskData.current.separate,

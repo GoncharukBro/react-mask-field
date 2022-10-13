@@ -128,7 +128,6 @@ export default function getMaskData({
 
   return {
     value,
-    unmaskedValue,
     parts,
     pattern,
     isValid,

@@ -93,7 +93,7 @@ export default function useMask({
     }
 
     maskData.current = getMaskData({
-      unmaskedValue: maskData.current.unmaskedValue,
+      unmaskedValue: changeData.current.unmaskedValue,
       mask,
       replacement,
       showMask,
@@ -104,7 +104,7 @@ export default function useMask({
 
     const maskEventDetail = {
       value: maskData.current.value,
-      unmaskedValue: maskData.current.unmaskedValue,
+      unmaskedValue: changeData.current.unmaskedValue,
       parts: maskData.current.parts,
       pattern: maskData.current.pattern,
       isValid: maskData.current.isValid,
@@ -169,7 +169,7 @@ export default function useMask({
       });
 
       maskData.current = getMaskData({
-        unmaskedValue: maskData.current.unmaskedValue,
+        unmaskedValue: changeData.current.unmaskedValue,
         mask: modifiedData?.mask ?? mask,
         replacement: modifiedData?.replacement ?? replacement,
         showMask: modifiedData?.showMask ?? showMask,
@@ -189,7 +189,7 @@ export default function useMask({
 
       const maskEventDetail = {
         value: maskData.current.value,
-        unmaskedValue: maskData.current.unmaskedValue,
+        unmaskedValue: changeData.current.unmaskedValue,
         parts: maskData.current.parts,
         pattern: maskData.current.pattern,
         isValid: maskData.current.isValid,

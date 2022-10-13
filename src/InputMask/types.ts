@@ -54,7 +54,6 @@ export type MaskPart = {
 
 export interface MaskData {
   value: string;
-  unmaskedValue: string;
   parts: MaskPart[];
   pattern: string;
   isValid: boolean;

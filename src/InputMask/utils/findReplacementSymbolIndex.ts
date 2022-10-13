@@ -12,8 +12,10 @@ export default function findReplacementSymbolIndex(
   replacement: Replacement,
   position?: number
 ): number {
-  return value.split('').findIndex((symbol, index) => {
+  const replacementSymbolIndex = value.split('').findIndex((symbol, index) => {
     const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
     return index >= (position ?? 0) && isReplacementKey;
   });
+
+  return replacementSymbolIndex !== -1 ? replacementSymbolIndex : value.length;
 }

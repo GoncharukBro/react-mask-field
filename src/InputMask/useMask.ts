@@ -71,10 +71,7 @@ export default function useMask({
       separate,
     });
 
-    const replacementSymbolIndex = findReplacementSymbolIndex(initialValue, replacement);
-
-    const curetPosition =
-      replacementSymbolIndex !== -1 ? replacementSymbolIndex : initialValue.length;
+    const curetPosition = findReplacementSymbolIndex(initialValue, replacement);
 
     return {
       value: initialValue,
@@ -103,16 +100,7 @@ export default function useMask({
       separate,
     });
 
-    const curetPosition = getCaretPosition({
-      inputType: 'initial',
-      added: changeData.current.added,
-      beforeRange: changeData.current.beforeRange,
-      afterRange: changeData.current.afterRange,
-      value: maskData.current.value,
-      parts: maskData.current.parts,
-      replacement: maskData.current.replacement,
-      separate: maskData.current.separate,
-    });
+    const curetPosition = findReplacementSymbolIndex(maskData.current.value, replacement);
 
     const maskEventDetail = {
       value: maskData.current.value,
@@ -238,10 +226,18 @@ export default function useMask({
           separate: maskData.current.separate,
         });
 
-        return { value: previousValue, selectionStart: curetPosition, selectionEnd: curetPosition };
+        return {
+          value: previousValue,
+          selectionStart: curetPosition,
+          selectionEnd: curetPosition,
+        };
       }
 
-      return { value: previousValue, selectionStart, selectionEnd };
+      return {
+        value: previousValue,
+        selectionStart,
+        selectionEnd,
+      };
     },
     []
   );

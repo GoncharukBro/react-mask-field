@@ -31,8 +31,6 @@ export default function getCaretPosition({
   selectionEndRange,
   selectionStart,
 }: GetCaretPositionParams): number {
-  let nextCaretPosition = -1;
-
   const [previousBeforeDecimal = ''] = replaceWithNumber(
     previousValue,
     localizedValues.symbols
@@ -59,6 +57,9 @@ export default function getCaretPosition({
     return selectionStart;
   }
 
+  let nextCaretPosition = -1;
+  let count = 0;
+
   // Считаем количество чисел после `selectionEndRange`
   let countAfterSelectionEnd = previousBeforeDecimal
     .slice(selectionEndRange)
@@ -71,8 +72,6 @@ export default function getCaretPosition({
   ) {
     countAfterSelectionEnd -= added.length;
   }
-
-  let count = 0;
 
   // Нахоим индекс символа для установки позиции каретки
   for (let i = nextBeforeDecimal.length; i >= 0; i--) {

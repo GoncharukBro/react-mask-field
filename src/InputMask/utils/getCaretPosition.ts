@@ -34,28 +34,23 @@ export default function getCaretPosition({
     return type === 'input' || (separate && type === 'replacement');
   });
 
-  const getSymbolIndex = (index: number): number | false => {
-    return unmaskedSymbols[index]?.index ?? false;
-  };
-
-  const addedLastIndex = !!added && getSymbolIndex(beforeRange.length + added.length - 1);
-  const beforeRangeLastIndex = !!beforeRange && getSymbolIndex(beforeRange.length - 1);
-  const afterRangeFirstIndex = !!afterRange && getSymbolIndex(beforeRange.length + added.length);
-
-  switch (inputType) {
-    case 'insert':
-    case 'deleteForward':
-      if (addedLastIndex) return addedLastIndex + 1;
-      if (afterRangeFirstIndex) return afterRangeFirstIndex;
-      if (beforeRangeLastIndex) return beforeRangeLastIndex + 1;
-      break;
-    case 'deleteBackward':
-      if (beforeRangeLastIndex) return beforeRangeLastIndex + 1;
-      if (afterRangeFirstIndex) return afterRangeFirstIndex;
-      break;
+  if ((inputType === 'insert' || inputType === 'deleteForward') && added) {
+    const addedLastIndex = unmaskedSymbols[beforeRange.length + added.length - 1]?.index;
+    if (addedLastIndex !== undefined) return addedLastIndex + 1;
   }
 
-  const replacementSymbolIndex = findReplacementSymbolIndex(value, replacement);
+  if ((inputType === 'insert' || inputType === 'deleteForward') && afterRange) {
+    const afterRangeFirstIndex = unmaskedSymbols[beforeRange.length + added.length]?.index;
+    if (afterRangeFirstIndex !== undefined) return afterRangeFirstIndex;
+  }
 
-  return replacementSymbolIndex !== -1 ? replacementSymbolIndex : value.length;
+  if (
+    (inputType === 'insert' || inputType === 'deleteForward' || inputType === 'deleteBackward') &&
+    beforeRange
+  ) {
+    const beforeRangeLastIndex = unmaskedSymbols[beforeRange.length - 1]?.index;
+    if (beforeRangeLastIndex !== undefined) return beforeRangeLastIndex + 1;
+  }
+
+  return findReplacementSymbolIndex(value, replacement);
 }

@@ -86,10 +86,3 @@ export type Tracking<D = any> = (params: {
   selectionStart: number;
   selectionEnd: number;
 }) => MethodReturn & CustomInputEventDetail<D>;
-
-export type Fallback = (params: {
-  inputType: InputType;
-  previousValue: string;
-  selectionStart: number;
-  selectionEnd: number;
-}) => MethodReturn;

@@ -12,7 +12,6 @@ import type {
   Init,
   Update,
   Tracking,
-  Fallback,
   CustomInputEventHandler,
 } from './types';
 
@@ -24,7 +23,6 @@ interface UseInputParams<D> {
   init: Init;
   update: Update<D>;
   tracking: Tracking<D>;
-  fallback: Fallback;
   customInputEventType?: string;
   customInputEventHandler?: CustomInputEventHandler<D>;
 }
@@ -33,7 +31,6 @@ export default function useInput<D = any>({
   init,
   update,
   tracking,
-  fallback,
   customInputEventType,
   customInputEventHandler,
 }: UseInputParams<D>): React.MutableRefObject<HTMLInputElement | null> {
@@ -250,17 +247,10 @@ export default function useInput<D = any>({
           console.error(error);
         }
 
-        const fallbackResult = fallback({
-          inputType,
-          previousValue,
+        setInputAttributes(inputRef, {
+          value: previousValue,
           selectionStart: selection.current.start,
           selectionEnd: selection.current.end,
-        });
-
-        setInputAttributes(inputRef, {
-          value: fallbackResult.value,
-          selectionStart: fallbackResult.selectionStart,
-          selectionEnd: fallbackResult.selectionEnd,
         });
 
         event.preventDefault();
@@ -278,7 +268,7 @@ export default function useInput<D = any>({
     return () => {
       inputElement?.removeEventListener('input', handleInput);
     };
-  }, [tracking, fallback, dispatchCustomInputEvent]);
+  }, [tracking, dispatchCustomInputEvent]);
 
   /**
    *

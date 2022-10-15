@@ -12,7 +12,7 @@ import SyntheticChangeError from '../SyntheticChangeError';
 
 import useInput from '../useInput';
 
-import type { Init, Fallback, Tracking, Update } from '../types';
+import type { Init, Update, Tracking } from '../types';
 
 export default function useNumberFormat(
   props?: NumberFormatProps
@@ -176,20 +176,6 @@ export default function useNumberFormat(
 
   /**
    *
-   * Fallback
-   *
-   */
-
-  const fallback: Fallback = useCallback(({ previousValue, selectionStart, selectionEnd }) => {
-    return {
-      value: previousValue,
-      selectionStart,
-      selectionEnd,
-    };
-  }, []);
-
-  /**
-   *
    * Use input
    *
    */
@@ -198,7 +184,6 @@ export default function useNumberFormat(
     init,
     update,
     tracking,
-    fallback,
     customInputEventType: 'format',
     customInputEventHandler: onFormat,
   });

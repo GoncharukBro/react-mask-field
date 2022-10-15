@@ -14,7 +14,7 @@ import SyntheticChangeError from '../SyntheticChangeError';
 
 import useInput from '../useInput';
 
-import type { Init, Update, Tracking, Fallback } from '../types';
+import type { Init, Update, Tracking } from '../types';
 
 const convertToReplacementObject = (replacement: string): Replacement => {
   return replacement.length > 0 ? { [replacement]: /./ } : {};
@@ -208,42 +208,6 @@ export default function useMask({
 
   /**
    *
-   * Fallback
-   *
-   */
-
-  const fallback: Fallback = useCallback(
-    ({ inputType, previousValue, selectionStart, selectionEnd }) => {
-      if (changeData.current !== null && maskData.current !== null) {
-        const curetPosition = getCaretPosition({
-          inputType,
-          added: changeData.current.added,
-          beforeRange: changeData.current.beforeRange,
-          afterRange: changeData.current.afterRange,
-          value: maskData.current.value,
-          parts: maskData.current.parts,
-          replacement: maskData.current.replacement,
-          separate: maskData.current.separate,
-        });
-
-        return {
-          value: previousValue,
-          selectionStart: curetPosition,
-          selectionEnd: curetPosition,
-        };
-      }
-
-      return {
-        value: previousValue,
-        selectionStart,
-        selectionEnd,
-      };
-    },
-    []
-  );
-
-  /**
-   *
    * Use input
    *
    */
@@ -252,7 +216,6 @@ export default function useMask({
     init,
     update,
     tracking,
-    fallback,
     customInputEventType: 'mask',
     customInputEventHandler: onMask,
   });

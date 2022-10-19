@@ -34,13 +34,6 @@ export interface MaskProps {
   onMask?: MaskEventHandler;
 }
 
-export interface ChangeData {
-  unmaskedValue: string;
-  added: string;
-  beforeRange: string;
-  afterRange: string;
-}
-
 export type MaskPart = {
   /**
    * - `replacement` - символ замены
@@ -54,11 +47,8 @@ export type MaskPart = {
 
 export interface MaskData {
   value: string;
+  unmaskedValue: string;
   parts: MaskPart[];
   pattern: string;
   isValid: boolean;
-  mask: string;
-  replacement: Replacement;
-  showMask: boolean;
-  separate: boolean;
 }

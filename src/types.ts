@@ -61,19 +61,13 @@ export type CustomInputEventHandler<D = any> = (event: CustomInputEvent<D>) => v
 
 export type InputType = 'initial' | 'insert' | 'deleteBackward' | 'deleteForward';
 
-interface MethodReturn {
+interface InputAttributes {
   value: string;
   selectionStart: number;
   selectionEnd: number;
 }
 
-interface CustomInputEventDetail<D> {
-  customInputEventDetail?: D;
-}
-
-export type Init = (params: { controlled: boolean; initialValue: string }) => MethodReturn;
-
-export type Update<D = any> = () => (MethodReturn & CustomInputEventDetail<D>) | undefined;
+export type Init = (params: { controlled: boolean; initialValue: string }) => InputAttributes;
 
 export type Tracking<D = any> = (params: {
   inputType: InputType;
@@ -85,4 +79,4 @@ export type Tracking<D = any> = (params: {
   value: string;
   selectionStart: number;
   selectionEnd: number;
-}) => MethodReturn & CustomInputEventDetail<D>;
+}) => InputAttributes & { customInputEventDetail?: D };

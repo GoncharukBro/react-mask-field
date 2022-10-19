@@ -8,16 +8,20 @@ import unmask from './utils/unmask';
 
 import useError from './useError';
 
-import type { MaskProps, ChangeData, MaskData, MaskEventDetail, Replacement } from './types';
+import type { MaskProps, MaskData, MaskEventDetail, Replacement } from './types';
 
 import SyntheticChangeError from '../SyntheticChangeError';
 
 import useInput from '../useInput';
 
-import type { Init, Update, Tracking } from '../types';
+import type { Init, Tracking } from '../types';
 
 const convertToReplacementObject = (replacement: string): Replacement => {
   return replacement.length > 0 ? { [replacement]: /./ } : {};
+};
+
+type CachedMaskProps = Required<Pick<MaskProps, 'mask' | 'showMask' | 'separate'>> & {
+  replacement: Replacement;
 };
 
 export default function useMask({
@@ -33,7 +37,9 @@ export default function useMask({
       ? convertToReplacementObject(replacementProps)
       : replacementProps;
 
-  const changeData = useRef<ChangeData | null>(null);
+  const cachedMaskProps = useRef<CachedMaskProps | null>(null);
+  const maskProps = useRef<CachedMaskProps | null>(null);
+
   const maskData = useRef<MaskData | null>(null);
 
   // Преобразовываем объект `replacement` в строку для сравнения с зависимостью в `useCallback`
@@ -55,20 +61,14 @@ export default function useMask({
     // все символы, не являющиеся символами маски. Ожидается, что инициализированное значение соответствует паттерну маски
     const unmaskedValue = unmask({ value: initialValue, mask, replacement, separate });
 
-    changeData.current = {
-      unmaskedValue,
-      beforeRange: '',
-      added: unmaskedValue,
-      afterRange: '',
-    };
+    cachedMaskProps.current = { mask, replacement, showMask, separate };
+    maskProps.current = cachedMaskProps.current;
 
     maskData.current = getMaskData({
-      initialValue,
       unmaskedValue,
       mask,
       replacement,
       showMask,
-      separate,
     });
 
     const curetPosition = findReplacementSymbolIndex(initialValue, replacement);
@@ -83,51 +83,17 @@ export default function useMask({
 
   /**
    *
-   * Update
-   *
-   */
-
-  const update: Update<MaskEventDetail> = useCallback(() => {
-    if (changeData.current === null || maskData.current === null) {
-      return undefined;
-    }
-
-    maskData.current = getMaskData({
-      unmaskedValue: changeData.current.unmaskedValue,
-      mask,
-      replacement,
-      showMask,
-      separate,
-    });
-
-    const curetPosition = findReplacementSymbolIndex(maskData.current.value, replacement);
-
-    const maskEventDetail = {
-      value: maskData.current.value,
-      unmaskedValue: changeData.current.unmaskedValue,
-      parts: maskData.current.parts,
-      pattern: maskData.current.pattern,
-      isValid: maskData.current.isValid,
-    };
-
-    return {
-      value: maskData.current.value,
-      selectionStart: curetPosition,
-      selectionEnd: curetPosition,
-      customInputEventDetail: maskEventDetail,
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mask, stringifiedReplacement, showMask, separate]);
-
-  /**
-   *
    * Tracking
    *
    */
 
   const tracking: Tracking<MaskEventDetail> = useCallback(
     ({ inputType, added, previousValue, selectionStartRange, selectionEndRange }) => {
-      if (changeData.current === null || maskData.current === null) {
+      if (
+        cachedMaskProps.current === null ||
+        maskProps.current === null ||
+        maskData.current === null
+      ) {
         throw new SyntheticChangeError('The state has not been initialized.');
       }
 
@@ -135,27 +101,22 @@ export default function useMask({
       // возникнуть при контроле значения, если значение не было изменено после ввода. Для предотвращения подобных
       // ситуаций, нам важно синхронизировать предыдущее значение с кэшированным значением, если они различаются
       if (maskData.current.value !== previousValue) {
-        maskData.current = getMaskData({
-          initialValue: previousValue,
-          unmaskedValue: '',
-          mask: maskData.current.mask,
-          replacement: maskData.current.replacement,
-          showMask: maskData.current.showMask,
-          separate: maskData.current.separate,
-        });
+        maskProps.current = cachedMaskProps.current;
+      } else {
+        cachedMaskProps.current = maskProps.current;
       }
 
-      changeData.current = getChangeData({
+      const { unmaskedValue, ...other } = getChangeData({
         added,
         previousValue,
         selectionStartRange,
         selectionEndRange,
-        mask: maskData.current.mask,
-        replacement: maskData.current.replacement,
-        separate: maskData.current.separate,
+        mask: maskProps.current.mask,
+        replacement: maskProps.current.replacement,
+        separate: maskProps.current.separate,
       });
 
-      if (inputType === 'insert' && changeData.current.added === '') {
+      if (inputType === 'insert' && other.added === '') {
         throw new SyntheticChangeError(
           'The symbol does not match the value of the `replacement` object.'
         );
@@ -169,27 +130,26 @@ export default function useMask({
       });
 
       maskData.current = getMaskData({
-        unmaskedValue: changeData.current.unmaskedValue,
+        unmaskedValue,
         mask: modifiedData?.mask ?? mask,
         replacement: modifiedData?.replacement ?? replacement,
         showMask: modifiedData?.showMask ?? showMask,
-        separate: modifiedData?.separate ?? separate,
       });
 
       const curetPosition = getCaretPosition({
         inputType,
-        added: changeData.current.added,
-        beforeRange: changeData.current.beforeRange,
-        afterRange: changeData.current.afterRange,
+        added: other.added,
+        beforeRange: other.beforeRange,
+        afterRange: other.afterRange,
         value: maskData.current.value,
         parts: maskData.current.parts,
-        replacement: maskData.current.replacement,
-        separate: maskData.current.separate,
+        replacement: maskProps.current.replacement,
+        separate: maskProps.current.separate,
       });
 
       const maskEventDetail = {
         value: maskData.current.value,
-        unmaskedValue: changeData.current.unmaskedValue,
+        unmaskedValue: maskData.current.unmaskedValue,
         parts: maskData.current.parts,
         pattern: maskData.current.pattern,
         isValid: maskData.current.isValid,
@@ -214,7 +174,6 @@ export default function useMask({
 
   const inputRef = useInput<MaskEventDetail>({
     init,
-    update,
     tracking,
     customInputEventType: 'mask',
     customInputEventHandler: onMask,

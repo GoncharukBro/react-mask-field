@@ -12,7 +12,7 @@ import SyntheticChangeError from '../SyntheticChangeError';
 
 import useInput from '../useInput';
 
-import type { Init, Update, Tracking } from '../types';
+import type { Init, Tracking } from '../types';
 
 export default function useNumberFormat(
   props?: NumberFormatProps
@@ -44,16 +44,6 @@ export default function useNumberFormat(
       selectionEnd: initialValue.length,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  /**
-   *
-   * Update
-   *
-   */
-
-  const update: Update<NumberFormatEventDetail> = useCallback(() => {
-    return undefined;
   }, []);
 
   /**
@@ -182,7 +172,6 @@ export default function useNumberFormat(
 
   const inputRef = useInput<NumberFormatEventDetail>({
     init,
-    update,
     tracking,
     customInputEventType: 'format',
     customInputEventHandler: onFormat,

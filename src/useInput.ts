@@ -6,14 +6,7 @@ import setInputAttributes from './setInputAttributes';
 
 import useDispatchCustomInputEvent from './useDispatchCustomInputEvent';
 
-import type {
-  InputElement,
-  InputType,
-  Init,
-  Update,
-  Tracking,
-  CustomInputEventHandler,
-} from './types';
+import type { InputElement, InputType, Init, Tracking, CustomInputEventHandler } from './types';
 
 const validInputType = (inputRef: React.MutableRefObject<HTMLInputElement | null>) => {
   return inputRef.current !== null && inputRef.current.type === 'text';
@@ -21,7 +14,6 @@ const validInputType = (inputRef: React.MutableRefObject<HTMLInputElement | null
 
 interface UseInputParams<D> {
   init: Init;
-  update: Update<D>;
   tracking: Tracking<D>;
   customInputEventType?: string;
   customInputEventHandler?: CustomInputEventHandler<D>;
@@ -29,14 +21,11 @@ interface UseInputParams<D> {
 
 export default function useInput<D = any>({
   init,
-  update,
   tracking,
   customInputEventType,
   customInputEventHandler,
 }: UseInputParams<D>): React.MutableRefObject<HTMLInputElement | null> {
   const inputRef = useRef<InputElement | null>(null);
-
-  const isFirstRender = useRef(true);
 
   const selection = useRef({
     requestID: -1,
@@ -93,36 +82,6 @@ export default function useInput<D = any>({
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  /**
-   *
-   * Update when changing props
-   *
-   */
-
-  useEffect(() => {
-    if (!validInputType(inputRef)) return;
-
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-
-    const updateResult = update();
-
-    if (updateResult !== undefined) {
-      setInputAttributes(inputRef, {
-        value: updateResult.value,
-        selectionStart: updateResult.selectionStart,
-        selectionEnd: updateResult.selectionEnd,
-      });
-
-      if (updateResult.customInputEventDetail !== undefined) {
-        dispatchCustomInputEvent(updateResult.customInputEventDetail);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [update]);
 
   /**
    *

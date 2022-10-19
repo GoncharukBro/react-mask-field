@@ -1,6 +1,6 @@
 import unmask from './unmask';
 
-import type { Replacement, ChangeData } from '../types';
+import type { Replacement } from '../types';
 
 interface FilterParams {
   value: string;
@@ -54,7 +54,7 @@ export default function getChangeData({
   mask,
   replacement,
   separate,
-}: GetChangeDataParams): ChangeData {
+}: GetChangeDataParams) {
   let beforeRange = unmask({
     value: previousValue,
     end: selectionStartRange,

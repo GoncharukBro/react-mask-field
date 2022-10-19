@@ -84,33 +84,28 @@ interface GetMaskDataParams {
   mask: string;
   replacement: Replacement;
   showMask: boolean;
-  separate: boolean;
 }
 
 /**
  * Формирует данные маскированного значения
  * @param param
- * @param param.initialValue при наличии, значение в `input` будет соответствовать инициализированному значению
  * @param param.unmaskedValue пользовательские символы без учета символов маски
  * @param param.mask
  * @param param.replacement
  * @param param.showMask
- * @param param.separate
  * @returns объект с данными маскированного значение
  */
 export default function getMaskData({
-  initialValue,
   unmaskedValue,
   mask,
   replacement,
   showMask,
-  separate,
 }: GetMaskDataParams): MaskData {
-  let value = initialValue ?? formatToMask(unmaskedValue, { mask, replacement });
+  let value = formatToMask(unmaskedValue, { mask, replacement });
 
   const parts = formatToParts(value, { mask, replacement });
 
-  if (initialValue === undefined && !showMask) {
+  if (!showMask) {
     // Если пользователь не ввел ниодного символа, присваиваем пустую строку,
     // в противном случае, обрезаем значение по последний пользовательский символ
     if (parts.find(({ type }) => type === 'input') === undefined) {
@@ -124,16 +119,14 @@ export default function getMaskData({
 
   const pattern = generatePattern(false, mask, replacement);
   const patternWithDisableReplacementKey = generatePattern(true, mask, replacement);
+
   const isValid = new RegExp(patternWithDisableReplacementKey).test(value);
 
   return {
     value,
+    unmaskedValue,
     parts,
     pattern,
     isValid,
-    mask,
-    replacement,
-    showMask,
-    separate,
   };
 }

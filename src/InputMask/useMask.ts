@@ -1,10 +1,10 @@
 import { useRef, useCallback } from 'react';
 
-import getChangeData from './utils/getChangeData';
 import getMaskData from './utils/getMaskData';
 import getCaretPosition from './utils/getCaretPosition';
 import findReplacementSymbolIndex from './utils/findReplacementSymbolIndex';
 import unmask from './utils/unmask';
+import filter from './utils/filter';
 
 import useError from './useError';
 
@@ -106,20 +106,80 @@ export default function useMask({
         cachedMaskProps.current = maskProps.current;
       }
 
-      const { unmaskedValue, ...other } = getChangeData({
-        added,
-        previousValue,
-        selectionStartRange,
-        selectionEndRange,
+      let beforeRange = unmask({
+        value: previousValue,
+        end: selectionStartRange,
         mask: maskProps.current.mask,
         replacement: maskProps.current.replacement,
         separate: maskProps.current.separate,
       });
 
-      if (inputType === 'insert' && other.added === '') {
+      const regExp = new RegExp(`[^${Object.keys(maskProps.current.replacement)}]`, 'g');
+      // Находим все заменяемые символы для фильтрации пользовательского значения.
+      // Важно определить корректное значение на данном этапе
+      const replacementSymbols = maskProps.current.mask.replace(regExp, '');
+
+      if (beforeRange) {
+        beforeRange = filter({
+          value: beforeRange,
+          replacementSymbols,
+          replacement: maskProps.current.replacement,
+          separate: maskProps.current.separate,
+        });
+      }
+
+      if (added) {
+        // eslint-disable-next-line no-param-reassign
+        added = filter({
+          value: added,
+          replacementSymbols: replacementSymbols.slice(beforeRange.length),
+          replacement: maskProps.current.replacement,
+          separate: false, // Поскольку нас интересуют только "полезные" символы, фильтуем без учёта заменяемых символов
+        });
+      }
+
+      if (inputType === 'insert' && added === '') {
         throw new SyntheticChangeError(
           'The symbol does not match the value of the `replacement` object.'
         );
+      }
+
+      let afterRange = unmask({
+        value: previousValue,
+        start: selectionEndRange,
+        mask: maskProps.current.mask,
+        replacement: maskProps.current.replacement,
+        separate: maskProps.current.separate,
+      });
+
+      // Модифицируем `afterRange` чтобы позиция символов не смещалась. Необходимо выполнять
+      // после фильтрации `added` и перед фильтрацией `afterRange`
+      if (maskProps.current.separate) {
+        // Находим заменяемые символы в диапозоне изменяемых символов
+        const separateSymbols = maskProps.current.mask
+          .slice(selectionStartRange, selectionEndRange)
+          .replace(regExp, '');
+
+        // Получаем количество символов для сохранения перед `afterRange`. Возможные значения:
+        // `меньше ноля` - обрезаем значение от начала на количество символов;
+        // `ноль` - не меняем значение;
+        // `больше ноля` - добавляем заменяемые символы к началу значения.
+        const countSeparateSymbols = separateSymbols.length - added.length;
+
+        if (countSeparateSymbols < 0) {
+          afterRange = afterRange.slice(-countSeparateSymbols);
+        } else if (countSeparateSymbols > 0) {
+          afterRange = separateSymbols.slice(-countSeparateSymbols) + afterRange;
+        }
+      }
+
+      if (afterRange) {
+        afterRange = filter({
+          value: afterRange,
+          replacementSymbols: replacementSymbols.slice(added.length),
+          replacement: maskProps.current.replacement,
+          separate: maskProps.current.separate,
+        });
       }
 
       const modifiedData = modify?.({
@@ -130,7 +190,7 @@ export default function useMask({
       });
 
       maskData.current = getMaskData({
-        unmaskedValue,
+        unmaskedValue: beforeRange + added + afterRange,
         mask: modifiedData?.mask ?? mask,
         replacement: modifiedData?.replacement ?? replacement,
         showMask: modifiedData?.showMask ?? showMask,
@@ -138,13 +198,13 @@ export default function useMask({
 
       const curetPosition = getCaretPosition({
         inputType,
-        added: other.added,
-        beforeRange: other.beforeRange,
-        afterRange: other.afterRange,
+        added,
+        beforeRange,
+        afterRange,
         value: maskData.current.value,
         parts: maskData.current.parts,
-        replacement: maskProps.current.replacement,
-        separate: maskProps.current.separate,
+        replacement: modifiedData?.replacement ?? replacement,
+        separate: modifiedData?.separate ?? separate,
       });
 
       const maskEventDetail = {

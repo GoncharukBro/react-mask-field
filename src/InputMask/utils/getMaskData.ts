@@ -72,9 +72,12 @@ function formatToMask(unmaskedValue: string, { mask, replacement }: Options): st
 
   return mask.split('').reduce((prev, symbol) => {
     const isReplacementKey = Object.prototype.hasOwnProperty.call(replacement, symbol);
-    const hasUnmaskedSymbol = unmaskedValue[position] !== undefined;
 
-    return prev + (isReplacementKey && hasUnmaskedSymbol ? unmaskedValue[position++] : symbol);
+    if (isReplacementKey && unmaskedValue[position] !== undefined) {
+      return prev + unmaskedValue[position++];
+    }
+
+    return prev + symbol;
   }, '');
 }
 

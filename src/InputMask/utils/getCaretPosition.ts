@@ -34,22 +34,24 @@ export default function getCaretPosition({
     return type === 'input' || (separate && type === 'replacement');
   });
 
-  if ((inputType === 'insert' || inputType === 'deleteForward') && added) {
-    const addedLastIndex = unmaskedSymbols[beforeRange.length + added.length - 1]?.index;
+  const addedLastIndex = unmaskedSymbols[beforeRange.length + added.length - 1]?.index;
+  const afterRangeFirstIndex = unmaskedSymbols[beforeRange.length + added.length]?.index;
+  const beforeRangeLastIndex = unmaskedSymbols[beforeRange.length - 1]?.index;
+
+  if (inputType === 'insert') {
     if (addedLastIndex !== undefined) return addedLastIndex + 1;
-  }
-
-  if ((inputType === 'insert' || inputType === 'deleteForward') && afterRange) {
-    const afterRangeFirstIndex = unmaskedSymbols[beforeRange.length + added.length]?.index;
     if (afterRangeFirstIndex !== undefined) return afterRangeFirstIndex;
+    if (beforeRangeLastIndex !== undefined) return beforeRangeLastIndex + 1;
   }
 
-  if (
-    (inputType === 'insert' || inputType === 'deleteForward' || inputType === 'deleteBackward') &&
-    beforeRange
-  ) {
-    const beforeRangeLastIndex = unmaskedSymbols[beforeRange.length - 1]?.index;
+  if (inputType === 'deleteForward') {
+    if (afterRangeFirstIndex !== undefined) return afterRangeFirstIndex;
     if (beforeRangeLastIndex !== undefined) return beforeRangeLastIndex + 1;
+  }
+
+  if (inputType === 'deleteBackward') {
+    if (beforeRangeLastIndex !== undefined) return beforeRangeLastIndex + 1;
+    if (afterRangeFirstIndex !== undefined) return afterRangeFirstIndex;
   }
 
   return findReplacementSymbolIndex(value, replacement);

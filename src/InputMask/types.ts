@@ -17,13 +17,13 @@ export interface Replacement {
 }
 
 export interface ModifiedData {
-  mask: string;
-  replacement: Replacement;
-  showMask: boolean;
-  separate: boolean;
+  mask?: string;
+  replacement?: Replacement;
+  showMask?: boolean;
+  separate?: boolean;
 }
 
-export type Modify = (modifiedData: ModifiedData) => Partial<ModifiedData> | undefined;
+export type Modify = (unmaskedValue: string) => ModifiedData | undefined;
 
 export interface MaskProps {
   mask?: string;

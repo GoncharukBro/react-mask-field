@@ -5,7 +5,7 @@ import type { ComponentStory, Meta } from '@storybook/react';
 import InputMaskComponent from '..';
 
 import type { InputMaskProps } from '..';
-import type { ModifiedData, MaskEventDetail } from '../types';
+import type { MaskEventDetail } from '../types';
 
 export default {
   title: 'Mask',
@@ -15,7 +15,7 @@ export default {
 export const СontrolledComponentWithModifyPhone: ComponentStory<typeof InputMaskComponent> = () => {
   const [detail, setDetail] = useState<MaskEventDetail | null>(null);
 
-  const modify = ({ unmaskedValue }: ModifiedData) => {
+  const modify = (unmaskedValue: string) => {
     const newMask =
       unmaskedValue && unmaskedValue[0] !== '7' ? '+_ __________' : '+_ (___) ___-__-__';
     return { mask: newMask };

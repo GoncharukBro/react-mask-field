@@ -38,7 +38,7 @@ export default function useMask({
       : replacementProps;
 
   const cachedMaskProps = useRef<CachedMaskProps | null>(null);
-  const maskProps = useRef<CachedMaskProps | null>(null);
+  const fallbackMaskProps = useRef<CachedMaskProps | null>(null);
 
   const maskData = useRef<MaskData | null>(null);
 
@@ -62,7 +62,7 @@ export default function useMask({
     const unmaskedValue = unmask({ value: initialValue, mask, replacement, separate });
 
     cachedMaskProps.current = { mask, replacement, showMask, separate };
-    maskProps.current = cachedMaskProps.current;
+    fallbackMaskProps.current = cachedMaskProps.current;
 
     maskData.current = getMaskData({
       unmaskedValue,
@@ -91,7 +91,7 @@ export default function useMask({
     ({ inputType, added, previousValue, selectionStartRange, selectionEndRange }) => {
       if (
         cachedMaskProps.current === null ||
-        maskProps.current === null ||
+        fallbackMaskProps.current === null ||
         maskData.current === null
       ) {
         throw new SyntheticChangeError('The state has not been initialized.');
@@ -101,30 +101,30 @@ export default function useMask({
       // возникнуть при контроле значения, если значение не было изменено после ввода. Для предотвращения подобных
       // ситуаций, нам важно синхронизировать предыдущее значение с кэшированным значением, если они различаются
       if (maskData.current.value !== previousValue) {
-        maskProps.current = cachedMaskProps.current;
+        cachedMaskProps.current = fallbackMaskProps.current;
       } else {
-        cachedMaskProps.current = maskProps.current;
+        fallbackMaskProps.current = cachedMaskProps.current;
       }
 
       let beforeRange = unmask({
         value: previousValue,
         end: selectionStartRange,
-        mask: maskProps.current.mask,
-        replacement: maskProps.current.replacement,
-        separate: maskProps.current.separate,
+        mask: cachedMaskProps.current.mask,
+        replacement: cachedMaskProps.current.replacement,
+        separate: cachedMaskProps.current.separate,
       });
 
-      const regExp = new RegExp(`[^${Object.keys(maskProps.current.replacement)}]`, 'g');
+      const regExp = new RegExp(`[^${Object.keys(cachedMaskProps.current.replacement)}]`, 'g');
       // Находим все заменяемые символы для фильтрации пользовательского значения.
       // Важно определить корректное значение на данном этапе
-      const replacementSymbols = maskProps.current.mask.replace(regExp, '');
+      const replacementSymbols = cachedMaskProps.current.mask.replace(regExp, '');
 
       if (beforeRange) {
         beforeRange = filter({
           value: beforeRange,
           replacementSymbols,
-          replacement: maskProps.current.replacement,
-          separate: maskProps.current.separate,
+          replacement: cachedMaskProps.current.replacement,
+          separate: cachedMaskProps.current.separate,
         });
       }
 
@@ -133,7 +133,7 @@ export default function useMask({
         added = filter({
           value: added,
           replacementSymbols: replacementSymbols.slice(beforeRange.length),
-          replacement: maskProps.current.replacement,
+          replacement: cachedMaskProps.current.replacement,
           separate: false, // Поскольку нас интересуют только "полезные" символы, фильтуем без учёта заменяемых символов
         });
       }
@@ -147,16 +147,16 @@ export default function useMask({
       let afterRange = unmask({
         value: previousValue,
         start: selectionEndRange,
-        mask: maskProps.current.mask,
-        replacement: maskProps.current.replacement,
-        separate: maskProps.current.separate,
+        mask: cachedMaskProps.current.mask,
+        replacement: cachedMaskProps.current.replacement,
+        separate: cachedMaskProps.current.separate,
       });
 
       // Модифицируем `afterRange` чтобы позиция символов не смещалась. Необходимо выполнять
       // после фильтрации `added` и перед фильтрацией `afterRange`
-      if (maskProps.current.separate) {
+      if (cachedMaskProps.current.separate) {
         // Находим заменяемые символы в диапозоне изменяемых символов
-        const separateSymbols = maskProps.current.mask
+        const separateSymbols = cachedMaskProps.current.mask
           .slice(selectionStartRange, selectionEndRange)
           .replace(regExp, '');
 
@@ -176,21 +176,25 @@ export default function useMask({
       if (afterRange) {
         afterRange = filter({
           value: afterRange,
-          replacementSymbols: replacementSymbols.slice(added.length),
-          replacement: maskProps.current.replacement,
-          separate: maskProps.current.separate,
+          replacementSymbols: replacementSymbols.slice(beforeRange.length + added.length),
+          replacement: cachedMaskProps.current.replacement,
+          separate: cachedMaskProps.current.separate,
         });
       }
 
-      const modifiedData = modify?.({
-        mask,
-        replacement,
-        showMask,
-        separate,
-      });
+      const unmaskedValue = beforeRange + added + afterRange;
+
+      const modifiedData = modify?.(unmaskedValue);
+
+      cachedMaskProps.current = {
+        mask: modifiedData?.mask ?? mask,
+        replacement: modifiedData?.replacement ?? replacement,
+        showMask: modifiedData?.showMask ?? showMask,
+        separate: modifiedData?.separate ?? separate,
+      };
 
       maskData.current = getMaskData({
-        unmaskedValue: beforeRange + added + afterRange,
+        unmaskedValue,
         mask: modifiedData?.mask ?? mask,
         replacement: modifiedData?.replacement ?? replacement,
         showMask: modifiedData?.showMask ?? showMask,

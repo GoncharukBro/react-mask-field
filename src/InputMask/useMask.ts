@@ -188,16 +188,19 @@ export default function useMask({
 
       cachedMaskProps.current = {
         mask: modifiedData?.mask ?? mask,
-        replacement: modifiedData?.replacement ?? replacement,
+        replacement:
+          typeof modifiedData?.replacement === 'string'
+            ? convertToReplacementObject(modifiedData?.replacement)
+            : replacement,
         showMask: modifiedData?.showMask ?? showMask,
         separate: modifiedData?.separate ?? separate,
       };
 
       maskData.current = getMaskData({
         unmaskedValue,
-        mask: modifiedData?.mask ?? mask,
-        replacement: modifiedData?.replacement ?? replacement,
-        showMask: modifiedData?.showMask ?? showMask,
+        mask: cachedMaskProps.current.mask,
+        replacement: cachedMaskProps.current.replacement,
+        showMask: cachedMaskProps.current.showMask,
       });
 
       const curetPosition = getCaretPosition({
@@ -207,8 +210,8 @@ export default function useMask({
         afterRange,
         value: maskData.current.value,
         parts: maskData.current.parts,
-        replacement: modifiedData?.replacement ?? replacement,
-        separate: modifiedData?.separate ?? separate,
+        replacement: cachedMaskProps.current.replacement,
+        separate: cachedMaskProps.current.separate,
       });
 
       const maskEventDetail = {

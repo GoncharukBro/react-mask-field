@@ -18,7 +18,7 @@ export interface Replacement {
 
 export interface ModifiedData {
   mask?: string;
-  replacement?: Replacement;
+  replacement?: string | Replacement;
   showMask?: boolean;
   separate?: boolean;
 }

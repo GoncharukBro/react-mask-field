@@ -75,10 +75,7 @@ export default function useNumberFormat(
           value: '',
           selectionStart: 0,
           selectionEnd: 0,
-          customInputEventDetail: {
-            value: formatData.current.value,
-            numericValue: formatData.current.numericValue,
-          },
+          __detail: formatData.current,
         };
       }
 
@@ -109,10 +106,7 @@ export default function useNumberFormat(
           value: formatData.current.value,
           selectionStart: beforeDecimal.length + localizedValues.decimal.length,
           selectionEnd: beforeDecimal.length + localizedValues.decimal.length,
-          customInputEventDetail: {
-            value: formatData.current.value,
-            numericValue: formatData.current.numericValue,
-          },
+          __detail: formatData.current,
         };
       }
 
@@ -162,10 +156,7 @@ export default function useNumberFormat(
         value: formatData.current.value,
         selectionStart: caretPosition,
         selectionEnd: caretPosition,
-        customInputEventDetail: {
-          value: formatData.current.value,
-          numericValue: formatData.current.numericValue,
-        },
+        __detail: formatData.current,
       };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps

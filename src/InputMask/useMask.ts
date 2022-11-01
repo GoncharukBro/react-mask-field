@@ -214,19 +214,11 @@ export default function useMask({
         separate: cachedMaskProps.current.separate,
       });
 
-      const maskEventDetail = {
-        value: maskData.current.value,
-        unmaskedValue: maskData.current.unmaskedValue,
-        parts: maskData.current.parts,
-        pattern: maskData.current.pattern,
-        isValid: maskData.current.isValid,
-      };
-
       return {
         value: maskData.current.value,
         selectionStart: curetPosition,
         selectionEnd: curetPosition,
-        customInputEventDetail: maskEventDetail,
+        __detail: maskData.current,
       };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps

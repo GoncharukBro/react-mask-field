@@ -31,9 +31,7 @@ interface TrackingParams {
   selectionEnd: number;
 }
 
-export type Tracking<D = any> = (
-  params: TrackingParams
-) => InputAttributes & { customInputEventDetail?: D };
+export type Tracking<D = any> = (params: TrackingParams) => InputAttributes & { __detail: D };
 
 export interface InputElement extends HTMLInputElement {
   _wrapperState?: {

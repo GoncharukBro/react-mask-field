@@ -186,11 +186,9 @@ export default function useInput<D = any>({
         // Чтобы гарантировать правильное позиционирование каретки, обновляем
         // значения `selection` перед последующим вызовом функции обработчика `input`
         selection.current.start = trackingResult.selectionStart;
-        selection.current.end = trackingResult.selectionStart;
+        selection.current.end = trackingResult.selectionEnd;
 
-        if (trackingResult.customInputEventDetail !== undefined) {
-          dispatchCustomInputEvent(trackingResult.customInputEventDetail);
-        }
+        dispatchCustomInputEvent(trackingResult.__detail);
 
         // TODO: после изменения значения в кастомном событии или в принципе после изменения значение? Может кастомное событие не влияет?
         // После изменения значения в кастомном событии событие `change` срабатывать не будет,
@@ -206,6 +204,11 @@ export default function useInput<D = any>({
           selectionStart: selectionStart ?? selection.current.start,
           selectionEnd: selectionEnd ?? selection.current.end,
         });
+
+        // Чтобы гарантировать правильное позиционирование каретки, обновляем
+        // значения `selection` перед последующим вызовом функции обработчика `input`
+        if (selectionStart) selection.current.start = selectionStart;
+        if (selectionEnd) selection.current.end = selectionEnd;
 
         event.preventDefault();
         event.stopPropagation();

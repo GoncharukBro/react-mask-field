@@ -1,3 +1,40 @@
+export interface CustomInputEvent<D = any> extends CustomEvent<D> {
+  target: EventTarget & HTMLInputElement;
+}
+
+export type CustomInputEventHandler<D = any> = (event: CustomInputEvent<D>) => void;
+
+export type InputType = 'initial' | 'insert' | 'deleteBackward' | 'deleteForward';
+
+export interface InputAttributes {
+  value: string;
+  selectionStart: number;
+  selectionEnd: number;
+}
+
+interface InitParams {
+  controlled: boolean;
+  initialValue: string;
+}
+
+export type Init = (params: InitParams) => InputAttributes;
+
+interface TrackingParams {
+  inputType: InputType;
+  added: string;
+  deleted: string;
+  previousValue: string;
+  selectionStartRange: number;
+  selectionEndRange: number;
+  value: string;
+  selectionStart: number;
+  selectionEnd: number;
+}
+
+export type Tracking<D = any> = (
+  params: TrackingParams
+) => InputAttributes & { customInputEventDetail?: D };
+
 export interface InputElement extends HTMLInputElement {
   _wrapperState?: {
     controlled?: boolean;
@@ -52,31 +89,3 @@ export type BaseComponentProps<
   (C extends undefined
     ? React.InputHTMLAttributes<HTMLInputElement>
     : ForwardedComponentProps<C, P>);
-
-export interface CustomInputEvent<D = any> extends CustomEvent<D> {
-  target: EventTarget & HTMLInputElement;
-}
-
-export type CustomInputEventHandler<D = any> = (event: CustomInputEvent<D>) => void;
-
-export type InputType = 'initial' | 'insert' | 'deleteBackward' | 'deleteForward';
-
-interface InputAttributes {
-  value: string;
-  selectionStart: number;
-  selectionEnd: number;
-}
-
-export type Init = (params: { controlled: boolean; initialValue: string }) => InputAttributes;
-
-export type Tracking<D = any> = (params: {
-  inputType: InputType;
-  added: string;
-  deleted: string;
-  previousValue: string;
-  selectionStartRange: number;
-  selectionEndRange: number;
-  value: string;
-  selectionStart: number;
-  selectionEnd: number;
-}) => InputAttributes & { customInputEventDetail?: D };

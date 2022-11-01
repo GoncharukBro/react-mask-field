@@ -8,7 +8,7 @@ import toNumber from './utils/toNumber';
 
 import type { NumberFormatProps, NumberFormatData, NumberFormatEventDetail } from './types';
 
-import SyntheticChangeError from '../SyntheticChangeError';
+import { SyntheticChangeError } from '../SyntheticChangeError';
 
 import useInput from '../useInput';
 
@@ -30,7 +30,7 @@ export default function useNumberFormat(
    *
    */
 
-  const init: Init = useCallback(({ initialValue }) => {
+  const init = useCallback<Init>(({ initialValue }) => {
     const localizedValues = getLocalizedValues(locales);
 
     formatData.current = {
@@ -52,7 +52,7 @@ export default function useNumberFormat(
    *
    */
 
-  const tracking: Tracking<NumberFormatEventDetail> = useCallback(
+  const tracking = useCallback<Tracking<NumberFormatEventDetail>>(
     ({
       inputType,
       added,
@@ -75,7 +75,10 @@ export default function useNumberFormat(
           value: '',
           selectionStart: 0,
           selectionEnd: 0,
-          customInputEventDetail: formatData.current,
+          customInputEventDetail: {
+            value: formatData.current.value,
+            numericValue: formatData.current.numericValue,
+          },
         };
       }
 
@@ -106,7 +109,10 @@ export default function useNumberFormat(
           value: formatData.current.value,
           selectionStart: beforeDecimal.length + localizedValues.decimal.length,
           selectionEnd: beforeDecimal.length + localizedValues.decimal.length,
-          customInputEventDetail: formatData.current,
+          customInputEventDetail: {
+            value: formatData.current.value,
+            numericValue: formatData.current.numericValue,
+          },
         };
       }
 
@@ -114,11 +120,10 @@ export default function useNumberFormat(
         const caretPosition =
           inputType === 'deleteForward' ? selectionEndRange : selectionStartRange;
 
-        return {
-          value: previousValue,
-          selectionStart: caretPosition,
-          selectionEnd: caretPosition,
-        };
+        throw new SyntheticChangeError(
+          'The symbol does not match the value of the resolved symbols.',
+          { attributes: { selectionStart: caretPosition, selectionEnd: caretPosition } }
+        );
       }
 
       // eslint-disable-next-line no-param-reassign
@@ -157,7 +162,10 @@ export default function useNumberFormat(
         value: formatData.current.value,
         selectionStart: caretPosition,
         selectionEnd: caretPosition,
-        customInputEventDetail: formatData.current,
+        customInputEventDetail: {
+          value: formatData.current.value,
+          numericValue: formatData.current.numericValue,
+        },
       };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -1,8 +1,4 @@
-interface InputAttributes {
-  value: string;
-  selectionStart: number;
-  selectionEnd: number;
-}
+import type { InputAttributes } from './types';
 
 export default function setInputAttributes(
   inputRef: React.MutableRefObject<HTMLInputElement | null>,

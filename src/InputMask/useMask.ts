@@ -10,7 +10,7 @@ import useError from './useError';
 
 import type { MaskProps, MaskData, MaskEventDetail, Replacement } from './types';
 
-import SyntheticChangeError from '../SyntheticChangeError';
+import { SyntheticChangeError } from '../SyntheticChangeError';
 
 import useInput from '../useInput';
 
@@ -53,7 +53,7 @@ export default function useMask({
    *
    */
 
-  const init: Init = useCallback(({ controlled, initialValue }) => {
+  const init = useCallback<Init>(({ controlled, initialValue }) => {
     // eslint-disable-next-line no-param-reassign
     initialValue = controlled ? initialValue : initialValue || (showMask ? mask : '');
 
@@ -87,7 +87,7 @@ export default function useMask({
    *
    */
 
-  const tracking: Tracking<MaskEventDetail> = useCallback(
+  const tracking = useCallback<Tracking<MaskEventDetail>>(
     ({ inputType, added, previousValue, selectionStartRange, selectionEndRange }) => {
       if (
         cachedMaskProps.current === null ||

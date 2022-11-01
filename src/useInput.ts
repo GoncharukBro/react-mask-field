@@ -1,6 +1,6 @@
 import { useLayoutEffect, useEffect, useRef } from 'react';
 
-import SyntheticChangeError from './SyntheticChangeError';
+import { SyntheticChangeError } from './SyntheticChangeError';
 
 import setInputAttributes from './setInputAttributes';
 
@@ -93,9 +93,6 @@ export default function useInput<D = any>({
     const handleInput = (event: Event) => {
       if (!validInputType(inputRef)) return;
 
-      let inputType: InputType = 'initial';
-      const previousValue = inputRef.current?._valueTracker?.getValue?.() ?? '';
-
       try {
         if (inputRef.current === null) {
           throw new SyntheticChangeError('Reference to input element is not initialized.');
@@ -114,6 +111,9 @@ export default function useInput<D = any>({
         if (selectionStart === null || selectionEnd === null) {
           throw new SyntheticChangeError('The selection attributes have not been initialized.');
         }
+
+        const previousValue = inputRef.current._valueTracker?.getValue?.() ?? '';
+        let inputType: InputType = 'initial';
 
         // Определяем тип ввода (ручное определение типа ввода способствует кроссбраузерности)
         if (selectionStart > selection.current.start) {
@@ -198,24 +198,22 @@ export default function useInput<D = any>({
         // проблему с версии React 16, устанавливаем предыдущее состояние на отличное от текущего.
         inputRef.current._valueTracker?.setValue?.(previousValue);
       } catch (error) {
-        if (
-          process.env.NODE_ENV !== 'production' &&
-          (error as Error).name === 'SyntheticChangeError'
-        ) {
-          // eslint-disable-next-line no-console
-          console.error(error);
-        }
+        const { value, selectionStart, selectionEnd } =
+          (error as SyntheticChangeError).cause?.attributes ?? {};
 
         setInputAttributes(inputRef, {
-          value: previousValue,
-          selectionStart: selection.current.start,
-          selectionEnd: selection.current.end,
+          value: value ?? inputRef.current?._valueTracker?.getValue?.() ?? '',
+          selectionStart: selectionStart ?? selection.current.start,
+          selectionEnd: selectionEnd ?? selection.current.end,
         });
 
         event.preventDefault();
         event.stopPropagation();
 
-        if ((error as Error).name !== 'SyntheticChangeError') {
+        if (error instanceof SyntheticChangeError) {
+          // eslint-disable-next-line no-console
+          if (process.env.NODE_ENV !== 'production') console.error({ error });
+        } else {
           throw error;
         }
       }

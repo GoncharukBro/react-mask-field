@@ -1,5 +1,16 @@
 import type { CustomInputEvent, CustomInputEventHandler } from '../types';
 
+export type MaskPart = {
+  /**
+   * - `replacement` - символ замены
+   * - `mask` - символ маски
+   * - `input` - символ введенный пользователем
+   */
+  type: 'replacement' | 'mask' | 'input';
+  value: string;
+  index: number;
+};
+
 export interface MaskEventDetail {
   value: string;
   unmaskedValue: string;
@@ -32,23 +43,4 @@ export interface MaskProps {
   separate?: boolean;
   modify?: Modify;
   onMask?: MaskEventHandler;
-}
-
-export type MaskPart = {
-  /**
-   * - `replacement` - символ замены
-   * - `mask` - символ маски
-   * - `input` - символ введенный пользователем
-   */
-  type: 'replacement' | 'mask' | 'input';
-  value: string;
-  index: number;
-};
-
-export interface MaskData {
-  value: string;
-  unmaskedValue: string;
-  parts: MaskPart[];
-  pattern: string;
-  isValid: boolean;
 }

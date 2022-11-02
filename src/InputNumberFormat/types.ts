@@ -30,8 +30,3 @@ export interface NumberFormatProps {
   options?: NumberFormatOptions;
   onFormat?: NumberFormatEventHandler;
 }
-
-export interface NumberFormatData {
-  value: string;
-  numericValue: number;
-}

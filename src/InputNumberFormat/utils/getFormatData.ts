@@ -4,7 +4,7 @@ import type {
   NumberFormatOptions,
   NumberFormatLocalizedValues,
   NumberFormatResolvedValues,
-  NumberFormatData,
+  NumberFormatEventDetail,
 } from '../types';
 
 interface FilterParams {
@@ -59,7 +59,7 @@ export default function getFormatData({
   previousValue,
   selectionStartRange,
   selectionEndRange,
-}: GetFormatDataParams): NumberFormatData {
+}: GetFormatDataParams): NumberFormatEventDetail {
   // eslint-disable-next-line prefer-const
   let [previousBeforeDecimal = '', previousAfterDecimal = ''] = previousValue.split(
     localizedValues.decimal

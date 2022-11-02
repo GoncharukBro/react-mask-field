@@ -8,7 +8,7 @@ import filter from './utils/filter';
 
 import useError from './useError';
 
-import type { MaskProps, MaskData, MaskEventDetail, Replacement } from './types';
+import type { MaskProps, MaskEventDetail, Replacement } from './types';
 
 import { SyntheticChangeError } from '../SyntheticChangeError';
 
@@ -24,23 +24,30 @@ type CachedMaskProps = Required<Pick<MaskProps, 'mask' | 'showMask' | 'separate'
   replacement: Replacement;
 };
 
-export default function useMask({
-  mask = '',
-  replacement: replacementProps = {},
-  showMask = false,
-  separate = false,
-  modify,
-  onMask,
-}: MaskProps): React.MutableRefObject<HTMLInputElement | null> {
+interface Cache {
+  value: string;
+  props: CachedMaskProps;
+  fallbackProps: CachedMaskProps;
+}
+
+export default function useMask(
+  props?: MaskProps
+): React.MutableRefObject<HTMLInputElement | null> {
+  const {
+    mask = '',
+    replacement: replacementProps = {},
+    showMask = false,
+    separate = false,
+    modify,
+    onMask,
+  } = props ?? {};
+
   const replacement =
     typeof replacementProps === 'string'
       ? convertToReplacementObject(replacementProps)
       : replacementProps;
 
-  const cachedMaskProps = useRef<CachedMaskProps | null>(null);
-  const fallbackMaskProps = useRef<CachedMaskProps | null>(null);
-
-  const maskData = useRef<MaskData | null>(null);
+  const cache = useRef<Cache | null>(null);
 
   // Преобразовываем объект `replacement` в строку для сравнения с зависимостью в `useCallback`
   const stringifiedReplacement = JSON.stringify(replacement, (key, value) => {
@@ -55,21 +62,11 @@ export default function useMask({
 
   const init = useCallback<Init>(({ controlled, initialValue }) => {
     // eslint-disable-next-line no-param-reassign
-    initialValue = controlled ? initialValue : initialValue || (showMask ? mask : '');
+    initialValue = controlled || initialValue ? initialValue : showMask ? mask : '';
 
-    // Немаскированное значение необходимо для инициализации состояния. Выбираем из инициализированного значения
-    // все символы, не являющиеся символами маски. Ожидается, что инициализированное значение соответствует паттерну маски
-    const unmaskedValue = unmask({ value: initialValue, mask, replacement, separate });
+    const cachedProps = { mask, replacement, showMask, separate };
 
-    cachedMaskProps.current = { mask, replacement, showMask, separate };
-    fallbackMaskProps.current = cachedMaskProps.current;
-
-    maskData.current = getMaskData({
-      unmaskedValue,
-      mask,
-      replacement,
-      showMask,
-    });
+    cache.current = { value: initialValue, props: cachedProps, fallbackProps: cachedProps };
 
     const curetPosition = findReplacementSymbolIndex(initialValue, replacement);
 
@@ -89,42 +86,38 @@ export default function useMask({
 
   const tracking = useCallback<Tracking<MaskEventDetail>>(
     ({ inputType, added, previousValue, selectionStartRange, selectionEndRange }) => {
-      if (
-        cachedMaskProps.current === null ||
-        fallbackMaskProps.current === null ||
-        maskData.current === null
-      ) {
+      if (cache.current === null) {
         throw new SyntheticChangeError('The state has not been initialized.');
       }
 
       // Предыдущее значение всегда должно соответствовать маскированному значению из кэша. Обратная ситуация может
       // возникнуть при контроле значения, если значение не было изменено после ввода. Для предотвращения подобных
       // ситуаций, нам важно синхронизировать предыдущее значение с кэшированным значением, если они различаются
-      if (maskData.current.value !== previousValue) {
-        cachedMaskProps.current = fallbackMaskProps.current;
+      if (cache.current.value !== previousValue) {
+        cache.current.props = cache.current.fallbackProps;
       } else {
-        fallbackMaskProps.current = cachedMaskProps.current;
+        cache.current.fallbackProps = cache.current.props;
       }
 
       let beforeRange = unmask({
         value: previousValue,
         end: selectionStartRange,
-        mask: cachedMaskProps.current.mask,
-        replacement: cachedMaskProps.current.replacement,
-        separate: cachedMaskProps.current.separate,
+        mask: cache.current.props.mask,
+        replacement: cache.current.props.replacement,
+        separate: cache.current.props.separate,
       });
 
-      const regExp = new RegExp(`[^${Object.keys(cachedMaskProps.current.replacement)}]`, 'g');
+      const regExp = new RegExp(`[^${Object.keys(cache.current.props.replacement)}]`, 'g');
       // Находим все заменяемые символы для фильтрации пользовательского значения.
       // Важно определить корректное значение на данном этапе
-      const replacementSymbols = cachedMaskProps.current.mask.replace(regExp, '');
+      const replacementSymbols = cache.current.props.mask.replace(regExp, '');
 
       if (beforeRange) {
         beforeRange = filter({
           value: beforeRange,
           replacementSymbols,
-          replacement: cachedMaskProps.current.replacement,
-          separate: cachedMaskProps.current.separate,
+          replacement: cache.current.props.replacement,
+          separate: cache.current.props.separate,
         });
       }
 
@@ -133,7 +126,7 @@ export default function useMask({
         added = filter({
           value: added,
           replacementSymbols: replacementSymbols.slice(beforeRange.length),
-          replacement: cachedMaskProps.current.replacement,
+          replacement: cache.current.props.replacement,
           separate: false, // Поскольку нас интересуют только "полезные" символы, фильтуем без учёта заменяемых символов
         });
       }
@@ -147,16 +140,16 @@ export default function useMask({
       let afterRange = unmask({
         value: previousValue,
         start: selectionEndRange,
-        mask: cachedMaskProps.current.mask,
-        replacement: cachedMaskProps.current.replacement,
-        separate: cachedMaskProps.current.separate,
+        mask: cache.current.props.mask,
+        replacement: cache.current.props.replacement,
+        separate: cache.current.props.separate,
       });
 
       // Модифицируем `afterRange` чтобы позиция символов не смещалась. Необходимо выполнять
       // после фильтрации `added` и перед фильтрацией `afterRange`
-      if (cachedMaskProps.current.separate) {
+      if (cache.current.props.separate) {
         // Находим заменяемые символы в диапозоне изменяемых символов
-        const separateSymbols = cachedMaskProps.current.mask
+        const separateSymbols = cache.current.props.mask
           .slice(selectionStartRange, selectionEndRange)
           .replace(regExp, '');
 
@@ -177,30 +170,30 @@ export default function useMask({
         afterRange = filter({
           value: afterRange,
           replacementSymbols: replacementSymbols.slice(beforeRange.length + added.length),
-          replacement: cachedMaskProps.current.replacement,
-          separate: cachedMaskProps.current.separate,
+          replacement: cache.current.props.replacement,
+          separate: cache.current.props.separate,
         });
       }
 
       const unmaskedValue = beforeRange + added + afterRange;
 
-      const modifiedData = modify?.(unmaskedValue);
+      /* eslint-disable prefer-const */
+      let {
+        mask: modifiedMask = mask,
+        replacement: modifiedReplacement = replacement,
+        showMask: modifiedShowMask = showMask,
+        separate: modifiedSeparate = separate,
+      } = modify?.(unmaskedValue) ?? {};
 
-      cachedMaskProps.current = {
-        mask: modifiedData?.mask ?? mask,
-        replacement:
-          typeof modifiedData?.replacement === 'string'
-            ? convertToReplacementObject(modifiedData?.replacement)
-            : replacement,
-        showMask: modifiedData?.showMask ?? showMask,
-        separate: modifiedData?.separate ?? separate,
-      };
+      if (typeof modifiedReplacement === 'string') {
+        modifiedReplacement = convertToReplacementObject(modifiedReplacement);
+      }
 
-      maskData.current = getMaskData({
+      const detail = getMaskData({
         unmaskedValue,
-        mask: cachedMaskProps.current.mask,
-        replacement: cachedMaskProps.current.replacement,
-        showMask: cachedMaskProps.current.showMask,
+        mask: modifiedMask,
+        replacement: modifiedReplacement,
+        showMask: modifiedShowMask,
       });
 
       const curetPosition = getCaretPosition({
@@ -208,17 +201,25 @@ export default function useMask({
         added,
         beforeRange,
         afterRange,
-        value: maskData.current.value,
-        parts: maskData.current.parts,
-        replacement: cachedMaskProps.current.replacement,
-        separate: cachedMaskProps.current.separate,
+        value: detail.value,
+        parts: detail.parts,
+        replacement: modifiedReplacement,
+        separate: modifiedSeparate,
       });
 
+      cache.current.value = detail.value;
+      cache.current.props = {
+        mask: modifiedMask,
+        replacement: modifiedReplacement,
+        showMask: modifiedShowMask,
+        separate: modifiedSeparate,
+      };
+
       return {
-        value: maskData.current.value,
+        value: detail.value,
         selectionStart: curetPosition,
         selectionEnd: curetPosition,
-        __detail: maskData.current,
+        __detail: detail,
       };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps

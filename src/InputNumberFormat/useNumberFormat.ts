@@ -6,7 +6,7 @@ import getFormatData from './utils/getFormatData';
 import getCaretPosition from './utils/getCaretPosition';
 import toNumber from './utils/toNumber';
 
-import type { NumberFormatProps, NumberFormatData, NumberFormatEventDetail } from './types';
+import type { NumberFormatProps, NumberFormatEventDetail } from './types';
 
 import { SyntheticChangeError } from '../SyntheticChangeError';
 
@@ -14,14 +14,23 @@ import useInput from '../useInput';
 
 import type { Init, Tracking } from '../types';
 
+type CachedNumberFormatProps = Pick<NumberFormatProps, 'locales' | 'options'>;
+
+interface Cache {
+  value: string;
+  props: CachedNumberFormatProps;
+  fallbackProps: CachedNumberFormatProps;
+}
+
 export default function useNumberFormat(
   props?: NumberFormatProps
 ): React.MutableRefObject<HTMLInputElement | null> {
   const { locales, options, onFormat } = props ?? {};
 
-  const formatData = useRef<NumberFormatData | null>(null);
+  const cache = useRef<Cache | null>(null);
 
-  // Преобразовываем объект `options` в строку для сравнения с зависимостью в `useCallback`
+  // Преобразовываем в строку для сравнения с зависимостью в `useCallback`
+  const stringifiedLocales = JSON.stringify(locales);
   const stringifiedOptions = JSON.stringify(options);
 
   /**
@@ -31,12 +40,9 @@ export default function useNumberFormat(
    */
 
   const init = useCallback<Init>(({ initialValue }) => {
-    const localizedValues = getLocalizedValues(locales);
+    const cachedProps = { locales, options };
 
-    formatData.current = {
-      value: initialValue,
-      numericValue: toNumber(initialValue, localizedValues),
-    };
+    cache.current = { value: initialValue, props: cachedProps, fallbackProps: cachedProps };
 
     return {
       value: initialValue,
@@ -64,23 +70,39 @@ export default function useNumberFormat(
       selectionStart,
       selectionEnd,
     }) => {
-      if (formatData.current === null) {
+      if (cache.current === null) {
         throw new SyntheticChangeError('The state has not been initialized.');
       }
 
+      // Предыдущее значение всегда должно соответствовать маскированному значению из кэша. Обратная ситуация может
+      // возникнуть при контроле значения, если значение не было изменено после ввода. Для предотвращения подобных
+      // ситуаций, нам важно синхронизировать предыдущее значение с кэшированным значением, если они различаются
+      if (cache.current.value !== previousValue) {
+        cache.current.props = cache.current.fallbackProps;
+      } else {
+        cache.current.fallbackProps = cache.current.props;
+      }
+
       if (value === '') {
-        formatData.current = { value: '', numericValue: 0 };
+        const detail = { value: '', numericValue: 0 };
+
+        cache.current.value = detail.value;
+        cache.current.props = { locales, options };
 
         return {
           value: '',
           selectionStart: 0,
           selectionEnd: 0,
-          __detail: formatData.current,
+          __detail: detail,
         };
       }
 
       const localizedValues = getLocalizedValues(locales);
-      const resolvedValues = getResolvedValues(formatData.current.numericValue, locales, options);
+      const resolvedValues = getResolvedValues(
+        toNumber(cache.current.value, localizedValues),
+        locales,
+        options
+      );
 
       if (
         (added === '.' || added === ',' || added === localizedValues.decimal) &&
@@ -97,16 +119,21 @@ export default function useNumberFormat(
 
         const formattedValue = beforeDecimal + localizedValues.decimal + afterDecimal;
 
-        formatData.current = {
+        const detail = {
           value: formattedValue,
           numericValue: toNumber(formattedValue, localizedValues),
         };
 
+        const caretPosition = beforeDecimal.length + localizedValues.decimal.length;
+
+        cache.current.value = detail.value;
+        cache.current.props = { locales, options };
+
         return {
-          value: formatData.current.value,
-          selectionStart: beforeDecimal.length + localizedValues.decimal.length,
-          selectionEnd: beforeDecimal.length + localizedValues.decimal.length,
-          __detail: formatData.current,
+          value: detail.value,
+          selectionStart: caretPosition,
+          selectionEnd: caretPosition,
+          __detail: detail,
         };
       }
 
@@ -129,7 +156,7 @@ export default function useNumberFormat(
         );
       }
 
-      formatData.current = getFormatData({
+      const detail = getFormatData({
         locales,
         options,
         localizedValues,
@@ -145,22 +172,25 @@ export default function useNumberFormat(
         inputType,
         added,
         previousValue,
-        nextValue: formatData.current.value,
+        nextValue: detail.value,
         selectionStartRange,
         selectionEndRange,
         selectionStart,
         selectionEnd,
       });
 
+      cache.current.value = detail.value;
+      cache.current.props = { locales, options };
+
       return {
-        value: formatData.current.value,
+        value: detail.value,
         selectionStart: caretPosition,
         selectionEnd: caretPosition,
-        __detail: formatData.current,
+        __detail: detail,
       };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [locales, stringifiedOptions]
+    [stringifiedLocales, stringifiedOptions]
   );
 
   /**

@@ -1,6 +1,6 @@
 import { NumberFormatLocalizedValues } from 'InputNumberFormat/types';
 
-import SyntheticChangeError from '../../SyntheticChangeError';
+import { SyntheticChangeError } from '../../SyntheticChangeError';
 
 /**
  * Возвращает применяемые значения по заданной локали

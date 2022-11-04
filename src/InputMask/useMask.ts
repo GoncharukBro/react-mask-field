@@ -99,6 +99,9 @@ export default function useMask(
         cache.current.fallbackProps = cache.current.props;
       }
 
+      // Дополнительно нам важно учесть, что немаскированное значение с учетом удаления или добавления символов должно
+      // получаться с помощью закэшированных пропсов, то есть тех которые были применены к значению на момент предыдущего маскирования
+
       let beforeRange = unmask({
         value: previousValue,
         end: selectionStartRange,

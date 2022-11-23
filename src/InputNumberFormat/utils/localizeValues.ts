@@ -7,7 +7,7 @@ import { SyntheticChangeError } from '../../SyntheticChangeError';
  * @param locales
  * @returns
  */
-export default function getLocalizedValues(
+export default function localizeValues(
   locales: string | string[] | undefined
 ): NumberFormatLocalizedValues {
   // Получаем разделитель в заданной локали

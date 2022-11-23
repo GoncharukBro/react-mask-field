@@ -1,12 +1,17 @@
 import { useRef, useCallback } from 'react';
 
-import getLocalizedValues from './utils/getLocalizedValues';
-import getResolvedValues from './utils/getResolvedValues';
-import getFormatData from './utils/getFormatData';
+import localizeValues from './utils/localizeValues';
+import resolveOptions from './utils/resolveOptions';
+import getNumberFormatEventDetail from './utils/getNumberFormatEventDetail';
 import getCaretPosition from './utils/getCaretPosition';
+import replaceWithNumber from './utils/replaceWithNumber';
 import toNumber from './utils/toNumber';
 
-import type { NumberFormatProps, NumberFormatEventDetail } from './types';
+import type {
+  NumberFormatProps,
+  NumberFormatLocalizedValues,
+  NumberFormatEventDetail,
+} from './types';
 
 import { SyntheticChangeError } from '../SyntheticChangeError';
 
@@ -14,12 +19,10 @@ import useInput from '../useInput';
 
 import type { Init, Tracking } from '../types';
 
-type CachedNumberFormatProps = Pick<NumberFormatProps, 'locales' | 'options'>;
-
 interface Cache {
   value: string;
-  props: CachedNumberFormatProps;
-  fallbackProps: CachedNumberFormatProps;
+  localizedValues: NumberFormatLocalizedValues;
+  fallbackLocalizedValues: NumberFormatLocalizedValues;
 }
 
 export default function useNumberFormat(
@@ -40,15 +43,15 @@ export default function useNumberFormat(
    */
 
   const init = useCallback<Init>(({ initialValue }) => {
-    const cachedProps = { locales, options };
+    const cachedLocalizedValues = localizeValues(locales);
 
-    cache.current = { value: initialValue, props: cachedProps, fallbackProps: cachedProps };
-
-    return {
+    cache.current = {
       value: initialValue,
-      selectionStart: initialValue.length,
-      selectionEnd: initialValue.length,
+      localizedValues: cachedLocalizedValues,
+      fallbackLocalizedValues: cachedLocalizedValues,
     };
+
+    return { value: initialValue };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -78,16 +81,21 @@ export default function useNumberFormat(
       // возникнуть при контроле значения, если значение не было изменено после ввода. Для предотвращения подобных
       // ситуаций, нам важно синхронизировать предыдущее значение с кэшированным значением, если они различаются
       if (cache.current.value !== previousValue) {
-        cache.current.props = cache.current.fallbackProps;
+        cache.current.localizedValues = cache.current.fallbackLocalizedValues;
       } else {
-        cache.current.fallbackProps = cache.current.props;
+        cache.current.fallbackLocalizedValues = cache.current.localizedValues;
       }
+
+      const previusNumericValue = toNumber(previousValue, cache.current.localizedValues);
+
+      const localizedValues = localizeValues(locales);
+      const resolvedOptions = resolveOptions(previusNumericValue, locales, options);
 
       if (value === '') {
         const detail = { value: '', numericValue: 0 };
 
         cache.current.value = detail.value;
-        cache.current.props = { locales, options };
+        cache.current.localizedValues = localizedValues;
 
         return {
           value: '',
@@ -97,47 +105,7 @@ export default function useNumberFormat(
         };
       }
 
-      const localizedValues = getLocalizedValues(locales);
-      const resolvedValues = getResolvedValues(
-        toNumber(cache.current.value, localizedValues),
-        locales,
-        options
-      );
-
-      if (
-        (added === '.' || added === ',' || added === localizedValues.decimal) &&
-        resolvedValues.maximumFractionDigits > 0
-      ) {
-        const [previousBeforeDecimal = '', previousAfterDecimal = ''] = previousValue.split(
-          localizedValues.decimal
-        );
-        const [nextBeforeDecimal, nextAfterDecimal = localizedValues.symbols[0]] =
-          new Intl.NumberFormat(locales, options).format(0).split(localizedValues.decimal);
-
-        const beforeDecimal = previousBeforeDecimal || nextBeforeDecimal;
-        const afterDecimal = previousAfterDecimal || nextAfterDecimal;
-
-        const formattedValue = beforeDecimal + localizedValues.decimal + afterDecimal;
-
-        const detail = {
-          value: formattedValue,
-          numericValue: toNumber(formattedValue, localizedValues),
-        };
-
-        const caretPosition = beforeDecimal.length + localizedValues.decimal.length;
-
-        cache.current.value = detail.value;
-        cache.current.props = { locales, options };
-
-        return {
-          value: detail.value,
-          selectionStart: caretPosition,
-          selectionEnd: caretPosition,
-          __detail: detail,
-        };
-      }
-
-      if (deleted === localizedValues.decimal) {
+      if (deleted === cache.current.localizedValues.decimal) {
         const caretPosition =
           inputType === 'deleteForward' ? selectionEndRange : selectionStartRange;
 
@@ -145,6 +113,51 @@ export default function useNumberFormat(
           'The symbol does not match the value of the resolved symbols.',
           { attributes: { selectionStart: caretPosition, selectionEnd: caretPosition } }
         );
+      }
+
+      const [previousBeforeDecimal = '', previousAfterDecimal = ''] = previousValue.split(
+        cache.current.localizedValues.decimal
+      );
+
+      if (
+        previousAfterDecimal &&
+        (added === '.' || added === ',' || added === cache.current.localizedValues.decimal)
+      ) {
+        const caretPosition =
+          previousBeforeDecimal.length + cache.current.localizedValues.decimal.length;
+
+        throw new SyntheticChangeError(
+          'The symbol does not match the value of the resolved symbols.',
+          { attributes: { selectionStart: caretPosition, selectionEnd: caretPosition } }
+        );
+      }
+
+      if (
+        !previousAfterDecimal &&
+        (added === '.' || added === ',' || added === localizedValues.decimal) &&
+        resolvedOptions.maximumFractionDigits > 0
+      ) {
+        const [nextBeforeDecimal, nextAfterDecimal = localizedValues.symbols[0]] =
+          new Intl.NumberFormat(locales, options)
+            .format(previusNumericValue)
+            .split(localizedValues.decimal);
+
+        const detail = {
+          value: nextBeforeDecimal + localizedValues.decimal + nextAfterDecimal,
+          numericValue: previusNumericValue,
+        };
+
+        const caretPosition = nextBeforeDecimal.length + localizedValues.decimal.length;
+
+        cache.current.value = detail.value;
+        cache.current.localizedValues = localizedValues;
+
+        return {
+          value: detail.value,
+          selectionStart: caretPosition,
+          selectionEnd: caretPosition,
+          __detail: detail,
+        };
       }
 
       // eslint-disable-next-line no-param-reassign
@@ -156,31 +169,42 @@ export default function useNumberFormat(
         );
       }
 
-      const detail = getFormatData({
+      const changedPartType =
+        selectionStartRange <= previousBeforeDecimal.length ? 'integer' : 'fraction';
+
+      const detail = getNumberFormatEventDetail({
+        changedPartType,
         locales,
         options,
-        localizedValues,
-        resolvedValues,
-        added,
-        previousValue,
+        cachedLocalizedValues: cache.current.localizedValues,
+        resolvedOptions,
+        added: replaceWithNumber(added, localizedValues.symbols),
+        previousBeforeDecimal: replaceWithNumber(
+          previousBeforeDecimal,
+          cache.current.localizedValues.symbols
+        ),
+        previousAfterDecimal: replaceWithNumber(
+          previousAfterDecimal,
+          cache.current.localizedValues.symbols
+        ),
         selectionStartRange,
         selectionEndRange,
       });
 
       const caretPosition = getCaretPosition({
+        changedPartType,
+        cachedLocalizedValues: cache.current.localizedValues,
         localizedValues,
         inputType,
         added,
-        previousValue,
+        previousBeforeDecimal,
         nextValue: detail.value,
-        selectionStartRange,
         selectionEndRange,
         selectionStart,
-        selectionEnd,
       });
 
       cache.current.value = detail.value;
-      cache.current.props = { locales, options };
+      cache.current.localizedValues = localizedValues;
 
       return {
         value: detail.value,

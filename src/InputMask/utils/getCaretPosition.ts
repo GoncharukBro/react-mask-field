@@ -1,5 +1,3 @@
-import findReplacementSymbolIndex from './findReplacementSymbolIndex';
-
 import type { MaskPart, Replacement } from '../types';
 
 import type { InputType } from '../../types';
@@ -35,8 +33,8 @@ export default function getCaretPosition({
   });
 
   const addedLastIndex = unmaskedSymbols[beforeRange.length + added.length - 1]?.index;
-  const afterRangeFirstIndex = unmaskedSymbols[beforeRange.length + added.length]?.index;
   const beforeRangeLastIndex = unmaskedSymbols[beforeRange.length - 1]?.index;
+  const afterRangeFirstIndex = unmaskedSymbols[beforeRange.length + added.length]?.index;
 
   if (inputType === 'insert') {
     if (addedLastIndex !== undefined) return addedLastIndex + 1;
@@ -54,5 +52,10 @@ export default function getCaretPosition({
     if (afterRangeFirstIndex !== undefined) return afterRangeFirstIndex;
   }
 
-  return findReplacementSymbolIndex(value, replacement);
+  // Находим первый индекс символа замены указанного в свойстве `replacement`
+  const replacementSymbolIndex = value.split('').findIndex((symbol) => {
+    return Object.prototype.hasOwnProperty.call(replacement, symbol);
+  });
+
+  return replacementSymbolIndex !== -1 ? replacementSymbolIndex : value.length;
 }

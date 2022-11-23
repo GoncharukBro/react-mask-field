@@ -17,7 +17,7 @@ interface InitParams {
   initialValue: string;
 }
 
-export type Init = (params: InitParams) => InputAttributes;
+export type Init = (params: InitParams) => Pick<InputAttributes, 'value'>;
 
 interface TrackingParams {
   inputType: InputType;

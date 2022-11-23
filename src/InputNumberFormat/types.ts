@@ -18,7 +18,7 @@ export interface NumberFormatLocalizedValues {
   symbols: string;
 }
 
-export interface NumberFormatResolvedValues {
+export interface NumberFormatResolvedOptions {
   minimumFractionDigits: number;
   maximumFractionDigits: number;
   minimumIntegerDigits: number;

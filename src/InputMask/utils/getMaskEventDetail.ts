@@ -81,7 +81,7 @@ function formatToMask(unmaskedValue: string, { mask, replacement }: Options): st
   }, '');
 }
 
-interface GetMaskDataParams {
+interface GetMaskEventDetailParams {
   unmaskedValue: string;
   mask: string;
   replacement: Replacement;
@@ -97,12 +97,12 @@ interface GetMaskDataParams {
  * @param param.showMask
  * @returns объект с данными маскированного значение
  */
-export default function getMaskData({
+export default function getMaskEventDetail({
   unmaskedValue,
   mask,
   replacement,
   showMask,
-}: GetMaskDataParams): MaskEventDetail {
+}: GetMaskEventDetailParams): MaskEventDetail {
   let value = formatToMask(unmaskedValue, { mask, replacement });
 
   const parts = formatToParts(value, { mask, replacement });

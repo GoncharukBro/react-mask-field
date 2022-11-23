@@ -70,16 +70,12 @@ export default function useInput<D = any>({
     if (inputRef.current === null || !validInputType(inputRef)) return;
 
     const { controlled = false, initialValue = '' } = inputRef.current._wrapperState ?? {};
-
     const initResult = init({ controlled, initialValue });
 
-    // Поскольку в предыдущем шаге мы изменяем инициализированное
-    // значение, мы также должны изменить значение элемента
-    setInputAttributes(inputRef, {
-      value: initResult.value,
-      selectionStart: initResult.selectionStart,
-      selectionEnd: initResult.selectionEnd,
-    });
+    // Поскольку в предыдущем шаге мы изменяем инициализированное значение, мы
+    // также должны изменить значение элемента, при этом мы не должны устанавливать
+    // позицию каретки, так как установка позиции здесь приведёт к автофокусу
+    setInputAttributes(inputRef, { value: initResult.value });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

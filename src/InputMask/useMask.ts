@@ -1,8 +1,7 @@
 import { useRef, useCallback } from 'react';
 
-import getMaskData from './utils/getMaskData';
+import getMaskEventDetail from './utils/getMaskEventDetail';
 import getCaretPosition from './utils/getCaretPosition';
-import findReplacementSymbolIndex from './utils/findReplacementSymbolIndex';
 import unmask from './utils/unmask';
 import filter from './utils/filter';
 
@@ -65,16 +64,9 @@ export default function useMask(
     initialValue = controlled || initialValue ? initialValue : showMask ? mask : '';
 
     const cachedProps = { mask, replacement, showMask, separate };
-
     cache.current = { value: initialValue, props: cachedProps, fallbackProps: cachedProps };
 
-    const curetPosition = findReplacementSymbolIndex(initialValue, replacement);
-
-    return {
-      value: initialValue,
-      selectionStart: curetPosition,
-      selectionEnd: curetPosition,
-    };
+    return { value: initialValue };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -192,7 +184,7 @@ export default function useMask(
         modifiedReplacement = convertToReplacementObject(modifiedReplacement);
       }
 
-      const detail = getMaskData({
+      const detail = getMaskEventDetail({
         unmaskedValue,
         mask: modifiedMask,
         replacement: modifiedReplacement,

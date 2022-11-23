@@ -1,19 +1,17 @@
-import replaceWithNumber from './replaceWithNumber';
-
 import type { NumberFormatLocalizedValues } from '../types';
 
 import type { InputType } from '../../types';
 
 interface GetCaretPositionParams {
+  changedPartType: 'integer' | 'fraction';
+  cachedLocalizedValues: NumberFormatLocalizedValues;
   localizedValues: NumberFormatLocalizedValues;
   inputType: InputType;
   added: string;
-  previousValue: string;
+  previousBeforeDecimal: string;
   nextValue: string;
-  selectionStartRange: number;
   selectionEndRange: number;
   selectionStart: number;
-  selectionEnd: number;
 }
 
 /**
@@ -22,30 +20,24 @@ interface GetCaretPositionParams {
  * @returns
  */
 export default function getCaretPosition({
+  changedPartType,
+  cachedLocalizedValues,
   localizedValues,
   inputType,
   added,
-  previousValue,
+  previousBeforeDecimal,
   nextValue,
-  selectionStartRange,
   selectionEndRange,
   selectionStart,
 }: GetCaretPositionParams): number {
-  const [previousBeforeDecimal = ''] = replaceWithNumber(
-    previousValue,
-    localizedValues.symbols
-  ).split(localizedValues.decimal);
-  const [nextBeforeDecimal = '', nextAfterDecimal = ''] = replaceWithNumber(
-    nextValue,
-    localizedValues.symbols
-  ).split(localizedValues.decimal);
-
-  const changedPartType =
-    selectionStartRange <= previousBeforeDecimal.length ? 'integer' : 'fraction';
+  const [nextBeforeDecimal = '', nextAfterDecimal = ''] = nextValue.split(localizedValues.decimal);
 
   // TODO: подумать над позицией каретки при `changedPartType === 'fraction'`
   if (changedPartType === 'fraction') {
-    const nextFractionWithNumber = nextAfterDecimal.replace(/[^\d]/g, '');
+    const nextFractionWithNumber = nextAfterDecimal.replace(
+      new RegExp(`[^${localizedValues.symbols}]`, 'g'),
+      ''
+    );
 
     const caretPosition =
       nextBeforeDecimal.length + localizedValues.decimal.length + nextFractionWithNumber.length;
@@ -63,7 +55,7 @@ export default function getCaretPosition({
   // Считаем количество чисел после `selectionEndRange`
   let countAfterSelectionEnd = previousBeforeDecimal
     .slice(selectionEndRange)
-    .replace(/[^\d]/g, '').length;
+    .replace(new RegExp(`[^${cachedLocalizedValues.symbols}]`, 'g'), '').length;
 
   if (
     previousBeforeDecimal.length === nextBeforeDecimal.length &&
@@ -73,9 +65,11 @@ export default function getCaretPosition({
     countAfterSelectionEnd -= added.length;
   }
 
+  const regExp = new RegExp(`[${localizedValues.symbols}]`);
+
   // Нахоим индекс символа для установки позиции каретки
   for (let i = nextBeforeDecimal.length; i >= 0; i--) {
-    if (/\d/.test(nextBeforeDecimal[i])) {
+    if (regExp.test(nextBeforeDecimal[i])) {
       count += 1;
     }
 
@@ -89,7 +83,7 @@ export default function getCaretPosition({
   const shiftCaretPosition = (shiftIndex: number) => {
     const index = nextCaretPosition + shiftIndex;
 
-    if (index >= 0 && index < nextBeforeDecimal.length && !/\d/.test(nextBeforeDecimal[index])) {
+    if (index >= 0 && index < nextBeforeDecimal.length && !regExp.test(nextBeforeDecimal[index])) {
       nextCaretPosition += shiftIndex < 0 ? -1 : 1;
       shiftCaretPosition(shiftIndex);
     }

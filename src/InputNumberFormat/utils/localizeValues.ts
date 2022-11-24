@@ -1,6 +1,4 @@
-import { NumberFormatLocalizedValues } from 'InputNumberFormat/types';
-
-import { SyntheticChangeError } from '../../SyntheticChangeError';
+import type { NumberFormatLocalizedValues } from 'InputNumberFormat/types';
 
 /**
  * Возвращает применяемые значения по заданной локали
@@ -16,7 +14,7 @@ export default function localizeValues(
     .find(({ type }) => type === 'decimal')?.value;
 
   if (decimal === undefined) {
-    throw new SyntheticChangeError('The decimal separator is not defined.');
+    throw new Error('The decimal separator is not defined.');
   }
 
   // Получаем все цыфры в заданной локали (возможны варианты

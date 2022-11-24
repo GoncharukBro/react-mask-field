@@ -13,7 +13,9 @@ export default function useDispatchCustomInputEvent<D = any>(
 
   const dispatch = useCallback(
     (customEventDetail: D) => {
-      if (inputRef.current === null || !customInputEventType || !customInputEventHandler) return;
+      if (inputRef.current === null || !customInputEventType || !customInputEventHandler) {
+        return;
+      }
 
       const { value, selectionStart, selectionEnd } = inputRef.current;
 

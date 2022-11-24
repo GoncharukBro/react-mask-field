@@ -13,30 +13,19 @@ export default {
 } as Meta<InputMaskProps>;
 
 export const СontrolledComponent: ComponentStory<typeof InputMaskComponent> = () => {
-  const [mask, setMask] = useState('+7 (___) ___-__-__');
   const [value, setValue] = useState('');
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() =>
-          setMask((prev) => {
-            return prev[1] === '7' ? '+1 (___) ___-__-__' : '+7 (___) ___-__-__';
-          })
-        }
-      >
-        Изменить маску
-      </button>
-
       <InputMaskComponent
-        mask={mask}
+        mask="+7 (___) ___-__-__"
         replacement={{ _: /\d/ }}
         value={value}
         onChange={(event) => setValue(event.target.value)}
+        onMask={() => {}}
       />
 
-      <pre>{JSON.stringify({ mask, value }, null, 2)}</pre>
+      <pre>{JSON.stringify({ value }, null, 2)}</pre>
     </>
   );
 };

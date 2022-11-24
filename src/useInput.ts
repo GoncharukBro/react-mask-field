@@ -178,19 +178,17 @@ export default function useInput<D = any>({
           selectionEnd: trackingResult.selectionEnd,
         });
 
-        // TODO: до или после dispatchCustomInputEvent?
+        dispatchCustomInputEvent(trackingResult.__detail);
+
+        // После изменения значения в кастомном событии (`dispatchCustomInputEvent`) событие `change`
+        // срабатывать не будет, так как предыдущее и текущее состояние внутри `input` совпадают. Чтобы
+        // обойти эту проблему с версии React 16, устанавливаем предыдущее состояние на отличное от текущего.
+        inputRef.current._valueTracker?.setValue?.(previousValue);
+
         // Чтобы гарантировать правильное позиционирование каретки, обновляем
         // значения `selection` перед последующим вызовом функции обработчика `input`
         selection.current.start = trackingResult.selectionStart;
         selection.current.end = trackingResult.selectionEnd;
-
-        dispatchCustomInputEvent(trackingResult.__detail);
-
-        // TODO: после изменения значения в кастомном событии или в принципе после изменения значение? Может кастомное событие не влияет?
-        // После изменения значения в кастомном событии событие `change` срабатывать не будет,
-        // так как предыдущее и текущее состояние внутри `input` совпадают. Чтобы обойти эту
-        // проблему с версии React 16, устанавливаем предыдущее состояние на отличное от текущего.
-        inputRef.current._valueTracker?.setValue?.(previousValue);
       } catch (error) {
         const { value, selectionStart, selectionEnd } =
           (error as SyntheticChangeError).cause?.attributes ?? {};

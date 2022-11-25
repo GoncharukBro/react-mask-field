@@ -4,7 +4,7 @@ import useNumberFormat from './useNumberFormat';
 
 import type { NumberFormatProps } from './types';
 
-import useSetInputRef from '../useSetInputRef';
+import useConnectedRef from '../useConnectedRef';
 
 import type {
   ForwardedComponent,
@@ -41,13 +41,14 @@ function BaseInputNumberFormat(
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element {
   const inputRef = useNumberFormat({ locales, options, onFormat });
-  const setInputRef = useSetInputRef(inputRef, forwardedRef);
+
+  const connectedRef = useConnectedRef(inputRef, forwardedRef);
 
   if (Component) {
-    return <Component ref={setInputRef} {...props} />;
+    return <Component ref={connectedRef} {...props} />;
   }
 
-  return <input ref={setInputRef} {...props} />;
+  return <input ref={connectedRef} {...props} />;
 }
 
 const InputNumberFormat = forwardRef(BaseInputNumberFormat) as BaseComponent<NumberFormatProps>;

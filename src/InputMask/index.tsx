@@ -4,7 +4,7 @@ import useMask from './useMask';
 
 import type { MaskProps } from './types';
 
-import useSetInputRef from '../useSetInputRef';
+import useConnectedRef from '../useConnectedRef';
 
 import type {
   ForwardedComponent,
@@ -45,13 +45,14 @@ function BaseInputMask(
   forwardedRef: React.ForwardedRef<HTMLInputElement>
 ): JSX.Element {
   const inputRef = useMask({ mask, replacement, showMask, separate, modify, onMask });
-  const setInputRef = useSetInputRef(inputRef, forwardedRef);
+
+  const connectedRef = useConnectedRef(inputRef, forwardedRef);
 
   if (Component) {
-    return <Component ref={setInputRef} {...props} />;
+    return <Component ref={connectedRef} {...props} />;
   }
 
-  return <input ref={setInputRef} {...props} />;
+  return <input ref={connectedRef} {...props} />;
 }
 
 const InputMask = forwardRef(BaseInputMask) as BaseComponent<MaskProps>;

@@ -5,7 +5,6 @@ import type { ComponentStory, Meta } from '@storybook/react';
 import InputMaskComponent from '..';
 
 import type { InputMaskProps } from '..';
-import type { MaskEventDetail } from '../types';
 
 export default {
   title: 'Mask',

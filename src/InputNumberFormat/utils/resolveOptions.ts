@@ -31,10 +31,18 @@ export default function resolveOptions(
     minimumSignificantDigits: maximumSignificantDigits,
   }).formatToParts(value);
 
+  const colculate = (parts: any[]) => {
+    const reducedParts = parts.reduce((prev, item) => {
+      return item.type === 'fraction' ? [...prev, item.value] : prev;
+    }, []);
+
+    return reducedParts.join('').length;
+  };
+
   return {
     minimumIntegerDigits,
     maximumIntegerDigits: maximumSignificantDigits ?? options?.maximumIntegerDigits ?? 21,
-    minimumFractionDigits: partsForMinimum.filter(({ type }) => type === 'fraction').length,
-    maximumFractionDigits: partsForMaximum.filter(({ type }) => type === 'fraction').length,
+    minimumFractionDigits: colculate(partsForMinimum),
+    maximumFractionDigits: colculate(partsForMaximum),
   };
 }

@@ -25,7 +25,7 @@ export const Hook: ComponentStory<any> = () => {
   return (
     <>
       <div>
-        <p>-</p>
+        <p>{`{ locales: 'en-IN', options: { minimumIntegerDigits: 4 } }`}</p>
         <input ref={refIN} />
       </div>
 

@@ -113,6 +113,7 @@ export default function getNumberFormatEventDetail({
         ? nextFraction.length
         : options?.minimumFractionDigits,
     minimumSignificantDigits:
+      options?.minimumSignificantDigits &&
       nextFraction.length > resolvedOptions.minimumFractionDigits
         ? nextInteger.length + nextFraction.length
         : options?.minimumSignificantDigits,

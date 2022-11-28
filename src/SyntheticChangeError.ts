@@ -4,6 +4,10 @@ export interface SyntheticChangeError {
   cause?: { attributes?: Partial<InputAttributes> };
 }
 
+/**
+ * Кастомная ошибка обрабатывается в хуке `useInput` с возможностью
+ * передать аттрибуты для установки в `input` элемент.
+ */
 // eslint-disable-next-line no-redeclare
 export class SyntheticChangeError extends Error {
   constructor(message: string, cause?: SyntheticChangeError['cause']) {

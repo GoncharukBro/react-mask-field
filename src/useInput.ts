@@ -19,6 +19,12 @@ interface UseInputParams<D> {
   customInputEventHandler?: CustomInputEventHandler<D>;
 }
 
+/**
+ * Хук контроля события изменения ввода позволяет выполнять логику и изменять
+ * аттрибуты `input` элемента на опеределнных этапах треккинга события.
+ * @param param
+ * @returns
+ */
 export default function useInput<D = any>({
   init,
   tracking,

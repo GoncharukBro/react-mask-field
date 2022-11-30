@@ -42,7 +42,7 @@ export default function getCaretPosition({
     const caretPosition =
       nextBeforeDecimal.length + localizedValues.decimal.length + nextFractionWithNumber.length;
 
-    if (selectionEndRange >= caretPosition) {
+    if (selectionEndRange > caretPosition) {
       return caretPosition;
     }
 

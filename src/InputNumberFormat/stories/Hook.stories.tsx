@@ -13,12 +13,7 @@ export const Hook: ComponentStory<any> = () => {
   const refRU = useNumberFormat({ locales: 'ru-RU', options: { maximumSignificantDigits: 6 } });
   const refRUCur = useNumberFormat({
     locales: 'ru-RU',
-    options: {
-      style: 'currency',
-      currency: 'RUB',
-      minimumFractionDigits: 0,
-      minimumSignificantDigits: 4,
-    },
+    options: { style: 'currency', currency: 'RUB' },
   });
   const refJA = useNumberFormat({
     locales: 'ja-JP',

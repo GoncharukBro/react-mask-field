@@ -32,8 +32,8 @@ export default function resolveOptions(
   }).formatToParts(value);
 
   const colculate = (parts: any[]) => {
-    const reducedParts = parts.reduce((prev, item) => {
-      return item.type === 'fraction' ? [...prev, item.value] : prev;
+    const reducedParts = parts.reduce((prev, part) => {
+      return part.type === 'fraction' ? [...prev, part.value] : prev;
     }, []);
 
     return reducedParts.join('').length;

@@ -36,23 +36,16 @@ export default function getCaretPosition({
 
   // TODO: подумать над позицией каретки при `changedPartType === 'fraction'`
   if (changedPartType === 'fraction') {
-    const nextFractionWithNumber = nextAfterDecimal.replace(
+    const nextFraction = nextAfterDecimal.replace(
       new RegExp(`[^${localizedValues.symbols}]`, 'g'),
       ''
     );
 
-    const caretPosition =
-      nextBeforeDecimal.length + localizedValues.decimal.length + nextFractionWithNumber.length;
+    const lastFractionSymbolIndex =
+      nextBeforeDecimal.length + localizedValues.decimal.length + nextFraction.length;
 
-    if (selectionEndRange > caretPosition) {
-      return caretPosition;
-    }
-
-    return selectionStart;
+    return selectionStart <= lastFractionSymbolIndex ? selectionStart : lastFractionSymbolIndex;
   }
-
-  let nextCaretPosition = -1;
-  let count = 0;
 
   // Считаем количество чисел после `selectionEndRange`
   let countAfterSelectionEnd = previousBeforeDecimal
@@ -60,12 +53,15 @@ export default function getCaretPosition({
     .replace(new RegExp(`[^${previousLocalizedValues.symbols}]`, 'g'), '').length;
 
   if (
-    previousBeforeDecimal.length === nextBeforeDecimal.length &&
     added.length > 0 &&
-    countAfterSelectionEnd >= added.length
+    countAfterSelectionEnd >= added.length &&
+    previousBeforeDecimal.length === nextBeforeDecimal.length
   ) {
     countAfterSelectionEnd -= added.length;
   }
+
+  let nextCaretPosition = -1;
+  let count = 0;
 
   const regExp = new RegExp(`[${localizedValues.symbols}]`);
 
@@ -81,17 +77,19 @@ export default function getCaretPosition({
     }
   }
 
+  const shiftIndex = inputType === 'deleteForward' ? 0 : -1;
+
   // Сдвигаем каретку к ближайшему числу
-  const shiftCaretPosition = (shiftIndex: number) => {
+  const shiftCaretPosition = () => {
     const index = nextCaretPosition + shiftIndex;
 
     if (index >= 0 && index < nextBeforeDecimal.length && !regExp.test(nextBeforeDecimal[index])) {
       nextCaretPosition += shiftIndex < 0 ? -1 : 1;
-      shiftCaretPosition(shiftIndex);
+      shiftCaretPosition();
     }
   };
 
-  shiftCaretPosition(inputType === 'deleteForward' ? 0 : -1);
+  shiftCaretPosition();
 
   if (nextCaretPosition < 0) {
     nextCaretPosition = 0;
@@ -99,6 +97,12 @@ export default function getCaretPosition({
 
   if (nextCaretPosition > nextValue.length) {
     nextCaretPosition = nextValue.length;
+  }
+
+  const firstIntegerSymbolIndex = nextBeforeDecimal.match(regExp)?.index || 0;
+
+  if (nextCaretPosition < firstIntegerSymbolIndex) {
+    nextCaretPosition = firstIntegerSymbolIndex;
   }
 
   return nextCaretPosition;

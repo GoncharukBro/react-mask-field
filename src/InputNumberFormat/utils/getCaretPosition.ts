@@ -4,12 +4,13 @@ import type { InputType } from '../../types';
 
 interface GetCaretPositionParams {
   changedPartType: 'integer' | 'fraction';
-  cachedLocalizedValues: NumberFormatLocalizedValues;
+  previousLocalizedValues: NumberFormatLocalizedValues;
   localizedValues: NumberFormatLocalizedValues;
   inputType: InputType;
   added: string;
   previousBeforeDecimal: string;
   nextValue: string;
+  nextParts: Intl.NumberFormatPart[];
   selectionEndRange: number;
   selectionStart: number;
 }
@@ -21,12 +22,13 @@ interface GetCaretPositionParams {
  */
 export default function getCaretPosition({
   changedPartType,
-  cachedLocalizedValues,
+  previousLocalizedValues,
   localizedValues,
   inputType,
   added,
   previousBeforeDecimal,
   nextValue,
+  nextParts,
   selectionEndRange,
   selectionStart,
 }: GetCaretPositionParams): number {
@@ -55,7 +57,7 @@ export default function getCaretPosition({
   // Считаем количество чисел после `selectionEndRange`
   let countAfterSelectionEnd = previousBeforeDecimal
     .slice(selectionEndRange)
-    .replace(new RegExp(`[^${cachedLocalizedValues.symbols}]`, 'g'), '').length;
+    .replace(new RegExp(`[^${previousLocalizedValues.symbols}]`, 'g'), '').length;
 
   if (
     previousBeforeDecimal.length === nextBeforeDecimal.length &&

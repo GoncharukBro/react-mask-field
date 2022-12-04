@@ -41,7 +41,7 @@ interface GetNumberFormatEventDetailParams {
   changedPartType: 'integer' | 'fraction';
   locales: string | string[] | undefined;
   options: NumberFormatOptions | undefined;
-  cachedLocalizedValues: NumberFormatLocalizedValues;
+  previousLocalizedValues: NumberFormatLocalizedValues;
   resolvedOptions: NumberFormatResolvedOptions;
   added: string;
   previousBeforeDecimal: string;
@@ -54,7 +54,7 @@ export default function getNumberFormatEventDetail({
   changedPartType,
   locales,
   options,
-  cachedLocalizedValues,
+  previousLocalizedValues,
   resolvedOptions,
   added,
   previousBeforeDecimal,
@@ -72,7 +72,7 @@ export default function getNumberFormatEventDetail({
   });
 
   const previousAfterDecimalFirstIndex =
-    previousBeforeDecimal.length + cachedLocalizedValues.decimal.length;
+    previousBeforeDecimal.length + previousLocalizedValues.decimal.length;
 
   const minimumFractionDigits = resolvedOptions.minimumFractionDigits || 1;
 
@@ -100,24 +100,29 @@ export default function getNumberFormatEventDetail({
   nextFraction = nextFraction.slice(0, resolvedOptions.maximumFractionDigits);
 
   if (!nextInteger && Number(nextFraction) === 0) {
-    return { value: '', numericValue: 0 };
+    return { value: '', numericValue: 0, parts: [] };
   }
 
   const numericValue = Math.abs(Number(nextInteger + (nextFraction ? `.${nextFraction}` : '')));
 
-  const value = new Intl.NumberFormat(locales, {
+  const numberFormat = new Intl.NumberFormat(locales, {
     ...options,
     // Чтобы иметь возможность прописывать "0" устанавливаем значение в длину `nextFraction`
     minimumFractionDigits:
       nextFraction.length > resolvedOptions.minimumFractionDigits
         ? nextFraction.length
         : options?.minimumFractionDigits,
+    // `minimumFractionDigits` игнорируется при указанном `minimumSignificantDigits`,
+    // поэтому указываем правило для `minimumSignificantDigits`
     minimumSignificantDigits:
       options?.minimumSignificantDigits &&
       nextFraction.length > resolvedOptions.minimumFractionDigits
         ? nextInteger.length + nextFraction.length
         : options?.minimumSignificantDigits,
-  }).format(numericValue);
+  });
 
-  return { value, numericValue };
+  const value = numberFormat.format(numericValue);
+  const parts = numberFormat.formatToParts(numericValue);
+
+  return { value, numericValue, parts };
 }

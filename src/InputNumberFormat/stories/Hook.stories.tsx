@@ -9,11 +9,16 @@ export default {
 } as Meta;
 
 export const Hook: ComponentStory<any> = () => {
-  const refIN = useNumberFormat({ locales: 'en-IN', options: { minimumIntegerDigits: 4 } });
+  const refIN = useNumberFormat({ locales: 'en-IN', options: { minimumIntegerDigits: 1 } });
   const refRU = useNumberFormat({ locales: 'ru-RU', options: { maximumSignificantDigits: 6 } });
   const refRUCur = useNumberFormat({
     locales: 'ru-RU',
-    options: { style: 'currency', currency: 'RUB' },
+    options: {
+      style: 'currency',
+      currency: 'RUB',
+      minimumFractionDigits: 0,
+      minimumSignificantDigits: 4,
+    },
   });
   const refJA = useNumberFormat({
     locales: 'ja-JP',
@@ -32,35 +37,35 @@ export const Hook: ComponentStory<any> = () => {
       <hr />
 
       <div>
-        <p>-</p>
+        <p>{`{ locales: 'ru-RU', options: { maximumSignificantDigits: 6 } }`}</p>
         <input ref={refRU} />
       </div>
 
       <hr />
 
       <div>
-        <p>ru-RU currency-RUB</p>
+        <p>{`{ locales: 'ru-RU', options: { style: 'currency', currency: 'RUB' } }`}</p>
         <input ref={refRUCur} />
       </div>
 
       <hr />
 
       <div>
-        <p>ja-JP currency-RUB</p>
+        <p>{`{ locales: 'ja-JP', options: { style: 'currency', currency: 'RUB' } }`}</p>
         <input ref={refJA} />
       </div>
 
       <hr />
 
       <div>
-        <p>ar-EG</p>
+        <p>{`{ locales: 'ar-EG' }`}</p>
         <input ref={refAR} />
       </div>
 
       <hr />
 
       <div>
-        <p>zh-Hans-CN-u-nu-hanidec</p>
+        <p>{`{ locales: 'zh-Hans-CN-u-nu-hanidec' }`}</p>
         <input ref={refCN} />
       </div>
     </>

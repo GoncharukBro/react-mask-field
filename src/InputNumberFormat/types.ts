@@ -3,6 +3,7 @@ import type { CustomInputEvent, CustomInputEventHandler } from '../types';
 export interface NumberFormatEventDetail {
   value: string;
   numericValue: number;
+  parts: Intl.NumberFormatPart[];
 }
 
 export type NumberFormatEvent = CustomInputEvent<NumberFormatEventDetail>;

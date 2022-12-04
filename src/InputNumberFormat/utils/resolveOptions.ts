@@ -24,7 +24,7 @@ export default function resolveOptions(
   const partsForMinimum = new Intl.NumberFormat(locales, {
     minimumFractionDigits,
     minimumSignificantDigits,
-  }).formatToParts(0);
+  }).formatToParts(value);
 
   const partsForMaximum = new Intl.NumberFormat(locales, {
     minimumFractionDigits: maximumFractionDigits,

@@ -135,10 +135,11 @@ export default function useNumberFormat(
           minimumFractionDigits: options?.minimumFractionDigits || 1,
           // `minimumFractionDigits` игнорируется при указанном `minimumSignificantDigits`,
           // поэтому указываем правило для `minimumSignificantDigits`
-          minimumSignificantDigits: options?.minimumSignificantDigits
-            ? previousNumericValue.toString().length +
-              (options.minimumSignificantDigits - previousNumericValue.toString().length)
-            : options?.minimumSignificantDigits,
+          minimumSignificantDigits:
+            typeof options?.minimumSignificantDigits === 'number' &&
+            previousNumericValue.toString().length >= options.minimumSignificantDigits
+              ? previousNumericValue.toString().replace(/^0+/g, '').length + 1
+              : options?.minimumSignificantDigits,
         });
 
         const nextValue = numberFormat.format(previousNumericValue);

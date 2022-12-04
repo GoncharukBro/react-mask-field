@@ -115,9 +115,9 @@ export default function getNumberFormatEventDetail({
     // `minimumFractionDigits` игнорируется при указанном `minimumSignificantDigits`,
     // поэтому указываем правило для `minimumSignificantDigits`
     minimumSignificantDigits:
-      options?.minimumSignificantDigits &&
+      typeof options?.minimumSignificantDigits === 'number' &&
       nextFraction.length > resolvedOptions.minimumFractionDigits
-        ? nextInteger.length + nextFraction.length
+        ? nextInteger.replace(/^0+/g, '').length + nextFraction.length
         : options?.minimumSignificantDigits,
   });
 

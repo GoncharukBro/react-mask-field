@@ -31,8 +31,8 @@
   "scripts": {
     "test": "jest --watchAll",
     "build": "rollup --config rollup.config.ts --configPlugin typescript",
-    "eslint": "npx eslint \"src/**/*.{ts,tsx}\"",
-    "prettier": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "eslint": "npx eslint \"{core,packages}/**/*.{ts,tsx}\"",
+    "prettier": "npx prettier --write \"{core,packages}/**/*.{ts,tsx}\"",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
   },

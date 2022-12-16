@@ -2,7 +2,7 @@
   "compilerOptions": {
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "declaration": true,
     "declarationDir": ".",
     "esModuleInterop": true,
@@ -21,6 +21,6 @@
     "strict": true,
     "target": "es5"
   },
-  "include": ["src"],
+  "include": ["common", "packages"],
   "exclude": ["node_modules", "dist", "**/*.stories.tsx", "**/*.test.tsx"]
 }

@@ -1,3 +1,5 @@
+const process = require('process');
+
 module.exports = {
   stories: ['../packages/**/*.stories.mdx', '../packages/**/*.stories.@(js|jsx|ts|tsx)'],
   addons: [
@@ -6,7 +8,12 @@ module.exports = {
     '@storybook/addon-interactions',
   ],
   framework: '@storybook/react',
-  core: {
-    builder: '@storybook/builder-webpack5',
+  webpackFinal: async (config) => {
+    config.resolve.modules.push(process.cwd() + '/node_modules');
+    config.resolve.modules.push(process.cwd() + '/');
+
+    config.resolve.symlinks = false;
+
+    return config;
   },
 };

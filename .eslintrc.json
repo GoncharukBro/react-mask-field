@@ -25,7 +25,7 @@
     "consistent-return": 1,
     "default-case": 0,
     "import/extensions": 0,
-    "import/no-extraneous-dependencies": [2, { "devDependencies": true }],
+    "import/no-extraneous-dependencies": 0,
     "import/no-unresolved": 0,
     "import/prefer-default-export": 0,
     "max-classes-per-file": 0,

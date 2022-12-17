@@ -1,32 +1,9 @@
 {
-  "name": "react-mask-field",
-  "version": "3.0.1",
-  "author": "Nikolay Goncharuk <goncharuk.bro@gmail.com>",
-  "description": "React input component accepting custom mask.",
-  "keywords": [
-    "react",
-    "react component",
-    "input",
-    "field",
-    "mask",
-    "masked",
-    "formatting",
-    "pattern"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/GoncharukBro/react-mask-field.git"
-  },
-  "bugs": {
-    "url": "https://github.com/GoncharukBro/react-mask-field/issues"
-  },
-  "homepage": "https://github.com/GoncharukBro/react-mask-field#readme",
-  "license": "MIT",
-  "main": "dist/index.js",
-  "module": "dist/index.esm.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
+  "name": "react-input",
+  "private": true,
+  "workspaces": [
+    "common/*",
+    "packages/*"
   ],
   "scripts": {
     "test": "jest --watchAll",

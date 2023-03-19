@@ -6,7 +6,7 @@ The MaskField component allows you to apply a mask to the input field.
 ![npm](https://img.shields.io/npm/v/react-mask-field?style=flat-square)
 ![npm bundle size](https://img.shields.io/bundlephobia/min/react-mask-field?style=flat-square)
 
-> ⚠️ **Warning**! This package is no longer supported. Use the new [`@react-input/mask`](https://www.npmjs.com/package/@react-input/mask) package instead. Please read the documentation carefully before upgrading to a new package, as the package API has changed. In addition, you can use the new number formatting package [`@react-input/number-format`](https://www.npmjs.com/package/@react-input/number-format).
+> ⚠️ **Warning**! Package no longer supported. Use the new [`@react-input/mask`](https://www.npmjs.com/package/@react-input/mask) package instead. Please read the documentation carefully before upgrading to a new package, as the package API has changed. In addition, you can use the new number formatting package [`@react-input/number-format`](https://www.npmjs.com/package/@react-input/number-format).
 
 ## Installation
 
